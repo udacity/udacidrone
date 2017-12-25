@@ -10,6 +10,7 @@ import time
 class Drone:
 
     def __init__(self, protocol='tcp', ip_addr='127.0.0.1', port=5760, baud=921600, threaded=True, PX4=False, tlog_name="TLog.txt"):
+        """ """
         # for a serial connection, have a different format for the address
         if protocol == 'serial':
             comm_addr = '{},{}'.format(port, baud)

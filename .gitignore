@@ -1,4 +1,3 @@
-__pycache__/
 .DS_Store
 
 
@@ -10,3 +9,9 @@ Logs
 *.swo
 *.swp
 *~
+
+# python 
+__pycache__/
+build
+dist
+*.egg-info

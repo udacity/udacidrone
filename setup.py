@@ -18,20 +18,17 @@ for line in open('__version__.py'):
         version = line.strip().split()[2][1:-1]
 
 setup(
-    name='fcnd-drone-api',
+    name='fcnd_drone_api',
     version=version,
     description="Drone API for Udacity's Flying Car Nanodegree",
     long_description=long_description,
     packages=find_packages(exclude=('tests*',)),
-    url = 'https://github.com/udacity/FCND-Drone-API',
+    url='https://github.com/udacity/FCND-Drone-API',
     author='Udacity FCND Team',
     # TODO: Add team email
     author_email='',
-    install_requires=[
-        'numpy>=1.7',
-        'pymavlink>=2.2'
-        'utm>=0.4'
-    ],
+    install_requires=['numpy>=1.7', 'pymavlink>=2.2'
+                      'utm>=0.4'],
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',
     license='MIT License',
