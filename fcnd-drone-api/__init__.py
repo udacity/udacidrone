@@ -1,6 +1,6 @@
 from frame_utils import global_to_local, local_to_global
 from logger import Logger
-from drone import Drone 
+from drone import Drone
 
 import logging
 

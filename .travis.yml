@@ -1,8 +1,15 @@
 language: python
+
+sudo: true
+
+env:
+  global:
+    - PYTHONPATH=$PWD:PYTHONPATH
 python:
   - "3.6"
 # command to install dependencies
 install:
+  # NOTE: sometimes pymavlink fails if future and lxml aren't installed 
   - pip install numpy utm future lxml pymavlink
 # command to run tests
 script:
