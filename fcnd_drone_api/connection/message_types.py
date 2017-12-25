@@ -1,4 +1,5 @@
-"""Message Types
+"""
+Message Types
 
 custom set of message types to use between a specific connection type and 
 the drone class.
@@ -27,27 +28,9 @@ Attributes:
 import math
 import numpy as np
 
-# enum for he names to use for setting callbacks
-# this is to ensure that all the files are using the same names for the messages
-# implementations should use the variable names instead of the strings to minimize typo based errors
-MSG_ALL = '*'
-MSG_STATE = 'state_msg'
-MSG_GLOBAL_POSITION = 'global_position_msg'
-MSG_LOCAL_POSITION = 'local_position_msg'
-MSG_GLOBAL_HOME = 'global_home_msg'
-MSG_VELOCITY = 'local_velocity_msg'
-MSG_CONNECTION_CLOSED = 'connection_closed_msg'
-MSG_RAW_GYROSCOPE = 'gyro_raw_msg'
-MSG_RAW_ACCELEROMETER = 'accel_raw_msg'
-MSG_BAROMETER = 'baro_msg'
-MSG_ATTITUDE = 'attitude_msg'
-MSG_DISTANCE_SENSOR = 'distance_sensor_msg'
-
 
 class Message:
     """Message super class
-    
-    class that all the messages should subclass
     
     Attributes:
         _time: the message time
@@ -323,7 +306,10 @@ class DistanceSensorMessage(Message):
 
     @property
     def measurement(self):
-        """ (float, float, float): tuple containing the measurement information defined as (direction, distance, covariance) """
+        """ 
+        (float, float, float): tuple containing the measurement information defined as 
+        (direction, distance, covariance)
+        """
         return (self._direction, self._measurement, self._covariance)
 
     @property

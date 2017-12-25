@@ -1,22 +1,28 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
-import logger
-from connection import mavlink_connection as mc
-from connection import message_types as mt
-import time
+
+from fcnd_drone_api.connection import mavlink_connection as mc
+from fcnd_drone_api.connection import message_types as mt
+from fcnd_drone_api.logging import Logger
+from fcnd_drone_api.messaging import MsgID
 
 
 class Drone:
 
-    def __init__(self, protocol='tcp', ip_addr='127.0.0.1', port=5760, baud=921600, threaded=True, PX4=False, tlog_name="TLog.txt"):
+    def __init__(self,
+                 protocol='tcp',
+                 ip_addr='127.0.0.1',
+                 port=5760,
+                 baud=921600,
+                 threaded=True,
+                 PX4=False,
+                 tlog_name="TLog.txt"):
         """ """
         # for a serial connection, have a different format for the address
         if protocol == 'serial':
             comm_addr = '{},{}'.format(port, baud)
         else:
             comm_addr = '{0}:{1}:{2}'.format(protocol, ip_addr, port)
-        
+
         self.connection = mc.MavlinkConnection(comm_addr, threaded=threaded, PX4=PX4)
 
         # Global position in degrees (int)
@@ -74,22 +80,22 @@ class Drone:
         self._baro_altitude = 0.0
 
         self._update_property = {
-            'state_msg': self._update_state,
-            'global_position_msg': self._update_global_position,
-            'local_position_msg': self._update_local_position,
-            'global_home_msg': self._update_global_home,
-            'local_velocity_msg': self._update_local_velocity,
-            'gyro_raw_msg': self._update_gyro_raw,
-            'acceleration_raw_msg': self._update_acceleration_raw,
-            'euler_angle_msg': self._update_euler_angle,
-            'baro_msg': self._update_barometer
+            MsgID.STATE: self._update_state,
+            MsgID.GLOBAL_POSITION: self._update_global_position,
+            MsgID.LOCAL_POSITION: self._update_local_position,
+            MsgID.GLOBAL_HOME: self._update_global_home,
+            MsgID.VELOCITY: self._update_local_velocity,
+            MsgID.RAW_GYROSCOPE: self._update_gyro_raw,
+            MsgID.RAW_ACCELEROMETER: self._update_acceleration_raw,
+            MsgID.ATTITUDE_TARGET: self._update_euler_angle,
+            MsgID.BAROMETER: self._update_barometer
         }
 
-        #self.conn.add_message_listener('*',self.on_message_receive)
+        # self.conn.add_message_listener('*',self.on_message_receive)
 
         self._message_listeners = {}
         self.callbacks()
-        self.tlog = logger.Logger("Logs", tlog_name)
+        self.tlog = Logger("Logs", tlog_name)
 
     @property
     def global_position(self):
@@ -181,9 +187,10 @@ class Drone:
         self._baro_altitude = msg.altitude
 
     def callbacks(self):
-        @self.connection.on_message('*')
+
+        @self.connection.on_message(MsgID.ANY)
         def on_message_receive(_, msg_name, msg):
-            if msg_name == mt.MSG_CONNECTION_CLOSED:
+            if msg_name == mt.CONNECTION_CLOSED:
                 self.stop()
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
             if msg_name in self._update_property.keys():
@@ -234,21 +241,23 @@ class Drone:
         return log_dict
 
     def msg_callback(self, name):
-        """decorator for being able to add a listener for a specific message type        
+        """decorator for being able to add a listener for a specific message type
 
         @self.msg_callback(message_types.MSG_GLOBAL_POSITION)
         def gps_listener(name, gps):
             # do whatever with the gps, which will be of type GlobalPosition
 
-        or 
+        or
 
         @self.msg_callback('*')
         def all_msg_listener(name, msg):
             # this is a listener for all message types, so break out the msg as defined by the name
-        
-        These listeners need to be defined within the method self.callbacks() or directly within self.__init__() which calls self.callbacks
-        
-        Callbacks defined with decorators cannot be removed, use add_message_listener/remove_message_listener if the callback needs to be removed
+
+        These listeners need to be defined within the method self.callbacks() or directly within
+        self.__init__() which calls self.callbacks.
+
+        Callbacks defined with decorators cannot be removed, use add_message_listener/remove_message_listener
+        if the callback needs to be removed.
         """
 
         def decorator(fn):
@@ -262,13 +271,12 @@ class Drone:
 
     def add_message_listener(self, name, fn):
         """Add the function, fn, as a callback for the message type, name
-        
+
         For example:
             self.add_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
-            
             OR
             self.add_message_listener('*',all_msg_listener)
-            
+
         These can be added anywhere in the code and are identical to initializing a callback with the decorator
         """
         name = str(name)
@@ -279,10 +287,10 @@ class Drone:
 
     def remove_message_listener(self, name, fn):
         """Remove the function, fn, as a callback for the message type, name
-        
+
         For example:
             self.remove_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
-            
+
         """
         name = str(name)
         if name in self._message_listeners:
@@ -295,15 +303,15 @@ class Drone:
         """Passes the message to the appropriate listeners"""
         for fn in self._message_listeners.get(name, []):
             try:
-                #fn(self, name, msg)
+                # fn(self, name, msg)
                 fn(name, msg)
             except Exception as e:
                 print('>>> Exception in message handler for %s' % name)
                 print('>>> ' + str(e))
 
-        for fn in self._message_listeners.get('*', []):
+        for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                #fn(self, name, msg)
+                # fn(self, name, msg)
                 fn(name, msg)
             except Exception as e:
                 print('>>> Exception in message handler for %s' % name)
@@ -403,7 +411,7 @@ class Drone:
             print("set_home_position not defined")
 
     def start_log(self, directory, name):
-        self.log = logger.Logger(directory, name)
+        self.log = Logger(directory, name)
 
     def stop_log(self):
         """Stop collection of logs"""
@@ -411,13 +419,13 @@ class Drone:
 
     def start(self):
         """Starts the connection to the drone"""
-        
+
         # start the connection
         self.connection.start()
 
     def stop(self):
         """Stops the connection to the drone and closes the log"""
-        
+
         # stop the connection
         self.connection.stop()
         self._connected = False
@@ -426,9 +434,8 @@ class Drone:
         self.tlog.close()
 
     def run(self):
-        """Runs the connection in a while loop,
-        
-            same as "start" for a non-threaded connection
+        """
+        Runs the connection in a while loop, same as "start" for a non-threaded connection
         """
         if self.connection.threaded:
             self.connect()
@@ -436,10 +443,3 @@ class Drone:
                 pass
         else:
             self.start()
-
-
-# TODO: move this to example doc
-if __name__ == "__main__":
-    drone = Drone(threaded=False, tlog_name="TLog-manual.txt")
-    time.sleep(2)
-    drone.start()
