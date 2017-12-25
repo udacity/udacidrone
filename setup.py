@@ -13,8 +13,9 @@ except (IOError, ImportError, OSError) as e:
     sys.stderr.flush()
     long_description = open('README.md').read()
 
-# TODO: move to __init__.py
-version = '0.0.1'
+for line in open('__version__.py'):
+    if line.startswith('__version__ = '):
+        version = line.strip().split()[2][1:-1]
 
 setup(
     name='fcnd-drone-api',
