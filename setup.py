@@ -25,11 +25,12 @@ setup(
     packages=find_packages(exclude=('tests*',)),
     url = 'https://github.com/udacity/FCND-Drone-API',
     author='Udacity FCND Team',
-    # TODO: add team email?
+    # TODO: Add team email
     author_email='',
     install_requires=[
         'numpy>=1.7',
-        'scipy>=0.19.0',
+        'pymavlink>=2.2'
+        'utm>=0.4'
     ],
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',

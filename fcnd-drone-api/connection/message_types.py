@@ -24,8 +24,6 @@ Attributes:
     MSG_BAROMETER: name of the barometer message [LocalFrameMessage - only down populated]
     MSG_ATTITUDE: name of attitude message [FrameMessage]
 """
-import numpy as np
-
 import math
 import numpy as np
 
@@ -251,9 +249,9 @@ class FrameMessage(Message):
         self._q2 = q2
         self._q3 = q3
 
-        self._roll = math.degrees(math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1 ** 2 + q2 ** 2)))
+        self._roll = math.degrees(math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2)))
         self._pitch = math.degrees(math.asin(2.0 * (q0 * q2 - q3 * q1)))
-        self._yaw = math.degrees(math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2 ** 2 + q3 ** 2)))
+        self._yaw = math.degrees(math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2)))
 
     @property
     def roll(self):

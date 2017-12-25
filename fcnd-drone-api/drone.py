@@ -437,6 +437,7 @@ class Drone:
             self.start()
 
 
+# TODO: move this to example doc
 if __name__ == "__main__":
     drone = Drone(threaded=False, tlog_name="TLog-manual.txt")
     time.sleep(2)
