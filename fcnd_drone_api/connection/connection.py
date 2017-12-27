@@ -5,15 +5,8 @@ communication with a drone.
 """
 
 from abc import ABCMeta, abstractmethod
-"""
-Set of enums for the different possible connection types
-NOTE: right now the only implemented type is PX4 mavlink
-"""
-CONNECTION_TYPE_MAVLINK_PX4 = 1
 
-# CONNECTION_TYPE_MAVLINK_APM = 2
-# CONNECTION_TYPE_PARROT = 3
-# CONNECTION_TYPE_DJI = 4
+from fcnd_drone_api.messaging import MsgID
 
 
 class Connection():
@@ -50,7 +43,7 @@ class Connection():
 
         or
 
-        @conn.on_message('*')
+        @conn.on_message(MsgID.ANY)
         def all_msg_listener(_, name, msg):
             # this is a listener for all message types,
             # so break out the msg as defined by the name
@@ -111,22 +104,26 @@ class Connection():
         """
 
         # handle the message specific listeners
+        # print(name, msg)
+        print(self._message_listeners)
         for fn in self._message_listeners.get(name, []):
             try:
                 fn(self, name, msg)
             except Exception as e:
-                i = 1
-                #print("[CONNECTION ERROR] unable to handle message listener for " + name)
-                #print(e)
+                pass
+                # i = 1
+                # print("[CONNECTION ERROR] unable to handle message listener for " + name)
+                # print(e)
 
             # handle the listeners that are registered for all messages
-        for fn in self._message_listeners.get('*', []):
+        for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
                 fn(self, name, msg)
             except Exception as e:
-                i = 1
-                #print("[CONNECTION ERROR] unable to handle * message listener for " + name)
-                #print(e)
+                pass
+                # i = 1
+                # print("[CONNECTION ERROR] unable to handle * message listener for " + name)
+                # print(e)
 
     @property
     def threaded(self):

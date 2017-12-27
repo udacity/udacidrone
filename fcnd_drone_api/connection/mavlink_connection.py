@@ -13,6 +13,15 @@ from . import connection
 
 # force use of mavlink v2.0
 os.environ['MAVLINK20'] = '1'
+"""
+Set of enums for the different possible connection types
+NOTE: right now the only implemented type is PX4 mavlink
+"""
+CONNECTION_TYPE_MAVLINK_PX4 = 1
+
+# CONNECTION_TYPE_MAVLINK_APM = 2
+# CONNECTION_TYPE_PARROT = 3
+# CONNECTION_TYPE_DJI = 4
 
 
 class MainMode(Enum):
@@ -34,6 +43,20 @@ class PositionMask(Enum):
     MASK_IS_LOITER = 0x3000
 
 
+# def __init__(self,
+#              protocol='tcp',
+#              ip_addr='127.0.0.1',
+#              port=5760,
+#              baud=921600,
+#              threaded=True,
+#              PX4=False,
+#              tlog_name="TLog.txt"):
+# for a serial connection, have a different format for the address
+# if protocol == 'serial':
+#     comm_addr = '{},{}'.format(port, baud)
+# else:
+#     comm_addr = '{0}:{1}:{2}'.format(protocol, ip_addr, port)
+# self.connection = mc.MavlinkConnection(comm_addr, threaded=threaded, PX4=PX4)
 class MavlinkConnection(connection.Connection):
     """Connection implementation for Mavlink protocol
 
@@ -121,7 +144,7 @@ class MavlinkConnection(connection.Connection):
             if current_time - last_msg_time > self._timeout:
                 # print("timeout too long!")
                 # notify listeners that the connection is closing
-                self.notify_message_listeners(MsgID.MSG_CONNECTION_CLOSED, 0)
+                self.notify_message_listeners(MsgID.CONNECTION_CLOSED, 0)
 
                 # stop this read loop
                 self._running = False
@@ -142,11 +165,11 @@ class MavlinkConnection(connection.Connection):
                 # parse out the gps position and trigger that callback
                 gps = mt.GlobalFrameMessage(timestamp, float(msg.lat) / 1e7, float(msg.lon) / 1e7,
                                             float(msg.alt) / 1000)
-                self.notify_message_listeners(MsgID.MSG_GLOBAL_POSITION, gps)
+                self.notify_message_listeners(MsgID.GLOBAL_POSITION, gps)
 
                 # parse out the velocity and trigger that callback
                 vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vx) / 100)
-                self.notify_message_listeners(MsgID.MSG_VELOCITY, vel)
+                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
             elif msg.get_type() == 'HEARTBEAT':
                 motors_armed = (msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
@@ -162,34 +185,34 @@ class MavlinkConnection(connection.Connection):
                     guided_mode = True
 
                 state = mt.StateMessage(timestamp, motors_armed, guided_mode)
-                self.notify_message_listeners(MsgID.MSG_STATE, state)
+                self.notify_message_listeners(MsgID.STATE, state)
 
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                self.notify_message_listeners(MsgID.MSG_LOCAL_POSITION, pos)
+                self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                 # parse out the velocity and trigger that callback
                 vel = mt.LocalFrameMessage(timestamp, msg.vx, msg.vy, msg.vz)
-                self.notify_message_listeners(MsgID.MSG_VELOCITY, vel)
+                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
             elif msg.get_type() == 'HOME_POSITION':
                 home = mt.GlobalFrameMessage(timestamp,
                                              float(msg.latitude) / 1e7,
                                              float(msg.longitude) / 1e7, float(msg.altitude) / 1000)
-                self.notify_message_listeners(MsgID.MSG_GLOBAL_HOME, home)
+                self.notify_message_listeners(MsgID.GLOBAL_HOME, home)
 
             elif msg.get_type() == 'SCALED_IMU':
                 # break out the message into its respective messages for here
                 accel = mt.BodyFrameMessage(timestamp, msg.xacc, msg.yacc, msg.zacc)  # units are [mg]
-                self.notify_message_listeners(MsgID.MSG_RAW_ACCELEROMETER, accel)
+                self.notify_message_listeners(MsgID.RAW_ACCELEROMETER, accel)
 
                 gyro = mt.BodyFrameMessage(timestamp, msg.xgyro, msg.ygyro, msg.zgyro)  # units are [millirad/sec]
-                self.notify_message_listeners(MsgID.MSG_RAW_GYROSCOPE, gyro)
+                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
             elif msg.get_type() == 'SCALED_PRESSURE':
                 pressure = mt.BodyFrameMessage(timestamp, 0, 0, msg.press_abs)  # unit is [hectopascal]
-                self.notify_message_listeners(MsgID.MSG_BAROMETER, pressure)
+                self.notify_message_listeners(MsgID.BAROMETER, pressure)
 
             elif msg.get_type() == 'DISTANCE_SENSOR':
                 direction = 0
@@ -199,7 +222,7 @@ class MavlinkConnection(connection.Connection):
                                                 float(msg.min_distance) / 100,
                                                 float(msg.max_distance) / 100, direction,
                                                 float(msg.current_distance) / 100, float(msg.covariance) / 100)
-                self.notify_message_listeners(MsgID.MSG_DISTANCE_SENSOR, meas)
+                self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
             elif msg.get_type() == 'POSITION_TARGET_LOCAL_NED':
                 # DEBUG
@@ -215,7 +238,8 @@ class MavlinkConnection(connection.Connection):
             # TODO: parse out additional message types
 
     def command_loop(self):
-        """main loop for sending commands
+        """
+        Main loop for sending commands
         
         Loop that is run a separate thread to be able to send messages to the 
         target drone.  Uses the message queue `self._out_msg_queue` as the 

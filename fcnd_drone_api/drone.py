@@ -1,29 +1,13 @@
 import numpy as np
 
-from fcnd_drone_api.connection import mavlink_connection as mc
-from fcnd_drone_api.connection import message_types as mt
 from fcnd_drone_api.logging import Logger
 from fcnd_drone_api.messaging import MsgID
 
 
 class Drone:
 
-    def __init__(self,
-                 protocol='tcp',
-                 ip_addr='127.0.0.1',
-                 port=5760,
-                 baud=921600,
-                 threaded=True,
-                 PX4=False,
-                 tlog_name="TLog.txt"):
-        """ """
-        # for a serial connection, have a different format for the address
-        if protocol == 'serial':
-            comm_addr = '{},{}'.format(port, baud)
-        else:
-            comm_addr = '{0}:{1}:{2}'.format(protocol, ip_addr, port)
-
-        self.connection = mc.MavlinkConnection(comm_addr, threaded=threaded, PX4=PX4)
+    def __init__(self, connection, tlog_name="TLog.txt"):
+        self.connection = connection
 
         # Global position in degrees (int)
         # Altitude is in meters
@@ -84,7 +68,7 @@ class Drone:
             MsgID.GLOBAL_POSITION: self._update_global_position,
             MsgID.LOCAL_POSITION: self._update_local_position,
             MsgID.GLOBAL_HOME: self._update_global_home,
-            MsgID.VELOCITY: self._update_local_velocity,
+            MsgID.LOCAL_VELOCITY: self._update_local_velocity,
             MsgID.RAW_GYROSCOPE: self._update_gyro_raw,
             MsgID.RAW_ACCELEROMETER: self._update_acceleration_raw,
             MsgID.ATTITUDE_TARGET: self._update_euler_angle,
@@ -190,7 +174,8 @@ class Drone:
 
         @self.connection.on_message(MsgID.ANY)
         def on_message_receive(_, msg_name, msg):
-            if msg_name == mt.CONNECTION_CLOSED:
+            print('message received', msg_name)
+            if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
             if msg_name in self._update_property.keys():
@@ -279,11 +264,11 @@ class Drone:
 
         These can be added anywhere in the code and are identical to initializing a callback with the decorator
         """
-        name = str(name)
         if name not in self._message_listeners:
             self._message_listeners[name] = []
         if fn not in self._message_listeners[name]:
             self._message_listeners[name].append(fn)
+        print('after', self._message_listeners)
 
     def remove_message_listener(self, name, fn):
         """Remove the function, fn, as a callback for the message type, name

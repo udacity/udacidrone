@@ -10,13 +10,11 @@ except (IOError, ImportError, OSError) as e:
     sys.stderr.flush()
     long_description = open('README.md').read()
 
-for line in open('__version__.py'):
-    if line.startswith('__version__ = '):
-        version = line.strip().split()[2][1:-1]
+__version__ = '0.0.1'
 
 setup(
     name='fcnd_drone_api',
-    version=version,
+    version=__version__,
     description="Drone API for Udacity's Flying Car Nanodegree",
     long_description=long_description,
     packages=find_packages(exclude=('tests*',)),
@@ -24,7 +22,7 @@ setup(
     author='Udacity FCND Team',
     # TODO: Add team email
     author_email='',
-    install_requires=['numpy>=1.7', 'pymavlink>=2.2'
+    install_requires=['numpy>=1.10', 'pymavlink>=2.2'
                       'utm>=0.4'],
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',

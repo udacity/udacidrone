@@ -8,8 +8,8 @@ class Logger:
     def __init__(self, directory='Logs', filename='NavLog.txt'):
         filepath = os.path.join(directory, filename)
         print(filepath)
-        if not os.path.exists(filepath):
-            os.makedirs(os.path.dirname(filepath))
+        if not os.path.exists(directory):
+            os.makedirs(os.path.dirname(directory))
 
         self.log = open(filepath, 'w')
         self.num_data = 0
