@@ -43,20 +43,6 @@ class PositionMask(Enum):
     MASK_IS_LOITER = 0x3000
 
 
-# def __init__(self,
-#              protocol='tcp',
-#              ip_addr='127.0.0.1',
-#              port=5760,
-#              baud=921600,
-#              threaded=True,
-#              PX4=False,
-#              tlog_name="TLog.txt"):
-# for a serial connection, have a different format for the address
-# if protocol == 'serial':
-#     comm_addr = '{},{}'.format(port, baud)
-# else:
-#     comm_addr = '{0}:{1}:{2}'.format(protocol, ip_addr, port)
-# self.connection = mc.MavlinkConnection(comm_addr, threaded=threaded, PX4=PX4)
 class MavlinkConnection(connection.Connection):
     """Connection implementation for Mavlink protocol
 
@@ -64,6 +50,12 @@ class MavlinkConnection(connection.Connection):
     over the Mavlink protocol.
     Specifically designed with the PX4 autopilot in mind, and currently been 
     tested against that autopilot software.
+
+    TCP connection (protocol, ip, port):
+        conn = MavlinkConnection('tcp:127.0.0.1:5760')
+
+    Serial connection (port, baud):
+        conn = MavlinkConnection('5760:921600')
     """
 
     def __init__(self, device, threaded=False, PX4=False):
@@ -116,7 +108,8 @@ class MavlinkConnection(connection.Connection):
         # PX4 management
         self._using_px4 = PX4
 
-        self._timeout = 5  # seconds to wait of no messages before termination
+        # seconds to wait of no messages before termination
+        self._timeout = 5
 
     def dispatch_loop(self):
         """main loop to read from the drone
@@ -138,6 +131,7 @@ class MavlinkConnection(connection.Connection):
 
             # wait for a new message
             msg = self.wait_for_message()
+            # print('message received', msg)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
@@ -181,7 +175,7 @@ class MavlinkConnection(connection.Connection):
                 # extract whether or not we are in offboard mode for PX4
                 # (the main mode)
                 main_mode = (msg.custom_mode & 0x000F0000) >> 16
-                if main_mode == MainMode.PX4_MODE_OFFBOARD:
+                if main_mode == MainMode.PX4_MODE_OFFBOARD.value:
                     guided_mode = True
 
                 state = mt.StateMessage(timestamp, motors_armed, guided_mode)
@@ -254,8 +248,8 @@ class MavlinkConnection(connection.Connection):
         # default to sending a position command to (0,0,0)
         # this needs to be sending commands at a rate of at lease 2Hz in order
         # for PX4 to allow a switch into offboard control.
-        mask = (PositionMask.MASK_IGNORE_YAW_RATE | PositionMask.MASK_IGNORE_ACCELERATION |
-                PositionMask.MASK_IGNORE_VELOCITY)
+        mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
+                PositionMask.MASK_IGNORE_VELOCITY.value)
         high_rate_command = self._master.mav.set_position_target_local_ned_encode(
             0, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0)
@@ -338,6 +332,7 @@ class MavlinkConnection(connection.Connection):
             # send a heartbeat message back, since this needs to be
             # constantly sent so the autopilot knows this exists
             if msg.get_type() == 'HEARTBEAT':
+                print('Received HEARTBEAT, sending HEARBEAT ...')
                 # send -> type, autopilot, base mode, custom mode, system status
                 outmsg = self._master.mav.heartbeat_encode(mavutil.mavlink.MAV_TYPE_GCS,
                                                            mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0,
@@ -404,14 +399,15 @@ class MavlinkConnection(connection.Connection):
         self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0)
 
     def take_control(self):
+        print('in taking control')
         mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
-        custom_mode = MainMode.PX4_MODE_OFFBOARD
+        custom_mode = MainMode.PX4_MODE_OFFBOARD.value
         custom_sub_mode = 0  # not used for manual/offboard
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
 
     def release_control(self):
         mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
-        custom_mode = MainMode.PX4_MODE_MANUAL
+        custom_mode = MainMode.PX4_MODE_MANUAL.value
         custom_sub_mode = 0  # not used for manual/offboard
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
 
@@ -434,8 +430,8 @@ class MavlinkConnection(connection.Connection):
 
     def cmd_velocity(self, vn, ve, vd, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        mask = (PositionMask.MASK_IGNORE_YAW_RATE | PositionMask.MASK_IGNORE_ACCELERATION |
-                PositionMask.MASK_IGNORE_POSITION)
+        mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
+                PositionMask.MASK_IGNORE_POSITION.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
             time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0,
             0, vn, ve, vd, 0, 0, 0, heading, 0)
@@ -447,9 +443,9 @@ class MavlinkConnection(connection.Connection):
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        mask = PositionMask.MASK_IS_LOITER
-        mask = (PositionMask.MASK_IGNORE_YAW_RATE | PositionMask.MASK_IGNORE_ACCELERATION |
-                PositionMask.MASK_IGNORE_VELOCITY)
+        # mask = PositionMask.MASK_IS_LOITER.value
+        mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
+                PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
             time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
             d, 0, 0, 0, 0, 0, 0, heading, 0)
@@ -460,9 +456,9 @@ class MavlinkConnection(connection.Connection):
         # since connection doesn't keep track of this info, have drone send it
         # abstract away that part in the drone class
         time_boot_ms = 0  # this does not need to be set to a specific time
-        mask = PositionMask.MASK_IS_TAKEOFF
-        mask |= (PositionMask.MASK_IGNORE_YAW_RATE | PositionMask.MASK_IGNORE_YAW |
-                 PositionMask.MASK_IGNORE_ACCELERATION | PositionMask.MASK_IGNORE_VELOCITY)
+        mask = PositionMask.MASK_IS_TAKEOFF.value
+        mask |= (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_YAW.value |
+                 PositionMask.MASK_IGNORE_ACCELERATION.value | PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
             time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
             d, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -474,12 +470,12 @@ class MavlinkConnection(connection.Connection):
         # abstract away that part in the drone class
         d = 0  # going to land, so just set d to 0
         time_boot_ms = 0  # this does not need to be set to a specific time
-        mask = PositionMask.MASK_IS_LAND
-        mask |= (PositionMask.MASK_IGNORE_YAW_RATE | PositionMask.MASK_IGNORE_YAW |
-                 PositionMask.MASK_IGNORE_ACCELERATION | PositionMask.MASK_IGNORE_VELOCITY)
+        mask = PositionMask.MASK_IS_LAND.value
+        mask |= (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_YAW.value |
+                 PositionMask.MASK_IGNORE_ACCELERATION.value | PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
-            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
-            d, 0, 0, 0, 0, 0, 0, 0, 0)
+            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED.value, mask,
+            n, e, d, 0, 0, 0, 0, 0, 0, 0, 0)
         self.send_message(msg)
 
     def set_home_position(self, lat, lon, alt):

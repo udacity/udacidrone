@@ -77,7 +77,7 @@ class Drone:
 
         # self.conn.add_message_listener('*',self.on_message_receive)
 
-        self._message_listeners = {}
+        self._message_listeners = self.connection._message_listeners
         self.callbacks()
         self.tlog = Logger("Logs", tlog_name)
 
@@ -104,6 +104,7 @@ class Drone:
         return np.array([self._north, self._east, self._down])
 
     def _update_local_position(self, msg):
+        print('Updating local position', msg)
         self._north = msg.north
         self._east = msg.east
         self._down = msg.down
@@ -174,15 +175,15 @@ class Drone:
 
         @self.connection.on_message(MsgID.ANY)
         def on_message_receive(_, msg_name, msg):
-            print('message received', msg_name)
+            """Sorts incoming messages, updates the drone state variables and runs callbacks"""
+
+            print('Message received', msg_name)
             if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
-            """Sorts incoming messages, updates the drone state variables and runs callbacks"""
             if msg_name in self._update_property.keys():
                 self._update_property[msg_name](msg)
 
             self.notify_message_listeners(msg_name, msg)
-
             self.log_telemetry(msg_name, msg)
 
     def log_telemetry(self, msg_name, msg):
@@ -268,7 +269,6 @@ class Drone:
             self._message_listeners[name] = []
         if fn not in self._message_listeners[name]:
             self._message_listeners[name].append(fn)
-        print('after', self._message_listeners)
 
     def remove_message_listener(self, name, fn):
         """Remove the function, fn, as a callback for the message type, name
@@ -310,30 +310,30 @@ class Drone:
         """Send an arm command to the drone"""
         try:
             self.connection.arm()
-        except:
-            print("arm command not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def disarm(self):
         """Send a disarm command to the drone"""
         try:
             self.connection.disarm()
-        except:
-            print("disarm command not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def take_control(self):
         """If the drone is in guided mode this will switch to manual mode"""
         print('Take Control Messsage')
         try:
             self.connection.take_control()
-        except:
-            print("take_control command not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def release_control(self):
         """Take control of the drone """
         try:
             self.connection.release_control()
-        except:
-            print("release_control command not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def cmd_position(self, north, east, down, heading):
         """ Command the local position and drone heading
@@ -344,22 +344,22 @@ class Drone:
         """
         try:
             self.connection.cmd_position(north, east, down, heading)
-        except:
-            print("cmd_position not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def takeoff(self, target_altitude):
         """Command the drone to takeoff to the target_alt (in meters)"""
         try:
             self.connection.takeoff(self.local_position[0], self.local_position[1], target_altitude)
-        except:
-            print("takeoff no defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def land(self):
         """Command the drone to land at its current position"""
         try:
             self.connection.land(self.local_position[0], self.local_position[1])
-        except:
-            print("land not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, collective):
         """Command the drone orientation rates
@@ -368,8 +368,8 @@ class Drone:
         """
         try:
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, collective)
-        except:
-            print("cmd_attitude_rate not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def cmd_velocity(self, velocity_north, velocity_east, velocity_down, heading):
         """Command the drone velocity
@@ -378,22 +378,24 @@ class Drone:
         """
         try:
             self.connection.cmd_velocity(velocity_north, velocity_east, velocity_down, heading)
-        except:
-            print("cmd_velocity not defined")
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def cmd_motors(self, motor_rpm):
         """Command the rmp of the motors"""
         try:
             self.connection.cmd_motors(motor_rpm)
-        except:
-            print("cmd_motors not defined")
+
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def set_home_position(self, longitude, latitude, altitude):
         """Set the drone's home position to these coordinates"""
         try:
             self.connection.set_home_position(latitude, longitude, altitude)
-        except:
-            print("set_home_position not defined")
+
+        except Exception as e:
+            print('Caught Exception >>>', e)
 
     def start_log(self, directory, name):
         self.log = Logger(directory, name)

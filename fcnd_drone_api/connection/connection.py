@@ -104,11 +104,10 @@ class Connection():
         """
 
         # handle the message specific listeners
-        # print(name, msg)
-        print(self._message_listeners)
         for fn in self._message_listeners.get(name, []):
             try:
-                fn(self, name, msg)
+                # print('in here', name, fn, msg)
+                fn(name, msg)
             except Exception as e:
                 pass
                 # i = 1
@@ -118,7 +117,7 @@ class Connection():
             # handle the listeners that are registered for all messages
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                fn(self, name, msg)
+                fn(name, msg)
             except Exception as e:
                 pass
                 # i = 1
