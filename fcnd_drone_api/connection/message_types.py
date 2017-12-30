@@ -1,4 +1,7 @@
-"""Message Types
+"""
+TODO: This likely to undergo some changes.
+
+Message Types
 
 custom set of message types to use between a specific connection type and 
 the drone class.
@@ -24,32 +27,12 @@ Attributes:
     MSG_BAROMETER: name of the barometer message [LocalFrameMessage - only down populated]
     MSG_ATTITUDE: name of attitude message [FrameMessage]
 """
-import numpy as np
-
 import math
 import numpy as np
-
-# enum for he names to use for setting callbacks
-# this is to ensure that all the files are using the same names for the messages
-# implementations should use the variable names instead of the strings to minimize typo based errors
-MSG_ALL = '*'
-MSG_STATE = 'state_msg'
-MSG_GLOBAL_POSITION = 'global_position_msg'
-MSG_LOCAL_POSITION = 'local_position_msg'
-MSG_GLOBAL_HOME = 'global_home_msg'
-MSG_VELOCITY = 'local_velocity_msg'
-MSG_CONNECTION_CLOSED = 'connection_closed_msg'
-MSG_RAW_GYROSCOPE = 'gyro_raw_msg'
-MSG_RAW_ACCELEROMETER = 'accel_raw_msg'
-MSG_BAROMETER = 'baro_msg'
-MSG_ATTITUDE = 'attitude_msg'
-MSG_DISTANCE_SENSOR = 'distance_sensor_msg'
 
 
 class Message:
     """Message super class
-    
-    class that all the messages should subclass
     
     Attributes:
         _time: the message time
@@ -210,9 +193,9 @@ class FrameMessage(Message):
     Messages defining the rotation between frames (Euler angles or Quaternions)
 
     Attributes:
-        _roll: drone roll in degrees
-        _pitch: drone pitch in degrees
-        _yaw: drone yaw in degrees
+        _roll: drone roll in radians
+        _pitch: drone pitch in radians
+        _yaw: drone yaw in radians
         _q0: 0th element of quaterion
         _q1: 1th element of quaterion
         _q2: 2th element of quaterion
@@ -251,23 +234,23 @@ class FrameMessage(Message):
         self._q2 = q2
         self._q3 = q3
 
-        self._roll = math.degrees(math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1 ** 2 + q2 ** 2)))
-        self._pitch = math.degrees(math.asin(2.0 * (q0 * q2 - q3 * q1)))
-        self._yaw = math.degrees(math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2 ** 2 + q3 ** 2)))
+        self._roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2))
+        self._pitch = math.asin(2.0 * (q0 * q2 - q3 * q1))
+        self._yaw = math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2))
 
     @property
     def roll(self):
-        """float: roll in degrees """
+        """roll in radians"""
         return self._roll
 
     @property
     def pitch(self):
-        """float: pitch in degrees """
+        """pitch in radians"""
         return self._pitch
 
     @property
     def yaw(self):
-        """float: yaw in degrees [0, 360) """
+        """yaw in radians"""
         return self._yaw
 
     @property
@@ -310,7 +293,7 @@ class DistanceSensorMessage(Message):
     Attributes:
         _min_distance: minimum detectable distance in meters
         _max_distance: maximum detectable distance in meters
-        _direction: the heading of the sensor for this measurement in degrees
+        _direction: the heading of the sensor for this measurement in radians
         _measurement: the distance measured in meters
         _covariance: the covariance of the measurement
     """
@@ -325,7 +308,10 @@ class DistanceSensorMessage(Message):
 
     @property
     def measurement(self):
-        """ (float, float, float): tuple containing the measurement information defined as (direction, distance, covariance) """
+        """ 
+        (float, float, float): tuple containing the measurement information defined as 
+        (direction, distance, covariance)
+        """
         return (self._direction, self._measurement, self._covariance)
 
     @property

@@ -1,13 +1,16 @@
-import numpy as np
 import os
 
-class Logger:
+import numpy as np
+
+
+class Logger(object):
+    """"""
 
     def __init__(self, directory='Logs', filename='NavLog.txt'):
         filepath = os.path.join(directory, filename)
         print(filepath)
-        if not os.path.exists(filepath):
-            os.makedirs(os.path.dirname(filepath))
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
         self.log = open(filepath, 'w')
         self.num_data = 0

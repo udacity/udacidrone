@@ -1,0 +1,19 @@
+.DS_Store
+
+# backyard flyer solution for testing
+examples/p0.py
+
+# Log files
+Logs
+
+# tmp files
+*.swn
+*.swo
+*.swp
+*~
+
+# python 
+__pycache__/
+build
+dist
+*.egg-info
