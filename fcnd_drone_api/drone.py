@@ -2,6 +2,7 @@ import numpy as np
 
 from fcnd_drone_api.logging import Logger
 from fcnd_drone_api.messaging import MsgID
+import traceback
 
 
 class Drone:
@@ -174,16 +175,13 @@ class Drone:
     def callbacks(self):
 
         @self.connection.on_message(MsgID.ANY)
-        def on_message_receive(_, msg_name, msg):
+        def on_message_receive(msg_name, msg):
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-
-            print('Message received', msg_name)
+            print('Message received', msg_name, msg)
             if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
             if msg_name in self._update_property.keys():
                 self._update_property[msg_name](msg)
-
-            self.notify_message_listeners(msg_name, msg)
             self.log_telemetry(msg_name, msg)
 
     def log_telemetry(self, msg_name, msg):
@@ -249,58 +247,11 @@ class Drone:
         def decorator(fn):
             if isinstance(name, list):
                 for n in name:
-                    self.add_message_listener(n, fn)
+                    self.connection.add_message_listener(n, fn)
             else:
-                self.add_message_listener(name, fn)
+                self.connection.add_message_listener(name, fn)
 
         return decorator
-
-    def add_message_listener(self, name, fn):
-        """Add the function, fn, as a callback for the message type, name
-
-        For example:
-            self.add_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
-            OR
-            self.add_message_listener('*',all_msg_listener)
-
-        These can be added anywhere in the code and are identical to initializing a callback with the decorator
-        """
-        if name not in self._message_listeners:
-            self._message_listeners[name] = []
-        if fn not in self._message_listeners[name]:
-            self._message_listeners[name].append(fn)
-
-    def remove_message_listener(self, name, fn):
-        """Remove the function, fn, as a callback for the message type, name
-
-        For example:
-            self.remove_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
-
-        """
-        name = str(name)
-        if name in self._message_listeners:
-            if fn in self._message_listeners[name]:
-                self._message_listeners[name].remove(fn)
-                if len(self._message_listeners[name]) == 0:
-                    del self._message_listeners[name]
-
-    def notify_message_listeners(self, name, msg):
-        """Passes the message to the appropriate listeners"""
-        for fn in self._message_listeners.get(name, []):
-            try:
-                # fn(self, name, msg)
-                fn(name, msg)
-            except Exception as e:
-                print('>>> Exception in message handler for %s' % name)
-                print('>>> ' + str(e))
-
-        for fn in self._message_listeners.get(MsgID.ANY, []):
-            try:
-                # fn(self, name, msg)
-                fn(name, msg)
-            except Exception as e:
-                print('>>> Exception in message handler for %s' % name)
-                print('>>> ' + str(e))
 
     #
     # Command method wrappers
@@ -311,14 +262,14 @@ class Drone:
         try:
             self.connection.arm()
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def disarm(self):
         """Send a disarm command to the drone"""
         try:
             self.connection.disarm()
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def take_control(self):
         """If the drone is in guided mode this will switch to manual mode"""
@@ -326,14 +277,14 @@ class Drone:
         try:
             self.connection.take_control()
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def release_control(self):
         """Take control of the drone """
         try:
             self.connection.release_control()
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def cmd_position(self, north, east, down, heading):
         """ Command the local position and drone heading
@@ -345,21 +296,21 @@ class Drone:
         try:
             self.connection.cmd_position(north, east, down, heading)
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def takeoff(self, target_altitude):
         """Command the drone to takeoff to the target_alt (in meters)"""
         try:
             self.connection.takeoff(self.local_position[0], self.local_position[1], target_altitude)
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def land(self):
         """Command the drone to land at its current position"""
         try:
             self.connection.land(self.local_position[0], self.local_position[1])
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, collective):
         """Command the drone orientation rates
@@ -369,7 +320,7 @@ class Drone:
         try:
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, collective)
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def cmd_velocity(self, velocity_north, velocity_east, velocity_down, heading):
         """Command the drone velocity
@@ -379,15 +330,14 @@ class Drone:
         try:
             self.connection.cmd_velocity(velocity_north, velocity_east, velocity_down, heading)
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def cmd_motors(self, motor_rpm):
         """Command the rmp of the motors"""
         try:
             self.connection.cmd_motors(motor_rpm)
-
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def set_home_position(self, longitude, latitude, altitude):
         """Set the drone's home position to these coordinates"""
@@ -395,7 +345,7 @@ class Drone:
             self.connection.set_home_position(latitude, longitude, altitude)
 
         except Exception as e:
-            print('Caught Exception >>>', e)
+            traceback.print_exc()
 
     def start_log(self, directory, name):
         self.log = Logger(directory, name)

@@ -131,7 +131,7 @@ class MavlinkConnection(connection.Connection):
 
             # wait for a new message
             msg = self.wait_for_message()
-            # print('message received', msg)
+            print('message received', msg)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
@@ -155,6 +155,7 @@ class MavlinkConnection(connection.Connection):
             timestamp = msg._timestamp
             # parse out the message based on the type and call
             # the appropriate callbacks
+
             if msg.get_type() == 'GLOBAL_POSITION_INT':
                 # parse out the gps position and trigger that callback
                 gps = mt.GlobalFrameMessage(timestamp, float(msg.lat) / 1e7, float(msg.lon) / 1e7,
@@ -184,6 +185,7 @@ class MavlinkConnection(connection.Connection):
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
+                print('Local position', pos)
                 self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                 # parse out the velocity and trigger that callback
@@ -474,8 +476,8 @@ class MavlinkConnection(connection.Connection):
         mask |= (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_YAW.value |
                  PositionMask.MASK_IGNORE_ACCELERATION.value | PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
-            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED.value, mask,
-            n, e, d, 0, 0, 0, 0, 0, 0, 0, 0)
+            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
+            d, 0, 0, 0, 0, 0, 0, 0, 0)
         self.send_message(msg)
 
     def set_home_position(self, lat, lon, alt):

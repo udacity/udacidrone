@@ -7,6 +7,7 @@ communication with a drone.
 from abc import ABCMeta, abstractmethod
 
 from fcnd_drone_api.messaging import MsgID
+import traceback
 
 
 class Connection():
@@ -69,7 +70,6 @@ class Connection():
             fn: the callback function to trigger when the message comes in
         """
 
-        name = str(name)
         if name not in self._message_listeners:
             self._message_listeners[name] = []
         if fn not in self._message_listeners[name]:
@@ -85,7 +85,6 @@ class Connection():
             fn: the callback function to remove from the list
         """
 
-        name = str(name)
         if name in self._message_listeners:
             if fn in self._message_listeners[name]:
                 self._message_listeners[name].remove(fn)
@@ -102,27 +101,19 @@ class Connection():
             name: the name of the message (see message_types.py for a valid set)
             msg: the message data to pass to each of the listeners
         """
-
-        # handle the message specific listeners
         for fn in self._message_listeners.get(name, []):
             try:
-                # print('in here', name, fn, msg)
+                print('Executing {0} callback'.format(name))
                 fn(name, msg)
             except Exception as e:
-                pass
-                # i = 1
-                # print("[CONNECTION ERROR] unable to handle message listener for " + name)
-                # print(e)
+                traceback.print_exc()
 
-            # handle the listeners that are registered for all messages
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
+                print('Executing {0} callback'.format(MsgID.ANY))
                 fn(name, msg)
             except Exception as e:
-                pass
-                # i = 1
-                # print("[CONNECTION ERROR] unable to handle * message listener for " + name)
-                # print(e)
+                traceback.print_exc()
 
     @property
     def threaded(self):

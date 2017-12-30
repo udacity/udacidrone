@@ -9,7 +9,7 @@ class Logger:
         filepath = os.path.join(directory, filename)
         print(filepath)
         if not os.path.exists(directory):
-            os.makedirs(os.path.dirname(directory))
+            os.makedirs(directory)
 
         self.log = open(filepath, 'w')
         self.num_data = 0
