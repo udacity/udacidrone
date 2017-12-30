@@ -6,8 +6,7 @@ import traceback
 
 
 class Drone:
-    """
-    """
+    """"""
 
     def __init__(self, connection, tlog_name="TLog.txt"):
         self.connection = connection
@@ -104,7 +103,6 @@ class Drone:
         return np.array([self._north, self._east, self._down])
 
     def _update_local_position(self, msg):
-        print('Updating local position', msg)
         self._north = msg.north
         self._east = msg.east
         self._down = msg.down
@@ -257,11 +255,13 @@ class Drone:
             traceback.print_exc()
 
     def cmd_position(self, north, east, down, heading):
-        """ Command the local position and drone heading
+        """Command the local position and drone heading.
+
+        Args:
             north: local north in meters
             east: local east in meters
             down: local down in meters (positive down)
-            heading: drone yaw in degrees
+            heading: drone yaw in radians
         """
         try:
             self.connection.cmd_position(north, east, down, heading)
@@ -282,20 +282,28 @@ class Drone:
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, collective):
-        """Command the drone orientation rates
-            roll_rate,pitch_rate,yaw_rate: in deg/s
-            collective: upward acceleration in m/s**2
+    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
+        """Command the drone orientation rates.
+
+        Args:
+            roll_rate: in radians/second
+            pitch_rate: in radians/second
+            yaw_rate: in radians/second
+            thrust: upward acceleration in meters/second^2
         """
         try:
-            self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, collective)
+            self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
 
     def cmd_velocity(self, velocity_north, velocity_east, velocity_down, heading):
-        """Command the drone velocity
-            north_velocity,east_velocity,down_velocity: in m/s
-            heading: in degrees
+        """Command the drone velocity.
+            
+        Args:
+            north_velocity: in meters/second
+            east_velocity: in meters/second
+            down_velocity: in meters/second
+            heading: in radians
         """
         try:
             self.connection.cmd_velocity(velocity_north, velocity_east, velocity_down, heading)

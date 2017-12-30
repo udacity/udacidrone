@@ -3,7 +3,8 @@ import os
 import numpy as np
 
 
-class Logger:
+class Logger(object):
+    """"""
 
     def __init__(self, directory='Logs', filename='NavLog.txt'):
         filepath = os.path.join(directory, filename)

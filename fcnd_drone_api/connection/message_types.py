@@ -1,4 +1,6 @@
 """
+TODO: This likely to undergo some changes.
+
 Message Types
 
 custom set of message types to use between a specific connection type and 
@@ -191,9 +193,9 @@ class FrameMessage(Message):
     Messages defining the rotation between frames (Euler angles or Quaternions)
 
     Attributes:
-        _roll: drone roll in degrees
-        _pitch: drone pitch in degrees
-        _yaw: drone yaw in degrees
+        _roll: drone roll in radians
+        _pitch: drone pitch in radians
+        _yaw: drone yaw in radians
         _q0: 0th element of quaterion
         _q1: 1th element of quaterion
         _q2: 2th element of quaterion
@@ -232,23 +234,23 @@ class FrameMessage(Message):
         self._q2 = q2
         self._q3 = q3
 
-        self._roll = math.degrees(math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2)))
-        self._pitch = math.degrees(math.asin(2.0 * (q0 * q2 - q3 * q1)))
-        self._yaw = math.degrees(math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2)))
+        self._roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2))
+        self._pitch = math.asin(2.0 * (q0 * q2 - q3 * q1))
+        self._yaw = math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2))
 
     @property
     def roll(self):
-        """float: roll in degrees """
+        """roll in radians"""
         return self._roll
 
     @property
     def pitch(self):
-        """float: pitch in degrees """
+        """pitch in radians"""
         return self._pitch
 
     @property
     def yaw(self):
-        """float: yaw in degrees [0, 360) """
+        """yaw in radians"""
         return self._yaw
 
     @property
@@ -291,7 +293,7 @@ class DistanceSensorMessage(Message):
     Attributes:
         _min_distance: minimum detectable distance in meters
         _max_distance: maximum detectable distance in meters
-        _direction: the heading of the sensor for this measurement in degrees
+        _direction: the heading of the sensor for this measurement in radians
         _measurement: the distance measured in meters
         _covariance: the covariance of the measurement
     """
