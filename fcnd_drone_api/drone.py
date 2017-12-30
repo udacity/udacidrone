@@ -6,6 +6,8 @@ import traceback
 
 
 class Drone:
+    """
+    """
 
     def __init__(self, connection, tlog_name="TLog.txt"):
         self.connection = connection
@@ -220,28 +222,6 @@ class Drone:
 
             log_dict[line_split[0]] = entry
         return log_dict
-
-    def msg_callback(self, name):
-        """Decorator for being able to add a listener for a specific message type
-
-        @self.msg_callback(message_types.MSG_GLOBAL_POSITION)
-        def gps_listener(name, gps):
-            # do whatever with the gps, which will be of type GlobalPosition
-
-        or
-
-        @self.msg_callback('*')
-        def all_msg_listener(name, msg):
-            # this is a listener for all message types, so break out the msg as defined by the name
-
-        These listeners need to be defined within the method self.callbacks() or directly within
-        self.__init__() which calls self.callbacks.
-
-        Callbacks defined with decorators cannot be removed, use add_message_listener/remove_message_listener
-        if the callback needs to be removed.
-        """
-
-        return self.connection.on_message(name)
 
     #
     # Command method wrappers

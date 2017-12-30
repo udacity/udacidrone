@@ -1,6 +1,6 @@
 """API definition for connections to a drone.
 
-Defines a class to be subclassed by specific protocol implementations for 
+Defines a class to be subclassed by specific protocol implementations for
 communication with a drone.
 """
 
@@ -14,7 +14,7 @@ class Connection():
     """
     Abstract class for a connection to a drone.
 
-    Outlines the required API functions (interface) that must be 
+    Outlines the required API functions (interface) that must be
     implemented to satisfy the drone communication protocol.
 
     Attributes:
@@ -62,7 +62,7 @@ class Connection():
     def add_message_listener(self, name, fn):
         """adds a listener to the set of listeners
 
-        adds a callback function for the specified message to the set of 
+        adds a callback function for the specified message to the set of
         listeners to be triggered when messages arrive.
 
         Args:
@@ -77,9 +77,9 @@ class Connection():
 
     def remove_message_listener(self, name, fn):
         """remove a listener from the set of listeners
-        
+
         removes a callback function for the specified message.
-        
+
         Args:
             name: the name of the message (see message_types.py for a valid set)
             fn: the callback function to remove from the list
@@ -93,10 +93,10 @@ class Connection():
 
     def notify_message_listeners(self, name, msg):
         """trigger all callbacks for a given message
-        
-        goes through list of registered listeners (callback functions) for a 
+
+        goes through list of registered listeners (callback functions) for a
         given message and call each function in turn.
-        
+
         Args:
             name: the name of the message (see message_types.py for a valid set)
             msg: the message data to pass to each of the listeners
@@ -133,9 +133,9 @@ class Connection():
     @abstractmethod
     def dispatch_loop(self):
         """main loop that triggers callbacks when new messages come in
-        
-        dispatch loop that runs and when each new message comes in over the 
-        implemented protocol, translates the message to those defines in 
+
+        dispatch loop that runs and when each new message comes in over the
+        implemented protocol, translates the message to those defines in
         `message_types.py` and triggers the callbacks.
         """
         pass
@@ -152,8 +152,7 @@ class Connection():
 
     @abstractmethod
     def take_control(self):
-        """command to request control from a drone
-        
+        """
         command the drone to switch into a mode that allows external control.
         e.g. for PX4 this commands 'offboard' mode, while for APM this commands 'guided' mode
         """
@@ -167,9 +166,9 @@ class Connection():
     @abstractmethod
     def cmd_attitude(self, yaw, pitch, roll, collective):
         """command to set the desired attitude
-        
+
         sends a command to the drone to set a specific attitude and thrust level
-        
+
         Args:
             yaw: the desired yaw in degrees
             pitch: the desired pitch in degrees
@@ -181,9 +180,9 @@ class Connection():
     @abstractmethod
     def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, collective):
         """command to set the desired attitude rates
-        
+
         sends a command to the drone to set a specific attitude rate and thrust level
-        
+
         Args:
             yaw_rate: the desired yaw rate in degrees/second
             pitch_rate: the desired pitch rate in degrees/second
@@ -195,10 +194,10 @@ class Connection():
     @abstractmethod
     def cmd_velocity(self, vn, ve, vd, heading):
         """command to set the desired velocity
-        
+
         sends a command to the drone to set a specific velocity
         defined in a local frame (NED frame)
-        
+
         Args:
             vn: desired north velocity component in meters/second
             ve: desired east velocity component in meters/second
@@ -210,10 +209,10 @@ class Connection():
     @abstractmethod
     def cmd_motors(self, motor1, motor2, motor3, motor4):
         """command the thrust levels for each motor on a quadcopter
-        
+
         sends a command to set the normalized thrust levels directly
         for each of the 4 motors on a quadcopter.
-        
+
         Args:
             motor1: normalized thrust level for motor 1 on [0, 1]
             motor2: normalized thrust level for motor 2 on [0, 1]
@@ -225,10 +224,10 @@ class Connection():
     @abstractmethod
     def cmd_position(self, n, e, d, heading):
         """command to set the desired position
-        
+
         sends a command to the drone to set a position position
         defined in a local frame (NED frame)
-        
+
         Args:
             n: desired north position in meters
             e: desired east position in meters
@@ -243,7 +242,7 @@ class Connection():
 
         sends a takeoff command to the drone.
         note that some autopilots needs a full position for takeoff
-        and since this class is not aware of current position, (n, e) 
+        and since this class is not aware of current position, (n, e)
         must be passed along with d for this command.
 
         Args:
@@ -256,12 +255,12 @@ class Connection():
     @abstractmethod
     def land(self, n, e):
         """command to tell the drone to land
-        
+
         sends a land command to the drone.
         note that some autopilots needs a full position for landing
-        and since this class is not aware of the current position, (n, e) 
+        and since this class is not aware of the current position, (n, e)
         must be passed along (d is automatically set to 0).
-        
+
         Args:
             n: current north position in meters
             e: current east position in meters
@@ -271,9 +270,9 @@ class Connection():
     @abstractmethod
     def set_home_position(self, lat, lon, alt):
         """command to change the home position of the drone
-        
+
         sends a command to change the drone's home position to that specified.
-        
+
         Args:
             lat: desired home latitude in decimal degrees
             lon: desired home longitude in decimal degrees

@@ -46,9 +46,9 @@ class PositionMask(Enum):
 class MavlinkConnection(connection.Connection):
     """Connection implementation for Mavlink protocol
 
-    A specific implementation of the required communication to a drone executed 
+    A specific implementation of the required communication to a drone executed
     over the Mavlink protocol.
-    Specifically designed with the PX4 autopilot in mind, and currently been 
+    Specifically designed with the PX4 autopilot in mind, and currently been
     tested against that autopilot software.
 
     TCP connection (protocol, ip, port):
@@ -60,12 +60,12 @@ class MavlinkConnection(connection.Connection):
 
     def __init__(self, device, threaded=False, PX4=False):
         """constructor for mavlink based drone connection
-        
+
         initialize everything needed for a mavlink based connection to a drone.
-        
+
         Note: when threaded, the read loop runs as a daemon, meaning once all
-        other processes stop the thread immediately dies, therefore some 
-        acitivty (e.g. a while True loop) needs to be running on the main 
+        other processes stop the thread immediately dies, therefore some
+        acitivty (e.g. a while True loop) needs to be running on the main
         thread for this thread to survive.
 
         Args:
@@ -115,11 +115,11 @@ class MavlinkConnection(connection.Connection):
         """main loop to read from the drone
 
         continually listens to the drone connection for incoming messages.
-        for each new message, parses out the mavlink, creates messages as 
+        for each new message, parses out the mavlink, creates messages as
         defined in `message_types.py`, and triggers all callbacks registered
         for that type of message.
-        Also keeps an eye on the state of connection, and if nothing has 
-        happened in more than 5 seconds, sends a special termination message 
+        Also keeps an eye on the state of connection, and if nothing has
+        happened in more than 5 seconds, sends a special termination message
         to indicate that the drone connection has died.
 
         This should not be called directly by an outside class!
@@ -236,9 +236,9 @@ class MavlinkConnection(connection.Connection):
     def command_loop(self):
         """
         Main loop for sending commands
-        
-        Loop that is run a separate thread to be able to send messages to the 
-        target drone.  Uses the message queue `self._out_msg_queue` as the 
+
+        Loop that is run a separate thread to be able to send messages to the
+        target drone.  Uses the message queue `self._out_msg_queue` as the
         queue of messages to run.
 
         Currently runs at 5Hz.
@@ -288,11 +288,11 @@ class MavlinkConnection(connection.Connection):
 
     def send_message(self, msg):
         """send a given mavlink message to the drone
-        
+
         If connected with a PX4 autopilot, add the MAVLinkMessage to the
         command queue to be handled by the command loop (running in the write
         thread).  Otherwise immediately send the message.
-        
+
         Args:
             msg: a MAVLinkMessage to be sent to the drone
         """
@@ -310,14 +310,12 @@ class MavlinkConnection(connection.Connection):
             self._master.mav.send(msg)
 
     def wait_for_message(self):
-        """helper to wait for a new mavlink message
-        
-        calls pymavlink's blocking read function to read a next message, 
-        blocking for up to a timeout of 1s.
-        
+        """
+        Helper to wait for a new mavlink message calls pymavlink's blocking
+        read function to read a next message, blocking for up to a timeout of 1s.
+
         Returns:
-            mavlink message of the message that was read, 
-            or None if no valid message
+            mavlink message of the message that was read or None if no valid message
         """
 
         # NOTE: this returns a mavlink message
@@ -373,10 +371,9 @@ class MavlinkConnection(connection.Connection):
         self._master.close()
 
     def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
-        """helper function to send a COMMAND_LONG message
-        
-        packs and sends a COMMAND_LONG mavlink function.
-        
+        """
+        Packs and sends a Mavlink COMMAND_LONG message
+
         Args:
             command_type: the command type, as defined by MAV_CMD_*
             param1: param1 as defined by the specific command
@@ -476,8 +473,8 @@ class MavlinkConnection(connection.Connection):
         mask |= (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_YAW.value |
                  PositionMask.MASK_IGNORE_ACCELERATION.value | PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
-            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
-            d, 0, 0, 0, 0, 0, 0, 0, 0)
+            time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask,
+            n, e, d, 0, 0, 0, 0, 0, 0, 0, 0)
         self.send_message(msg)
 
     def set_home_position(self, lat, lon, alt):
