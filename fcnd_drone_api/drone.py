@@ -76,9 +76,6 @@ class Drone:
             MsgID.BAROMETER: self._update_barometer
         }
 
-        # self.conn.add_message_listener('*',self.on_message_receive)
-
-        self._message_listeners = self.connection._message_listeners
         self.callbacks()
         self.tlog = Logger("Logs", tlog_name)
 
@@ -225,7 +222,7 @@ class Drone:
         return log_dict
 
     def msg_callback(self, name):
-        """decorator for being able to add a listener for a specific message type
+        """Decorator for being able to add a listener for a specific message type
 
         @self.msg_callback(message_types.MSG_GLOBAL_POSITION)
         def gps_listener(name, gps):
@@ -244,14 +241,7 @@ class Drone:
         if the callback needs to be removed.
         """
 
-        def decorator(fn):
-            if isinstance(name, list):
-                for n in name:
-                    self.connection.add_message_listener(n, fn)
-            else:
-                self.connection.add_message_listener(name, fn)
-
-        return decorator
+        return self.connection.on_message(name)
 
     #
     # Command method wrappers
