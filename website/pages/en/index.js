@@ -76,13 +76,12 @@ class HomeSplash extends React.Component {
     let language = this.props.language || '';
     return (
       <SplashContainer>
-        <Logo img_src={imgUrl('docusaurus.svg')} />
+        {/* <Logo img_src={imgUrl('docusaurus.svg')} /> */}
         <div className="inner">
           <ProjectTitle />
           <PromoSection>
-            <Button href="#try">Try It Out</Button>
-            <Button href={docUrl('doc1.html', language)}>Example Link</Button>
-            <Button href={docUrl('doc2.html', language)}>Example Link 2</Button>
+            <Button href={docUrl('getting-started.html', language)}>Getting Started</Button>
+            {/* <Button href={docUrl('doc2.html', language)}>Example Link 2</Button> */}
           </PromoSection>
         </div>
       </SplashContainer>
@@ -100,18 +99,14 @@ const Block = props => (
 );
 
 const Features = props => (
-  <Block layout="fourColumn">
+  <Block align="center" layout="fourColumn">
     {[
       {
         content: 'This is the content of my feature',
-        image: imgUrl('docusaurus.svg'),
-        imageAlign: 'top',
         title: 'Feature One',
       },
       {
         content: 'The content of my second feature',
-        image: imgUrl('docusaurus.svg'),
-        imageAlign: 'top',
         title: 'Feature Two',
       },
     ]}
@@ -205,10 +200,10 @@ class Index extends React.Component {
         <HomeSplash language={language} />
         <div className="mainContainer">
           <Features />
-          <FeatureCallout />
-          <LearnHow />
-          <TryOut />
-          <Description />
+          {/* <FeatureCallout /> */}
+          {/* <LearnHow />
+          <TryOut /> */}
+          {/* <Description /> */}
           <Showcase language={language} />
         </div>
       </div>
