@@ -12,18 +12,18 @@ except (IOError, ImportError, OSError) as e:
 
 __version__ = '0.0.1'
 
-with open('./fcnd_drone_api/__version__.py') as f:
+with open('./udacidrone/__version__.py') as f:
     for line in f:
         if line.startswith('__version__ = '):
             version = line.strip().split()[2][1:-1]
 
 setup(
-    name='fcnd_drone_api',
+    name='udacidrone',
     version=version,
     description="Drone API for Udacity's Flying Car Nanodegree",
     long_description=long_description,
     packages=find_packages(exclude=('tests*',)),
-    url='https://github.com/udacity/FCND-Drone-API',
+    url='https://github.com/udacity/udacidrone',
     author='Udacity FCND Team',
     # TODO: Add team email
     author_email='',

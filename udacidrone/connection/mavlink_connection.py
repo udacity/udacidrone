@@ -6,7 +6,7 @@ from enum import Enum
 
 from pymavlink import mavutil
 
-from fcnd_drone_api.messaging import MsgID
+from udacidrone.messaging import MsgID
 
 from . import message_types as mt
 from . import connection
