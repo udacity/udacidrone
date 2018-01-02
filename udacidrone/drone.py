@@ -298,7 +298,7 @@ class Drone:
 
     def cmd_velocity(self, velocity_north, velocity_east, velocity_down, heading):
         """Command the drone velocity.
-            
+
         Args:
             north_velocity: in meters/second
             east_velocity: in meters/second
