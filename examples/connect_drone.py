@@ -1,7 +1,7 @@
 import time
 
-from fcnd_drone_api import Drone
-from fcnd_drone_api.connection import MavlinkConnection
+from udacidrone import Drone
+from udacidrone.connection import MavlinkConnection
 
 if __name__ == "__main__":
     conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)

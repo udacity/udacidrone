@@ -6,7 +6,7 @@ communication with a drone.
 
 from abc import ABCMeta, abstractmethod
 
-from fcnd_drone_api.messaging import MsgID
+from udacidrone.messaging import MsgID
 import traceback
 
 
@@ -45,7 +45,7 @@ class Connection(object):
 
         Example:
 
-            from fcnd_drone_api.messaging import MsgID
+            from udacidrone.messaging import MsgID
 
             @conn.on_message(MsgID.GLOBAL_POSITION)
             def gps_listener(_, name, gps):

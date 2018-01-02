@@ -1,7 +1,7 @@
 import numpy as np
 
-from fcnd_drone_api.logging import Logger
-from fcnd_drone_api.messaging import MsgID
+from udacidrone.logging import Logger
+from udacidrone.messaging import MsgID
 import traceback
 
 
