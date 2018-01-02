@@ -102,13 +102,17 @@ const Features = props => (
   <Block align="center" layout="fourColumn">
     {[
       {
-        content: 'This is the content of my feature',
-        title: 'Feature One',
+        title: 'Simple',
+        content: 'Made first and foremost for **educational** purposes.',
       },
       {
-        content: 'The content of my second feature',
-        title: 'Feature Two',
+        title: 'Hardware Support',
+        content: 'Take your code from simulation to real hardware with **minimal** changes',
       },
+      // {
+      //   title: 'Composable Primitives',
+      //   content: '',
+      // },
     ]}
   </Block>
 );
