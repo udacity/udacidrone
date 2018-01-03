@@ -16,4 +16,4 @@ class MsgID(Enum):
     RAW_ACCELEROMETER = auto()
     BAROMETER = auto()
     DISTANCE_SENSOR = auto()
-    ATTITUDE_TARGET = auto()
+    ATTITUDE = auto()
