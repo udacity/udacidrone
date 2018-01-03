@@ -29,7 +29,6 @@ class BackyardFlyer(Drone):
     def __init__(self, connection):
         super().__init__(connection)
         self.target_position = np.array([0.0, 0.0, 0.0])
-        # self.global_home = np.array([0.0,0.0,0.0])  # can't set this here, no setter for this property
         self.all_waypoints = []
         self.in_mission = True
         self.check_state = {}
@@ -37,41 +36,39 @@ class BackyardFlyer(Drone):
         # initial state
         self.flight_state = States.MANUAL
 
-    def callbacks(self):
-        """Define your callbacks within here"""
-        super().callbacks()
+        # register all your callbacks here
+        self.register_callback(MsgID.LOCAL_POSITION, self.local_position_callback)
+        self.register_callback(MsgID.LOCAL_VELOCITY, self.velocity_callback)
+        self.register_callback(MsgID.STATE, self.state_callback)
 
-        @self.connection.on_message(MsgID.LOCAL_POSITION)
-        def local_position_callback(msg_name, msg):
-            if self.flight_state == States.TAKEOFF:
-                if -1.0 * msg.down > 0.95 * self.target_position[2]:
-                    self.all_waypoints = self.calculate_box()
+    def local_position_callback(self, msg_name, msg):
+        if self.flight_state == States.TAKEOFF:
+            if -1.0 * msg.down > 0.95 * self.target_position[2]:
+                self.all_waypoints = self.calculate_box()
+                self.waypoint_transition()
+        elif self.flight_state == States.WAYPOINT:
+            if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
+                if len(self.all_waypoints) > 0:
                     self.waypoint_transition()
-            elif self.flight_state == States.WAYPOINT:
-                if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
-                    if len(self.all_waypoints) > 0:
-                        self.waypoint_transition()
-                    else:
-                        self.landing_transition()
+                else:
+                    self.landing_transition()
 
-        @self.connection.on_message(MsgID.LOCAL_VELOCITY)
-        def velocity_callback(msg_name, msg):
-            if self.flight_state == States.LANDING:
-                if self.global_position[2] - self.global_home[2] < 0.1:
-                    if abs(msg.down) < 0.01:
-                        self.disarming_transition()
+    def velocity_callback(self, msg_name, msg):
+        if self.flight_state == States.LANDING:
+            if self.global_position[2] - self.global_home[2] < 0.1:
+                if abs(msg.down) < 0.01:
+                    self.disarming_transition()
 
-        @self.connection.on_message(MsgID.STATE)
-        def state_callback(msg_name, msg):
-            if self.in_mission:
-                if self.flight_state == States.MANUAL:
-                    self.arming_transition()
-                elif self.flight_state == States.ARMING:
-                    if msg.armed:
-                        self.takeoff_transition()
-                elif self.flight_state == States.DISARMING:
-                    if ~msg.armed:
-                        self.manual_transition()
+    def state_callback(self, msg_name, msg):
+        if self.in_mission:
+            if self.flight_state == States.MANUAL:
+                self.arming_transition()
+            elif self.flight_state == States.ARMING:
+                if msg.armed:
+                    self.takeoff_transition()
+            elif self.flight_state == States.DISARMING:
+                if ~msg.armed:
+                    self.manual_transition()
 
     def calculate_box(self):
         print("Setting Home")

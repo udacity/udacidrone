@@ -77,7 +77,25 @@ class Drone:
             MsgID.BAROMETER: self._update_barometer
         }
 
-        self.callbacks()
+        # set the internal callbacks list to an empty dict
+        self._callbacks = {}
+
+        # configure this drone class to listen to all of the messages from the connection
+
+        def on_message_receive(msg_name, msg):
+            """Sorts incoming messages, updates the drone state variables and runs callbacks"""
+            print('Message received', msg_name, msg)
+            if msg_name == MsgID.CONNECTION_CLOSED:
+                self.stop()
+            if msg_name in self._update_property.keys():
+                self._update_property[msg_name](msg)
+            self.notify_callbacks(msg_name, msg)  # pass it along to these listeners
+            self.log_telemetry(msg_name, msg)
+
+        # add the above callback function as a listener for all connection messages
+        self.connection.add_message_listener(MsgID.ANY, on_message_receive)
+
+
         self.tlog = Logger("Logs", tlog_name)
 
     @property
@@ -169,18 +187,6 @@ class Drone:
     def _update_barometer(self, msg):
         self._baro_altitude = msg.altitude
 
-    def callbacks(self):
-
-        @self.connection.on_message(MsgID.ANY)
-        def on_message_receive(msg_name, msg):
-            """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-            print('Message received', msg_name, msg)
-            if msg_name == MsgID.CONNECTION_CLOSED:
-                self.stop()
-            if msg_name in self._update_property.keys():
-                self._update_property[msg_name](msg)
-            self.log_telemetry(msg_name, msg)
-
     def log_telemetry(self, msg_name, msg):
         """Save the msg information to the telemetry log"""
         if self.tlog.open:
@@ -220,6 +226,57 @@ class Drone:
 
             log_dict[line_split[0]] = entry
         return log_dict
+
+    #
+    # Handling of internal messages for callbacks
+    #
+
+    def register_callback(self, name, fn):
+        """Add the function, fn, as a callback for the message type, name
+        
+        For example:
+            self.add_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
+            
+            OR
+            self.add_message_listener('*',all_msg_listener)
+            
+        These can be added anywhere in the code and are identical to initializing a callback with the decorator
+        """
+        if name not in self._callbacks:
+            self._callbacks[name] = []
+        if fn not in self._callbacks[name]:
+            self._callbacks[name].append(fn)
+
+    def remove_callback(self, name, fn):
+        """Remove the function, fn, as a callback for the message type, name
+        
+        For example:
+            self.remove_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
+            
+        """
+        if name in self._callbacks:
+            if fn in self._callbacks[name]:
+                self._callbacks[name].remove(fn)
+                if len(self._callbacks[name]) == 0:
+                    del self._callbacks[name]
+
+    def notify_callbacks(self, name, msg):
+        """Passes the message to the appropriate listeners"""
+        for fn in self._callbacks.get(name, []):
+            try:
+                print('Drone executing {0} callback'.format(name))
+                fn(name, msg)
+            except Exception as e:
+                traceback.print_exc()
+
+        for fn in self._callbacks.get('*', []):
+            try:
+                print('Drone executing {0} callback'.format(MsgId.ANY))
+                fn(name, msg)
+            except Exception as e:
+                traceback.print_exc()
+
+
 
     #
     # Command method wrappers
