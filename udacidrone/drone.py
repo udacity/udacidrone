@@ -265,14 +265,14 @@ class Drone:
         for fn in self._callbacks.get(name, []):
             try:
                 print('Drone executing {0} callback'.format(name))
-                fn(name, msg)
+                fn()
             except Exception as e:
                 traceback.print_exc()
 
         for fn in self._callbacks.get('*', []):
             try:
                 print('Drone executing {0} callback'.format(MsgId.ANY))
-                fn(name, msg)
+                fn(name)
             except Exception as e:
                 traceback.print_exc()
 
