@@ -269,7 +269,7 @@ class Drone:
             except Exception as e:
                 traceback.print_exc()
 
-        for fn in self._callbacks.get('*', []):
+        for fn in self._callbacks.get(MsgId.ANY, []):
             try:
                 print('Drone executing {0} callback'.format(MsgId.ANY))
                 fn(name)
