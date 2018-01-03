@@ -153,6 +153,7 @@ class MavlinkConnection(connection.Connection):
             # parse out the message based on the type and call
             # the appropriate callbacks
 
+            # http://mavlink.org/messages/common/#GLOBAL_POSITION_INT
             if msg.get_type() == 'GLOBAL_POSITION_INT':
                 # parse out the gps position and trigger that callback
                 gps = mt.GlobalFrameMessage(timestamp, float(msg.lat) / 1e7, float(msg.lon) / 1e7,
@@ -163,6 +164,7 @@ class MavlinkConnection(connection.Connection):
                 vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vx) / 100)
                 self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
+            # http://mavlink.org/messages/common/#HEARTBEAT
             elif msg.get_type() == 'HEARTBEAT':
                 motors_armed = (msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
 
@@ -179,6 +181,7 @@ class MavlinkConnection(connection.Connection):
                 state = mt.StateMessage(timestamp, motors_armed, guided_mode)
                 self.notify_message_listeners(MsgID.STATE, state)
 
+            # http://mavlink.org/messages/common#LOCAL_POSITION_NED
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
@@ -189,12 +192,14 @@ class MavlinkConnection(connection.Connection):
                 vel = mt.LocalFrameMessage(timestamp, msg.vx, msg.vy, msg.vz)
                 self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
+            # http://mavlink.org/messages/common#HOME_POSITION
             elif msg.get_type() == 'HOME_POSITION':
                 home = mt.GlobalFrameMessage(timestamp,
                                              float(msg.latitude) / 1e7,
                                              float(msg.longitude) / 1e7, float(msg.altitude) / 1000)
                 self.notify_message_listeners(MsgID.GLOBAL_HOME, home)
 
+            # http://mavlink.org/messages/common/#SCALED_IMU
             elif msg.get_type() == 'SCALED_IMU':
                 # break out the message into its respective messages for here
                 accel = mt.BodyFrameMessage(timestamp, msg.xacc, msg.yacc, msg.zacc)  # units are [mg]
@@ -203,10 +208,12 @@ class MavlinkConnection(connection.Connection):
                 gyro = mt.BodyFrameMessage(timestamp, msg.xgyro, msg.ygyro, msg.zgyro)  # units are [millirad/sec]
                 self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
+            # http://mavlink.org/messages/common#SCALED_PRESSURE
             elif msg.get_type() == 'SCALED_PRESSURE':
                 pressure = mt.BodyFrameMessage(timestamp, 0, 0, msg.press_abs)  # unit is [hectopascal]
                 self.notify_message_listeners(MsgID.BAROMETER, pressure)
 
+            # http://mavlink.org/messages/common#DISTANCE_SENSOR
             elif msg.get_type() == 'DISTANCE_SENSOR':
                 direction = 0
                 # TODO: parse orientation
@@ -217,8 +224,18 @@ class MavlinkConnection(connection.Connection):
                                                 float(msg.current_distance) / 100, float(msg.covariance) / 100)
                 self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
-            elif msg.get_type() == 'POSITION_TARGET_LOCAL_NED':
-                pass
+            # http://mavlink.org/messages/common#ATTITUDE_TARGET
+            elif msg.get_type() == 'ATTITUDE_TARGET':
+                timestamp = msg.time_boot_ms
+                # TODO: check if mask notifies us to ignore a field
+                mask = msg.type_mask
+                quat = msg.q
+
+                fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
+                self.notify_message_listeners(MsgID.ATTITUDE, fm)
+
+                gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
+                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
             # DEBUG
             elif msg.get_type() == 'STATUSTEXT':
@@ -391,21 +408,21 @@ class MavlinkConnection(connection.Connection):
         custom_sub_mode = 0  # not used for manual/offboard
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
 
-    def cmd_attitude(self, yaw, pitch, roll, collective):
+    def cmd_attitude(self, yaw, pitch, roll, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
         # TODO: convert the attitude to a quaternion
         q = [0, 0, 0, 0]
         mask = 0b00000111
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
-                                                          mask, q, 0, 0, 0, collective)
+                                                          mask, q, 0, 0, 0, thrust)
         self.send_message(msg)
 
-    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, collective):
+    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0, 0, 0, 0]
         mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
-                                                          mask, q, roll_rate, pitch_rate, yaw_rate, collective)
+                                                          mask, q, roll_rate, pitch_rate, yaw_rate, thrust)
         self.send_message(msg)
 
     def cmd_velocity(self, vn, ve, vd, heading):

@@ -203,9 +203,9 @@ class FrameMessage(Message):
     """
 
     def __init__(self, *args):
-        if len(*args) == 4:
+        if len(args) == 4:
             self.init_euler(args[0], args[1], args[2], args[3])
-        elif len(*args) == 5:
+        elif len(args) == 5:
             self.init_quaternion(args[0], args[1], args[2], args[3], args[4])
 
     def init_euler(self, time, roll, pitch, yaw):
@@ -215,12 +215,12 @@ class FrameMessage(Message):
         self._pitch = pitch
         self._yaw = yaw
 
-        sp = math.sin(math.radians(pitch / 2.0))
-        cp = math.cos(math.radians(pitch / 2.0))
-        sr = math.sin(math.radians(roll / 2.0))
-        cr = math.cos(math.radians(roll / 2.0))
-        sy = math.sin(math.radians(yaw / 2.0))
-        cy = math.cos(math.radians(yaw / 2.0))
+        sp = np.sin(np.radians(pitch / 2.0))
+        cp = np.cos(np.radians(pitch / 2.0))
+        sr = np.sin(np.radians(roll / 2.0))
+        cr = np.cos(np.radians(roll / 2.0))
+        sy = np.sin(np.radians(yaw / 2.0))
+        cy = np.cos(np.radians(yaw / 2.0))
 
         self._q0 = cr * cp * cy + sr * sp * sy
         self._q1 = sr * cp * cy - cr * sp * sy
@@ -234,9 +234,9 @@ class FrameMessage(Message):
         self._q2 = q2
         self._q3 = q3
 
-        self._roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2))
-        self._pitch = math.asin(2.0 * (q0 * q2 - q3 * q1))
-        self._yaw = math.atain2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2))
+        self._roll = np.arctan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1**2 + q2**2))
+        self._pitch = np.arcsin(2.0 * (q0 * q2 - q3 * q1))
+        self._yaw = np.arctan2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2**2 + q3**2))
 
     @property
     def roll(self):

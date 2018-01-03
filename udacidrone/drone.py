@@ -73,8 +73,8 @@ class Drone:
             MsgID.LOCAL_VELOCITY: self._update_local_velocity,
             MsgID.RAW_GYROSCOPE: self._update_gyro_raw,
             MsgID.RAW_ACCELEROMETER: self._update_acceleration_raw,
-            MsgID.ATTITUDE_TARGET: self._update_euler_angle,
-            MsgID.BAROMETER: self._update_barometer
+            MsgID.BAROMETER: self._update_barometer,
+            MsgID.ATTITUDE: self._update_attitude
         }
 
         self.callbacks()
@@ -134,11 +134,11 @@ class Drone:
         self._connected = True
 
     @property
-    def euler_angle(self):
+    def attitude(self):
         """Roll, pitch, yaw euler angles in radians"""
         return np.array([self._roll, self._pitch, self._yaw])
 
-    def _update_euler_angle(self, msg):
+    def _update_attitude(self, msg):
         self._roll = msg.roll
         self._pitch = msg.pitch
         self._yaw = msg.yaw
@@ -292,6 +292,10 @@ class Drone:
             thrust: upward acceleration in meters/second^2
         """
         try:
+            thrust = np.clip(thrust, -1, 1)
+            yaw_rate = np.clip(yaw_rate, -1, 1)
+            roll_rate = np.clip(roll_rate, -1, 1)
+            pitch_rate = np.clip(pitch_rate, -1, 1)
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
