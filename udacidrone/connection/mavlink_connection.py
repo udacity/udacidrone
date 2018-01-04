@@ -123,7 +123,7 @@ class MavlinkConnection(connection.Connection):
         """
 
         last_msg_time = time.time()
-        while (self._running):
+        while self._running:
             current_time = time.time()
 
             # wait for a new message
@@ -280,7 +280,7 @@ class MavlinkConnection(connection.Connection):
                 else:
                     # either set this is as the high rate command
                     # to repeatedly send or send it immediately
-                    if (msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET'):
+                    if msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET':
                         high_rate_command = msg
                     else:
                         self._master.mav.send(msg)
