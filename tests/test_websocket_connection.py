@@ -1,5 +1,3 @@
-"""
-"""
 import time
 
 from udacidrone import Drone
