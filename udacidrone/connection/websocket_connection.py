@@ -1,6 +1,6 @@
 import asyncio
+import logging
 import os
-import queue
 import time
 from enum import Enum
 from io import BytesIO
@@ -25,6 +25,8 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 # CONNECTION_TYPE_MAVLINK_APM = 2
 # CONNECTION_TYPE_PARROT = 3
 # CONNECTION_TYPE_DJI = 4
+
+logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
 class MainMode(Enum):
@@ -79,11 +81,11 @@ class WebSocketConnection(connection.Connection):
         self._ws = None
 
         # management
-        self._running = False
         self._target_system = 1
         self._target_component = 1
 
         self._send_rate = send_rate
+        self._running = False
 
         # seconds to wait of no messages before termination
         self._timeout = timeout
@@ -118,6 +120,7 @@ class WebSocketConnection(connection.Connection):
             self._ws = ws
             while self._running:
                 current_time = time.time()
+                # msg = await asyncio.wait_for(ws.recv(), self._timeout)
                 msg = await ws.recv()
                 msg = self.decode_message(msg)
                 print('Message received', msg)
@@ -132,7 +135,7 @@ class WebSocketConnection(connection.Connection):
                     outmsg = self._mav.heartbeat_encode(mavutil.mavlink.MAV_TYPE_GCS,
                                                         mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0,
                                                         mavutil.mavlink.MAV_STATE_ACTIVE)
-                    self.send_message(outmsg)
+                    await self.send_message(outmsg)
 
                 # if we haven't heard a message in a given amount of time
                 # send a termination message
@@ -142,14 +145,16 @@ class WebSocketConnection(connection.Connection):
                     self.notify_message_listeners(MsgID.CONNECTION_CLOSED, 0)
 
                     # stop this read loop
-                    self._running = False
+                    self.stop()
 
                 # update the time of the last message
                 last_msg_time = current_time
 
                 # this does indeed get timestamp, should double check format
                 # TODO: decide on timestamp format for messages
-                timestamp = msg._timestamp
+                # timestamp = msg._timestamp
+                # NOTE: set this to time.time() so it works
+                timestamp = time.time()
                 # parse out the message based on the type and call
                 # the appropriate callbacks
 
@@ -185,7 +190,6 @@ class WebSocketConnection(connection.Connection):
                 elif msg.get_type() == 'LOCAL_POSITION_NED':
                     # parse out the local positin and trigger that callback
                     pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                    print('Local position', pos)
                     self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                     # parse out the velocity and trigger that callback
@@ -241,54 +245,6 @@ class WebSocketConnection(connection.Connection):
                 elif msg.get_type() == 'STATUSTEXT':
                     print("[autopilot message] " + msg.text.decode("utf-8"))
 
-    def command_loop(self):
-        """
-        Main loop for sending commands.
-
-        Loop that is run a separate thread to be able to send messages to the
-        target drone.  Uses the message queue `self._out_msg_queue` as the
-        queue of messages to run.
-        """
-
-        # default to sending a position command to (0,0,0)
-        # this needs to be sending commands at a rate of at lease 2Hz in order
-        # for PX4 to allow a switch into offboard control.
-        mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
-                PositionMask.MASK_IGNORE_VELOCITY.value)
-        high_rate_command = self._mav.set_position_target_local_ned_encode(
-            0, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0)
-
-        last_write_time = time.time()
-        while self._running:
-
-            # rate limit the loop
-            current_time = time.time()
-            if (current_time - last_write_time) < 1.0 / self._send_rate:
-                continue
-            last_write_time = time.time()
-
-            # empty out the queue of pending messages
-            # NOTE: Queue class is synchronized and is thread safe already!
-            msg = None
-            while not self._out_msg_queue.empty():
-                try:
-                    msg = self._out_msg_queue.get_nowait()
-                except queue.Empty:
-                    # if there is no msgs in the queue, will just continue
-                    pass
-                else:
-                    # either set this is as the high rate command
-                    # to repeatedly send or send it immediately
-                    if (msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET'):
-                        high_rate_command = msg
-                    else:
-                        self._mav.send(msg)
-                    self._out_msg_queue.task_done()
-
-            # continually want to send the high rate command
-            self._mav.send(high_rate_command)
-
     # def send_message(self, msg):
     async def send_message(self, msg):
         """
@@ -296,25 +252,27 @@ class WebSocketConnection(connection.Connection):
             msg: MAVLinkMessage to be sent to the drone
         """
         if self._ws is not None and self._ws.open:
-            buf = msg.get_msgbuf()
-            self._ws.send(buf)
-        else:
-            print('Attempted to send message but WebSocket connection is closed ...')
+            msg.pack(self._mav)
+            buf = bytes(msg.get_msgbuf())
+            await self._ws.send(buf)
 
     def start(self):
-        # start the main thread
         self._running = True
         asyncio.get_event_loop().run_until_complete(self.dispatch_loop())
-        asyncio.get_event_loop().run_forever()
 
     def stop(self):
         print("Closing connection ...")
         self._running = False
         if self._ws is not None:
             self._ws.close()
-        self._ws = None
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.stop()
+        pending_tasks = asyncio.Task.all_tasks(loop)
+        print(pending_tasks)
+        loop.close()
 
-    def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
+    async def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
         """
         Packs and sends a Mavlink COMMAND_LONG message
 
@@ -331,27 +289,30 @@ class WebSocketConnection(connection.Connection):
         confirmation = 0  # may want this as an input.... used for repeat messages
         msg = self._mav.command_long_encode(self._target_system, self._target_component, command_type, confirmation,
                                             param1, param2, param3, param4, param5, param6, param7)
-        self.send_message(msg)
+        await self.send_message(msg)
 
     def arm(self):
         # send an arm command through mavlink
-        self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1)
+        asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1))
 
     def disarm(self):
         # send a disarm command
-        self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0)
+        asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0))
 
     def take_control(self):
         mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
         custom_mode = MainMode.PX4_MODE_OFFBOARD.value
         custom_sub_mode = 0  # not used for manual/offboard
-        self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
+        asyncio.ensure_future(
+            self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode))
 
     def release_control(self):
         mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
         custom_mode = MainMode.PX4_MODE_MANUAL.value
         custom_sub_mode = 0  # not used for manual/offboard
-        self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
+        asyncio.ensure_future(
+            self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode))
+        print('in release control')
 
     def cmd_attitude(self, yaw, pitch, roll, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
@@ -360,7 +321,7 @@ class WebSocketConnection(connection.Connection):
         mask = 0b00000111
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    0, 0, 0, thrust)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
@@ -368,7 +329,7 @@ class WebSocketConnection(connection.Connection):
         mask = 0b10000000
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_rate, pitch_rate, yaw_rate, thrust)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def cmd_velocity(self, vn, ve, vd, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
@@ -377,7 +338,7 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_position_target_local_ned_encode(time_boot_ms, self._target_system, self._target_component,
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, vn, ve,
                                                              vd, 0, 0, 0, heading, 0)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def cmd_motors(self, motor1, motor2, motor3, motor4):
         # TODO: implement this
@@ -391,7 +352,7 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_position_target_local_ned_encode(time_boot_ms, self._target_system, self._target_component,
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e, d, 0, 0,
                                                              0, 0, 0, 0, heading, 0)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def takeoff(self, n, e, d):
         # for mavlink to PX4 need to specify the NED location for landing
@@ -404,7 +365,7 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_position_target_local_ned_encode(time_boot_ms, self._target_system, self._target_component,
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e, d, 0, 0,
                                                              0, 0, 0, 0, 0, 0)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def land(self, n, e):
         # for mavlink to PX4 need to specify the NED location for landing
@@ -418,7 +379,7 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_position_target_local_ned_encode(time_boot_ms, self._target_system, self._target_component,
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e, d, 0, 0,
                                                              0, 0, 0, 0, 0, 0)
-        self.send_message(msg)
+        asyncio.ensure_future(self.send_message(msg))
 
     def set_home_position(self, lat, lon, alt):
-        self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_HOME, 0, 0, 0, 0, lat, lon, alt)
+        asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_HOME, 0, 0, 0, 0, lat, lon, alt))

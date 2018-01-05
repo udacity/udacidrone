@@ -84,7 +84,6 @@ class Drone:
 
         def on_message_receive(msg_name, msg):
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-            print('Message received', msg_name, msg)
             if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
             if msg_name in self._update_property.keys():
@@ -94,7 +93,6 @@ class Drone:
 
         # add the above callback function as a listener for all connection messages
         self.connection.add_message_listener(MsgID.ANY, on_message_receive)
-
 
         self.tlog = Logger("Logs", tlog_name)
 
@@ -234,11 +232,13 @@ class Drone:
     def register_callback(self, name, fn):
         """Add the function, fn, as a callback for the message type, name
         
-        For example:
-            self.add_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
+        Example:
+
+            self.add_message_listener(MsgID.GLOBAL_POSITION, global_msg_listener)
             
             OR
-            self.add_message_listener('*',all_msg_listener)
+
+            self.add_message_listener(MsgID.ANY, all_msg_listener)
             
         These can be added anywhere in the code and are identical to initializing a callback with the decorator
         """
@@ -269,14 +269,12 @@ class Drone:
             except Exception as e:
                 traceback.print_exc()
 
-        for fn in self._callbacks.get(MsgId.ANY, []):
+        for fn in self._callbacks.get(MsgID.ANY, []):
             try:
-                print('Drone executing {0} callback'.format(MsgId.ANY))
+                print('Drone executing {0} callback'.format(MsgID.ANY))
                 fn(name)
             except Exception as e:
                 traceback.print_exc()
-
-
 
     #
     # Command method wrappers

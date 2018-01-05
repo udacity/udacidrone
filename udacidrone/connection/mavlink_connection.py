@@ -185,7 +185,6 @@ class MavlinkConnection(connection.Connection):
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                print('Local position', pos)
                 self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                 # parse out the velocity and trigger that callback
