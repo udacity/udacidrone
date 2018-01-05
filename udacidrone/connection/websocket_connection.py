@@ -245,6 +245,8 @@ class WebSocketConnection(connection.Connection):
                 elif msg.get_type() == 'STATUSTEXT':
                     print("[autopilot message] " + msg.text.decode("utf-8"))
 
+        await self._shutdown_event_loop()
+
     # def send_message(self, msg):
     async def send_message(self, msg):
         """
@@ -258,19 +260,18 @@ class WebSocketConnection(connection.Connection):
 
     def start(self):
         self._running = True
-        asyncio.get_event_loop().run_until_complete(self.dispatch_loop())
+        asyncio.ensure_future(self.dispatch_loop())
+        asyncio.get_event_loop().run_forever()
+
+    async def _shutdown_event_loop(self):
+        print('Shutting down event loop')
+        loop = asyncio.get_event_loop()
+        await loop.shutdown_asyncgens()
+        loop.stop()
 
     def stop(self):
-        print("Closing connection ...")
         self._running = False
-        if self._ws is not None:
-            self._ws.close()
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.stop()
-        pending_tasks = asyncio.Task.all_tasks(loop)
-        print(pending_tasks)
-        loop.close()
+        print("Closing connection")
 
     async def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
         """
