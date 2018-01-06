@@ -21,54 +21,29 @@ All message types also contain the time. More information about the properties o
 
 ### Registering Callbacks
 
-The incoming message data is receiving using callback methods. These methods are only called when a message of their respective type is received. There are two ways to register a callback:
+The incoming message data is receiving using callback methods. These methods are only called when a message of their respective type is received.  Callbacks are member functions of the drone class and are registered/unregistered using `self.register_callback(msg_type, callback_fn)` and `self.remove_callback(msg_type, callback_fn)`, respectively.
 
-1. Using the `@msg_callback(msg_type)` decorator (preferred):
-
-Callbacks registered using decorators need to be defined (and decorated) within the `callbacks` method. The `callbacks` method is called on initialization to register all the defined callbacks.  It looks like this and you can find it at line 182 in `drone.py`:
+To register a callback for a particular message type (`MSG_GLOBAL_POSITION` in this case): 
 
 ```python
-    def callbacks(self):
-        @self.connection.on_message('*')
-        def on_message_receive(_, msg_name, msg):
-            if msg_name == mt.MSG_CONNECTION_CLOSED:
-                self.stop()
-            """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-            if msg_name in self._update_property.keys():
-                self._update_property[msg_name](msg)
+self.register_callback(message_types.MSG_GLOBAL_POSITION, 								self.global_position_callback)
 
-            self.notify_message_listeners(msg_name, msg)
-
-            self.log_telemetry(msg_name, msg)
+def global_position_callback(self):
+	# do whatever you want knowing that the drone global position attribute has new information
 ```
 
+Callbacks are triggered when the corresponding attributes of the drone class have been updated with new information from the simulator or real drone.  For this reason, you will notice that the callbacks do not require any input variables (besides the `self` parameter required for a class member function).
 
-
-2. New callbacks can be added to the `callbacks()` method in a subclass.  To register a callback for a particular message type (`MSG_GLOBAL_POSITION` in this case): 
-
-```python
-self.add_message_listener(message_types.MSG_GLOBAL_POSITION, 								self.global_position_listener)
-
-def global_position_listener(self, name, global_position):
-	# do whatever you want with the global_position, which will be of type GlobalPosition
-```
-
-A callback for all message types can be registered uisng, `*`:
+In some cases, you may find it useful to have a single callback for all attribute changes, which can be done by passing `MsgId.ANY` as the message type.  For this callback, an additional parameter of the name of the attribute set that has been updated is also passed to the callback.
 
 ```python
-@self.msg_callback('*')
-def all_msg_listener(name, msg):
-	# this is a listener for all message types, so break out the msg as defined by the name
-```
-
-or
-
-```python
-self.add_message_listener('*', self.all_msg_listener)
-def all_msg_listener(self, name, msg):
+self.register_callback('*', self.all_msg_callback)
+def all_msg_callback(self, name):
 	# this is a listener for all message types, so break out the msg as defined by the name
 ```
         
+
+
 
 ### Drone Attributes
 
@@ -83,9 +58,8 @@ In addition to being passed to appropriate callbacks, the message data is also s
 Drone attributes can be used if information is required from multiple messages. For example:
 
 ```python
-@self.msg_callback(message_types.MSG_GLOBAL_POSITION)
-def global_position_listener(name, global_position):
-	if msg.global_position[2] < 0.05: # Checks the global altitude
+def global_position_callback(self):
+	if self.global_position[2] < 0.05: # Checks the global altitude
         if self.local_velocity[2] < 0.05 # Checks the latest drone velocity, since it isn't part of the message
 ```
 
@@ -178,10 +152,9 @@ The six states predefined for the state machine:
 While the drone is in each state, you will need to check transition criteria with a registered callback. If the transition criteria are met, you will set the next state and pass along any commands to the drone. For example:
 
 ```python
-@self.on_message(mt.MSG_STATE)
-def state_callback(msg_name, msg):
+def state_callback():
 	if self.state == States.DISARMING:
-    	if ~msg.armed:
+    	if ~self.armed:
         	self.release_control()
         	self.in_mission = False
         	self.state = States.MANUAL

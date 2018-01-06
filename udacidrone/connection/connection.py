@@ -36,36 +36,6 @@ class Connection(object):
         self._message_listeners = {}
         self._threaded = threaded
 
-    def on_message(self, name):
-        """
-        Decorator for being able to add a listener for a specific message type.
-
-        Args:
-            name: `MsgID` name of the message
-
-        Example:
-
-            from udacidrone.messaging import MsgID
-
-            @conn.on_message(MsgID.GLOBAL_POSITION)
-            def gps_listener(_, name, gps):
-            # do whatever with the gps, which will be of type GlobalPosition
-
-            @conn.on_message(MsgID.ANY)
-            def all_msg_listener(_, name, msg):
-            # this is a listener for all message types,
-            # so break out the msg as defined by the name
-        """
-
-        def decorator(fn):
-            if isinstance(name, list):
-                for n in name:
-                    self.add_message_listener(n, fn)
-            else:
-                self.add_message_listener(name, fn)
-
-        return decorator
-
     def add_message_listener(self, name, fn):
         """
         Adds a callback function for the specified message to the set of
