@@ -5,6 +5,7 @@ import time
 from enum import Enum
 from io import BytesIO
 
+import uvloop
 import websockets
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
@@ -26,6 +27,7 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 # CONNECTION_TYPE_PARROT = 3
 # CONNECTION_TYPE_DJI = 4
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
@@ -78,6 +80,8 @@ class WebSocketConnection(connection.Connection):
         self._uri = uri
         self._f = BytesIO()
         self._mav = mavlink.MAVLink(self._f)
+        # This will be set with self._uri when the async event loop is
+        # started
         self._ws = None
 
         # management
@@ -313,7 +317,6 @@ class WebSocketConnection(connection.Connection):
         custom_sub_mode = 0  # not used for manual/offboard
         asyncio.ensure_future(
             self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode))
-        print('in release control')
 
     def cmd_attitude(self, yaw, pitch, roll, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time

@@ -13,11 +13,14 @@ Instructions:
     - Run a file using a WebSocketConnection, such as test_websocket_connection.py 
       in this directory.
 """
+import uvloop
 import asyncio
 import signal
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 from io import BytesIO
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 HOST = '127.0.0.1'
 PORT = 5760
@@ -40,6 +43,7 @@ async def relay(ws, path):
             print('Connection closed, remaining connected clients', len(connections))
             connections.remove(ws)
         else:
+            print('Message to relay', msg)
             for conn in connections:
                 if conn != ws:
                     await conn.send(msg)

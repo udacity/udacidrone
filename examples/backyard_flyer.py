@@ -112,7 +112,6 @@ class BackyardFlyer(Drone):
     def manual_transition(self):
         print("manual transition")
         self.release_control()
-        print('after release control')
         self.stop()
         self.in_mission = False
         self.flight_state = States.MANUAL
