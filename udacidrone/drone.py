@@ -338,6 +338,20 @@ class Drone:
             self.connection.land(self.local_position[0], self.local_position[1])
         except Exception as e:
             traceback.print_exc()
+            
+    def cmd_attitude(self, roll, pitch, yawrate, thrust):
+        """Command the drone through attitude command
+        
+        Args:
+            roll: in radians
+            pitch: in randians
+            yawrate: in radians/second
+            thrust: upward acceleration in meters/second^2
+        """
+        try:
+            self.connection.cmd_attitude(roll, pitch, yawrate, thrust)
+        except Exception as e:
+            traceback.print_exc()
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command the drone orientation rates.

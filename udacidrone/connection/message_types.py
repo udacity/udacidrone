@@ -215,12 +215,12 @@ class FrameMessage(Message):
         self._pitch = pitch
         self._yaw = yaw
 
-        sp = np.sin(np.radians(pitch / 2.0))
-        cp = np.cos(np.radians(pitch / 2.0))
-        sr = np.sin(np.radians(roll / 2.0))
-        cr = np.cos(np.radians(roll / 2.0))
-        sy = np.sin(np.radians(yaw / 2.0))
-        cy = np.cos(np.radians(yaw / 2.0))
+        sp = np.sin(pitch / 2.0)
+        cp = np.cos(pitch / 2.0)
+        sr = np.sin(roll / 2.0)
+        cr = np.cos(roll / 2.0)
+        sy = np.sin(yaw / 2.0)
+        cy = np.cos(yaw / 2.0)
 
         self._q0 = cr * cp * cy + sr * sp * sy
         self._q1 = sr * cp * cy - cr * sp * sy

@@ -138,7 +138,7 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_attitude(self, yaw, pitch, roll, thrust):
+    def cmd_attitude(self, roll, pitch, yawrate, thrust):
         """Command to set the desired attitude and thrust
 
         Args:
