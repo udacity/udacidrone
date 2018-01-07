@@ -11,7 +11,7 @@ from enum import Enum
 import numpy as np
 
 from udacidrone import Drone
-from udacidrone.connection import MavlinkConnection
+from udacidrone.connection import MavlinkConnection, WebSocketConnection
 from udacidrone.messaging import MsgID
 
 
@@ -134,7 +134,8 @@ class BackyardFlyer(Drone):
 
 
 if __name__ == "__main__":
-    conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
+    # conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
+    conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = BackyardFlyer(conn)
     time.sleep(2)
     drone.start()
