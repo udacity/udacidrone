@@ -5,9 +5,10 @@ from udacidrone.messaging import MsgID
 import traceback
 
 
-class Drone:
-    """"""
-
+class Drone(object):
+    """
+    Drone class
+    """
     def __init__(self, connection, tlog_name="TLog.txt"):
         self.connection = connection
 
@@ -41,9 +42,6 @@ class Drone:
         # If the drone is guided it is being autonomously controlled,
         # the other opposite would be manual control.
         self._guided = False
-
-        # If there is an active connection to a simulated or physical drone.
-        self._connected = False
 
         # Euler angles in radians
         self._roll = 0.0
@@ -142,12 +140,11 @@ class Drone:
 
     @property
     def connected(self):
-        return self._connected
+        return self.connection.connected
 
     def _update_state(self, msg):
         self._armed = msg.armed
         self._guided = msg.guided
-        self._connected = True
 
     @property
     def attitude(self):
@@ -230,16 +227,20 @@ class Drone:
     #
 
     def register_callback(self, name, fn):
-        """Add the function, fn, as a callback for the message type, name
-        
+        """Add the function, `fn`, as a callback for the message type, `name`.
+
+        Args:
+            name: MsgID describing the message id
+            fn: Callback function
+
         Example:
 
             self.add_message_listener(MsgID.GLOBAL_POSITION, global_msg_listener)
-            
+
             OR
 
             self.add_message_listener(MsgID.ANY, all_msg_listener)
-            
+
         These can be added anywhere in the code and are identical to initializing a callback with the decorator
         """
         if name not in self._callbacks:
@@ -248,11 +249,16 @@ class Drone:
             self._callbacks[name].append(fn)
 
     def remove_callback(self, name, fn):
-        """Remove the function, fn, as a callback for the message type, name
-        
-        For example:
-            self.remove_message_listener(message_types.MSG_GLOBAL_POSITION,global_msg_listener)
-            
+        """Remove the function, `fn`, as a callback for the message type, `name`
+
+        Args:
+            name: MsgID describing the message id
+            fn: Callback function
+
+        Example:
+
+            self.remove_message_listener(MsgID.GLOBAL_POSITION, global_msg_listener)
+
         """
         if name in self._callbacks:
             if fn in self._callbacks[name]:
@@ -402,7 +408,6 @@ class Drone:
 
         # stop the connection
         self.connection.stop()
-        self._connected = False
 
         # close the telemetry log
         self.tlog.close()

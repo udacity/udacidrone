@@ -28,7 +28,7 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 # CONNECTION_TYPE_DJI = 4
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-logging.getLogger('asyncio').setLevel(logging.WARNING)
+logging.getLogger('asyncio').setLevel(logging.DEBUG)
 
 
 class MainMode(Enum):
@@ -53,7 +53,12 @@ class PositionMask(Enum):
 class WebSocketConnection(connection.Connection):
     """
     Implementation of the required communication to a drone executed
-    over the Mavlink protocol. 
+    over the WebSocket protocol. Messages sent and received are encoded/decoded
+    by MAVLink.
+
+    The main use of this connection is to allow communication with the FCND simulator
+    in the classroom (while in the browser) since current limitations do not allow for communication
+    via TCP/UDP directly.
 
     Example:
 
@@ -61,21 +66,16 @@ class WebSocketConnection(connection.Connection):
 
     """
 
-    def __init__(self, uri, threaded=False, send_rate=5, timeout=5):
+    def __init__(self, uri, send_rate=5, timeout=5):
         """
-        Note: When threaded, the read loop runs as a daemon, meaning once all
-        other processes stop the thread immediately dies, therefore some
-        acitivty (e.g. a while True loop) needs to be running on the main
-        thread for this thread to survive.
-
         Args:
-            device: address to the drone, e.g. "tcp:127.0.0.1:5760" (see mavutil mavlink connection for valid options)
-            threaded: bool for whether or not to run the message read loop on a separate thread
+            uri: address to the drone, e.g. "ws://127.0.0.1:5760"
             send_rate: the rate in Hertz (Hz) to send messages to the drone
+            timeout: the time limit in seconds to wait for a message prior to closing connection
         """
 
         # call the superclass constructor
-        super().__init__(threaded)
+        super().__init__(threaded=False)
 
         self._uri = uri
         self._f = BytesIO()
@@ -102,29 +102,27 @@ class WebSocketConnection(connection.Connection):
     def timeout(self):
         return self._timeout
 
+    @property
+    def connected(self):
+        if self._ws is None:
+            return False
+        return self._ws.open
+
     def decode_message(self, msg):
         return self._mav.decode(bytearray(msg))
 
-    async def dispatch_loop(self):
-        """Main loop to read from the drone.
-
+    async def _dispatch_loop(self):
+        """
         Continually listens to the drone connection for incoming messages.
-        for each new message, parses out the mavlink, creates messages as
+        For each new message, decodes the MAVLink, creates messages as
         defined in `message_types.py`, and triggers all callbacks registered
         for that type of message.
-        Also keeps an eye on the state of connection, and if nothing has
-        happened in more than 5 seconds, sends a special termination message
-        to indicate that the drone connection has died.
-
-        THIS SHOULD NOT BE CALLED DIRECTLY BY AN OUTSIDE CLASS!
         """
-
         last_msg_time = time.time()
         async with websockets.connect(self._uri) as ws:
             self._ws = ws
             while self._running:
                 current_time = time.time()
-                # msg = await asyncio.wait_for(ws.recv(), self._timeout)
                 msg = await ws.recv()
                 msg = self.decode_message(msg)
                 print('Message received', msg)
@@ -141,14 +139,10 @@ class WebSocketConnection(connection.Connection):
                                                         mavutil.mavlink.MAV_STATE_ACTIVE)
                     await self.send_message(outmsg)
 
-                # if we haven't heard a message in a given amount of time
-                # send a termination message
+                # If we haven't heard a message in a given amount of time
+                # terminate connection and event loop.
                 if current_time - last_msg_time > self._timeout:
-                    # print("timeout too long!")
-                    # notify listeners that the connection is closing
                     self.notify_message_listeners(MsgID.CONNECTION_CLOSED, 0)
-
-                    # stop this read loop
                     self.stop()
 
                 # update the time of the last message
@@ -251,20 +245,14 @@ class WebSocketConnection(connection.Connection):
 
         await self._shutdown_event_loop()
 
-    # def send_message(self, msg):
-    async def send_message(self, msg):
-        """
-        Args:
-            msg: MAVLinkMessage to be sent to the drone
-        """
-        if self._ws is not None and self._ws.open:
-            msg.pack(self._mav)
-            buf = bytes(msg.get_msgbuf())
-            await self._ws.send(buf)
-
     def start(self):
+        """
+        Starts an asynchronous event loop to receive and send messages. The
+        loop runs until `self.stop` is called or the connection timeouts.
+
+        """
         self._running = True
-        asyncio.ensure_future(self.dispatch_loop())
+        asyncio.ensure_future(self._dispatch_loop())
         asyncio.get_event_loop().run_forever()
 
     async def _shutdown_event_loop(self):
@@ -274,8 +262,25 @@ class WebSocketConnection(connection.Connection):
         loop.stop()
 
     def stop(self):
+        """
+        Closing WebSocket connection and shutdowns the event loop.
+
+        All events received PRIOR to calling this function will be executed.
+        """
         self._running = False
         print("Closing connection")
+
+    async def send_message(self, msg):
+        """
+        Send to a MAVLink message to the drone.
+
+        Args:
+            msg: MAVLinkMessage to be sent to the drone
+        """
+        if self._ws is not None and self._ws.open:
+            msg.pack(self._mav)
+            buf = bytes(msg.get_msgbuf())
+            await self._ws.send(buf)
 
     async def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
         """
@@ -297,11 +302,15 @@ class WebSocketConnection(connection.Connection):
         await self.send_message(msg)
 
     def arm(self):
-        # send an arm command through mavlink
+        """
+        Send an arm command.
+        """
         asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1))
 
     def disarm(self):
-        # send a disarm command
+        """
+        Send a disarm command.
+        """
         asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0))
 
     def take_control(self):

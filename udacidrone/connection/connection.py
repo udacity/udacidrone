@@ -99,6 +99,16 @@ class Connection(object):
         """
         return self._threaded
 
+    # @abstractpropert
+    @property
+    @abstractmethod
+    def connected(self):
+        """
+        Returns:
+            Boolean. True if connection is able to send and/or receive messages, False otherwise.
+        """
+        pass
+
     @abstractmethod
     def start(self):
         """Command to start a connection with a drone"""
