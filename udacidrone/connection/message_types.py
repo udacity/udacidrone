@@ -27,7 +27,6 @@ Attributes:
     MSG_BAROMETER: name of the barometer message [LocalFrameMessage - only down populated]
     MSG_ATTITUDE: name of attitude message [FrameMessage]
 """
-import math
 import numpy as np
 
 

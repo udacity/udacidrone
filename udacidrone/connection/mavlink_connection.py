@@ -108,6 +108,12 @@ class MavlinkConnection(connection.Connection):
         # seconds to wait of no messages before termination
         self._timeout = 5
 
+    @property
+    def connected(self):
+        if self._master.port.fileno() == -1:
+            return False
+        return True
+
     def dispatch_loop(self):
         """Main loop to read from the drone.
 
@@ -123,7 +129,7 @@ class MavlinkConnection(connection.Connection):
         """
 
         last_msg_time = time.time()
-        while (self._running):
+        while self._running:
             current_time = time.time()
 
             # wait for a new message
@@ -185,7 +191,6 @@ class MavlinkConnection(connection.Connection):
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                #print('Local position', pos)
                 self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                 # parse out the velocity and trigger that callback
@@ -281,7 +286,7 @@ class MavlinkConnection(connection.Connection):
                 else:
                     # either set this is as the high rate command
                     # to repeatedly send or send it immediately
-                    if (msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET'):
+                    if msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET':
                         high_rate_command = msg
                     else:
                         self._master.mav.send(msg)
@@ -290,29 +295,9 @@ class MavlinkConnection(connection.Connection):
             # continually want to send the high rate command
             self._master.mav.send(high_rate_command)
 
-    def send_message(self, msg):
-        """Send a given mavlink message to the drone. If connected with a PX4 autopilot,
-        add the MAVLinkMessage to the command queue to be handled by the command loop
-        (running in the write thread).  Otherwise immediately send the message.
-
-        :param msg: MAVLinkMessage to be sent to the drone
-        """
-
-        # if we are using PX4, means we are also using out command loop
-        # in a separate thread and therefore need to send the data to that
-        # thread using the queue
-        #
-        # if we are not using PX4, then just immediately send the message
-        if self._using_px4:
-            # NOTE: queue is already thread safe
-            # no need to handle additional locks
-            self._out_msg_queue.put(msg)
-        else:
-            self._master.mav.send(msg)
-
     def wait_for_message(self):
         """
-        Wait for a new mavlink message calls pymavlink's blocking read function to read 
+        Wait for a new mavlink message calls pymavlink's blocking read function to read
         a next message, blocking for up to a timeout of 1s.
 
         Returns:
@@ -369,6 +354,26 @@ class MavlinkConnection(connection.Connection):
         # close the connection
         print("Closing connection ...")
         self._master.close()
+
+    def send_message(self, msg):
+        """Send a given mavlink message to the drone. If connected with a PX4 autopilot,
+        add the MAVLinkMessage to the command queue to be handled by the command loop
+        (running in the write thread).  Otherwise immediately send the message.
+
+        :param msg: MAVLinkMessage to be sent to the drone
+        """
+
+        # if we are using PX4, means we are also using out command loop
+        # in a separate thread and therefore need to send the data to that
+        # thread using the queue
+        #
+        # if we are not using PX4, then just immediately send the message
+        if self._using_px4:
+            # NOTE: queue is already thread safe
+            # no need to handle additional locks
+            self._out_msg_queue.put(msg)
+        else:
+            self._master.mav.send(msg)
 
     def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):
         """

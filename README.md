@@ -34,7 +34,7 @@ def global_position_callback(self):
 
 Callbacks are triggered when the corresponding attributes of the drone class have been updated with new information from the simulator or real drone.  For this reason, you will notice that the callbacks do not require any input variables (besides the `self` parameter required for a class member function).
 
-In some cases, you may find it useful to have a single callback for all attribute changes, which can be done by passing `MsgId.ANY` as the message type.  For this callback, an additional parameter of the name of the attribute set that has been updated is also passed to the callback.
+In some cases, you may find it useful to have a single callback for all attribute changes, which can be done by passing `MsgID.ANY` as the message type.  For this callback, an additional parameter of the name of the attribute set that has been updated is also passed to the callback.
 
 ```python
 self.register_callback('*', self.all_msg_callback)
