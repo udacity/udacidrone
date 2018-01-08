@@ -84,7 +84,7 @@ class Drone:
 
         def on_message_receive(msg_name, msg):
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-            print('Message received', msg_name, msg)
+            #print('Message received', msg_name, msg)
             if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
             if msg_name in self._update_property.keys():
@@ -264,14 +264,14 @@ class Drone:
         """Passes the message to the appropriate listeners"""
         for fn in self._callbacks.get(name, []):
             try:
-                print('Drone executing {0} callback'.format(name))
+                #print('Drone executing {0} callback'.format(name))
                 fn()
             except Exception as e:
                 traceback.print_exc()
 
-        for fn in self._callbacks.get(MsgId.ANY, []):
+        for fn in self._callbacks.get(MsgID.ANY, []):
             try:
-                print('Drone executing {0} callback'.format(MsgId.ANY))
+                #print('Drone executing {0} callback'.format(MsgId.ANY))
                 fn(name)
             except Exception as e:
                 traceback.print_exc()

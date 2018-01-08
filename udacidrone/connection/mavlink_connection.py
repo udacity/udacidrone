@@ -128,7 +128,7 @@ class MavlinkConnection(connection.Connection):
 
             # wait for a new message
             msg = self.wait_for_message()
-            print('Message received', msg)
+            #print('Message received', msg)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
@@ -185,7 +185,7 @@ class MavlinkConnection(connection.Connection):
             elif msg.get_type() == 'LOCAL_POSITION_NED':
                 # parse out the local positin and trigger that callback
                 pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                print('Local position', pos)
+                #print('Local position', pos)
                 self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
                 # parse out the velocity and trigger that callback
@@ -239,7 +239,8 @@ class MavlinkConnection(connection.Connection):
 
             # DEBUG
             elif msg.get_type() == 'STATUSTEXT':
-                print("[autopilot message] " + msg.text.decode("utf-8"))
+                #print("[autopilot message] " + msg.text.decode("utf-8"))
+                pass
 
     def command_loop(self):
         """
