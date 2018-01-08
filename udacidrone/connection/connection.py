@@ -79,14 +79,14 @@ class Connection(object):
         """
         for fn in self._message_listeners.get(name, []):
             try:
-                print('Executing {0} callback'.format(name))
+                #print('Executing {0} callback'.format(name))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
 
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                print('Executing {0} callback'.format(MsgID.ANY))
+                #print('Executing {0} callback'.format(MsgID.ANY))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
@@ -148,7 +148,7 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_attitude(self, yaw, pitch, roll, thrust):
+    def cmd_attitude(self, roll, pitch, yawrate, thrust):
         """Command to set the desired attitude and thrust
 
         Args:
