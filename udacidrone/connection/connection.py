@@ -160,7 +160,7 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
+    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
 
         Args:
