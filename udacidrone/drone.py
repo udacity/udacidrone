@@ -169,7 +169,7 @@ class Drone(object):
     @property
     def gyro_raw(self):
         """Angular velocites in radians/second"""
-        return np.array([self._gryo_x, self._gyro_y, self._gyro_z])
+        return np.array([self._gyro_x, self._gyro_y, self._gyro_z])
 
     def _update_gyro_raw(self, msg):
         self._gyro_x = msg.x
@@ -368,10 +368,10 @@ class Drone(object):
             thrust: upward acceleration in meters/second^2
         """
         try:
-            thrust = np.clip(thrust, -1, 1)
-            yaw_rate = np.clip(yaw_rate, -1, 1)
-            roll_rate = np.clip(roll_rate, -1, 1)
-            pitch_rate = np.clip(pitch_rate, -1, 1)
+            #thrust = np.clip(thrust, -1, 1)
+            #yaw_rate = np.clip(yaw_rate, -1, 1)
+            #roll_rate = np.clip(roll_rate, -1, 1)
+            #pitch_rate = np.clip(pitch_rate, -1, 1)
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()

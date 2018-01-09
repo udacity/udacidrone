@@ -363,15 +363,15 @@ class WebSocketConnection(connection.Connection):
                     self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
                 # http://mavlink.org/messages/common#ATTITUDE_TARGET
-                elif msg.get_type() == 'ATTITUDE_TARGET':
+                elif msg.get_type() == 'ATTITUDE_QUATERNION':
+                    timestamp = msg.time_boot_ms
                     # TODO: check if mask notifies us to ignore a field
-                    mask = msg.type_mask
-                    quat = msg.q
-
-                    att = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
-                    self.notify_message_listeners(MsgID.ATTITUDE, att)
-
-                    gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
+    
+    
+                    fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
+                    self.notify_message_listeners(MsgID.ATTITUDE, fm)
+    
+                    gyro = mt.BodyFrameMessage(timestamp, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
                     self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
                 # DEBUG

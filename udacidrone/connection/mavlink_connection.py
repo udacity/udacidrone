@@ -232,17 +232,16 @@ class MavlinkConnection(connection.Connection):
                                                 float(msg.current_distance) / 100, float(msg.covariance) / 100)
                 self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
-            # http://mavlink.org/messages/common#ATTITUDE_TARGET
-            elif msg.get_type() == 'ATTITUDE_TARGET':
+            # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
+            elif msg.get_type() == 'ATTITUDE_QUATERNION':
                 timestamp = msg.time_boot_ms
                 # TODO: check if mask notifies us to ignore a field
-                mask = msg.type_mask
-                quat = msg.q
 
-                fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
+
+                fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
                 self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
-                gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
+                gyro = mt.BodyFrameMessage(timestamp, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
                 self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
             # DEBUG
@@ -427,9 +426,9 @@ class MavlinkConnection(connection.Connection):
                                                           mask, q, 0, 0, yawrate, thrust)
         self.send_message(msg)
 
-    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
+    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        q = [0, 0, 0, 0]
+        q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_rate, pitch_rate, yaw_rate, thrust)
