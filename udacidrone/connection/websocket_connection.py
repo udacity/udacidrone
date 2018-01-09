@@ -83,6 +83,7 @@ class WebSocketConnection(connection.Connection):
         # This will be set with self._uri when the async event loop is
         # started
         self._ws = None
+        self._q = asyncio.Queue()
 
         # management
         self._target_system = 1
@@ -111,6 +112,139 @@ class WebSocketConnection(connection.Connection):
     def decode_message(self, msg):
         return self._mav.decode(bytearray(msg))
 
+    async def _read_loop(self):
+        async with websockets.connect(self._uri) as ws:
+            self._ws = ws
+            while self._running:
+                # current_time = time.time()
+                msg = await ws.recv()
+                msg = self.decode_message(msg)
+                await self._q.put(msg)
+
+    async def _do_message(self):
+        last_msg_time = time.time()
+        while self._running:
+            msg = await self._q.get()
+            current_time = time.time()
+            print('Message received', msg)
+
+            if msg.get_type() == 'BAD_DATA' or msg is None:
+                continue
+
+            # send a heartbeat message back, since this needs to be
+            # constantly sent so the autopilot knows this exists
+            if msg.get_type() == 'HEARTBEAT':
+                # send -> type, autopilot, base mode, custom mode, system status
+                outmsg = self._mav.heartbeat_encode(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+                                                    0, 0, mavutil.mavlink.MAV_STATE_ACTIVE)
+                await self.send_message(outmsg)
+
+            # If we haven't heard a message in a given amount of time
+            # terminate connection and event loop.
+            if current_time - last_msg_time > self._timeout:
+                self.notify_message_listeners(MsgID.CONNECTION_CLOSED, 0)
+                self.stop()
+
+            # update the time of the last message
+            last_msg_time = current_time
+
+            # this does indeed get timestamp, should double check format
+            # TODO: decide on timestamp format for messages
+            # timestamp = msg._timestamp
+            # NOTE: set this to time.time() so it works
+            timestamp = time.time()
+            # parse out the message based on the type and call
+            # the appropriate callbacks
+
+            # http://mavlink.org/messages/common/#GLOBAL_POSITION_INT
+            if msg.get_type() == 'GLOBAL_POSITION_INT':
+                # parse out the gps position and trigger that callback
+                gps = mt.GlobalFrameMessage(timestamp, float(msg.lat) / 1e7, float(msg.lon) / 1e7,
+                                            float(msg.alt) / 1000)
+                self.notify_message_listeners(MsgID.GLOBAL_POSITION, gps)
+
+                # parse out the velocity and trigger that callback
+                vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vx) / 100)
+                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
+
+            # http://mavlink.org/messages/common/#HEARTBEAT
+            elif msg.get_type() == 'HEARTBEAT':
+                motors_armed = (msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
+
+                # TODO: determine if want to broadcast all current mode types
+                # not just boolean on manual
+                guided_mode = False
+
+                # extract whether or not we are in offboard mode for PX4
+                # (the main mode)
+                main_mode = (msg.custom_mode & 0x000F0000) >> 16
+                if main_mode == MainMode.PX4_MODE_OFFBOARD.value:
+                    guided_mode = True
+
+                state = mt.StateMessage(timestamp, motors_armed, guided_mode)
+                self.notify_message_listeners(MsgID.STATE, state)
+
+            # http://mavlink.org/messages/common#LOCAL_POSITION_NED
+            elif msg.get_type() == 'LOCAL_POSITION_NED':
+                # parse out the local positin and trigger that callback
+                pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
+                self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
+
+                # parse out the velocity and trigger that callback
+                vel = mt.LocalFrameMessage(timestamp, msg.vx, msg.vy, msg.vz)
+                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
+
+            # http://mavlink.org/messages/common#HOME_POSITION
+            elif msg.get_type() == 'HOME_POSITION':
+                home = mt.GlobalFrameMessage(timestamp,
+                                             float(msg.latitude) / 1e7,
+                                             float(msg.longitude) / 1e7, float(msg.altitude) / 1000)
+                self.notify_message_listeners(MsgID.GLOBAL_HOME, home)
+
+            # http://mavlink.org/messages/common/#SCALED_IMU
+            elif msg.get_type() == 'SCALED_IMU':
+                # break out the message into its respective messages for here
+                accel = mt.BodyFrameMessage(timestamp, msg.xacc, msg.yacc, msg.zacc)  # units are [mg]
+                self.notify_message_listeners(MsgID.RAW_ACCELEROMETER, accel)
+
+                gyro = mt.BodyFrameMessage(timestamp, msg.xgyro, msg.ygyro, msg.zgyro)  # units are [millirad/sec]
+                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
+
+            # http://mavlink.org/messages/common#SCALED_PRESSURE
+            elif msg.get_type() == 'SCALED_PRESSURE':
+                pressure = mt.BodyFrameMessage(timestamp, 0, 0, msg.press_abs)  # unit is [hectopascal]
+                self.notify_message_listeners(MsgID.BAROMETER, pressure)
+
+            # http://mavlink.org/messages/common#DISTANCE_SENSOR
+            elif msg.get_type() == 'DISTANCE_SENSOR':
+                direction = 0
+                # TODO: parse orientation
+                # orientation = msg.orientation
+                meas = mt.DistanceSensorMessage(timestamp,
+                                                float(msg.min_distance) / 100,
+                                                float(msg.max_distance) / 100, direction,
+                                                float(msg.current_distance) / 100, float(msg.covariance) / 100)
+                self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
+
+            # http://mavlink.org/messages/common#ATTITUDE_TARGET
+            elif msg.get_type() == 'ATTITUDE_TARGET':
+                timestamp = msg.time_boot_ms
+                # TODO: check if mask notifies us to ignore a field
+                mask = msg.type_mask
+                quat = msg.q
+
+                fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
+                self.notify_message_listeners(MsgID.ATTITUDE, fm)
+
+                gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
+                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
+
+            # DEBUG
+            elif msg.get_type() == 'STATUSTEXT':
+                print("[autopilot message] " + msg.text.decode("utf-8"))
+
+        await self._shutdown_event_loop()
+
     async def _dispatch_loop(self):
         """
         Continually listens to the drone connection for incoming messages.
@@ -122,13 +256,15 @@ class WebSocketConnection(connection.Connection):
         async with websockets.connect(self._uri) as ws:
             self._ws = ws
             while self._running:
-                current_time = time.time()
                 msg = await ws.recv()
                 msg = self.decode_message(msg)
-                print('Message received', msg)
 
                 if msg.get_type() == 'BAD_DATA' or msg is None:
                     continue
+
+                print('Message received', msg)
+                current_time = time.time()
+                print("Time between messages", current_time - last_msg_time)
 
                 # send a heartbeat message back, since this needs to be
                 # constantly sent so the autopilot knows this exists
@@ -228,13 +364,12 @@ class WebSocketConnection(connection.Connection):
 
                 # http://mavlink.org/messages/common#ATTITUDE_TARGET
                 elif msg.get_type() == 'ATTITUDE_TARGET':
-                    timestamp = msg.time_boot_ms
                     # TODO: check if mask notifies us to ignore a field
                     mask = msg.type_mask
                     quat = msg.q
 
-                    fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
-                    self.notify_message_listeners(MsgID.ATTITUDE, fm)
+                    att = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
+                    self.notify_message_listeners(MsgID.ATTITUDE, att)
 
                     gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
                     self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
@@ -242,6 +377,7 @@ class WebSocketConnection(connection.Connection):
                 # DEBUG
                 elif msg.get_type() == 'STATUSTEXT':
                     print("[autopilot message] " + msg.text.decode("utf-8"))
+
 
         await self._shutdown_event_loop()
 
@@ -253,6 +389,8 @@ class WebSocketConnection(connection.Connection):
         """
         self._running = True
         asyncio.ensure_future(self._dispatch_loop())
+        # asyncio.ensure_future(self._read_loop())
+        # asyncio.ensure_future(self._do_message())
         asyncio.get_event_loop().run_forever()
 
     async def _shutdown_event_loop(self):

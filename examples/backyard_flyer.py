@@ -134,8 +134,8 @@ class BackyardFlyer(Drone):
 
 
 if __name__ == "__main__":
-    # conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
-    conn = WebSocketConnection('ws://127.0.0.1:5760')
+    conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
+    # conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = BackyardFlyer(conn)
     time.sleep(2)
     drone.start()

@@ -1,4 +1,3 @@
-
 """
 Relay websocket messages between the FCND Unity Simulator
 and a python client.
@@ -7,14 +6,15 @@ This must be done due to the current limitation of C# System.Net
 not being usable in a WebGL build.
 
 Instructions:
-    - Run this file prior to running the simulator scene. 
+    - Run this file prior to running the simulator scene.
     - In the simulator scene make sure the transport protocol is set to WebSocket.
     - Run the simulator scene.
-    - Run a file using a WebSocketConnection, such as test_websocket_connection.py 
+    - Run a file using a WebSocketConnection, such as test_websocket_connection.py
       in this directory.
 """
 import uvloop
 import asyncio
+import time
 import signal
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
@@ -36,6 +36,7 @@ connections = set()
 async def relay(ws, path):
     global connections
     connections.add(ws)
+    old = time.time()
     while True:
         try:
             msg = await ws.recv()
@@ -43,7 +44,12 @@ async def relay(ws, path):
             print('Connection closed, remaining connected clients', len(connections))
             connections.remove(ws)
         else:
-            print('Message to relay', msg)
+            now = time.time()
+            diff = now - old
+            if diff > 0.01:
+                print("Time between messages", now - old)
+                print('Message to relay', mav.decode(bytearray(msg)))
+            old = now
             for conn in connections:
                 if conn != ws:
                     await conn.send(msg)
