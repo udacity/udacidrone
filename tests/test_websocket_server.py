@@ -18,6 +18,7 @@ import time
 import signal
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+from collections import Counter
 from io import BytesIO
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -31,12 +32,13 @@ mav = mavlink.MAVLink(f)
 # Keep track of connections. We'll use this to relay
 # a connection's messages to all the other connections.
 connections = set()
-
+message_rates = Counter()
 
 async def relay(ws, path):
     global connections
+    global message_rates
     connections.add(ws)
-    old = time.time()
+    prev_time = time.time()
     while True:
         try:
             msg = await ws.recv()
@@ -44,12 +46,18 @@ async def relay(ws, path):
             print('Connection closed, remaining connected clients', len(connections))
             connections.remove(ws)
         else:
+            msg = mav.decode(bytearray(msg))
+            mt = msg.get_type()
             now = time.time()
-            diff = now - old
-            if diff > 0.01:
-                print("Time between messages", now - old)
-                print('Message to relay', mav.decode(bytearray(msg)))
-            old = now
+            message_rates[mt] += 1
+            diff = now - prev_time
+            if diff > 1.0:
+                for mt in message_rates:
+                    v = message_rates[mt] / diff
+                    print('Message rate for msg {0} is {1} Hz'.format(mt, v))
+                print()
+                prev_time = now
+                message_rates.clear()
             for conn in connections:
                 if conn != ws:
                     await conn.send(msg)
