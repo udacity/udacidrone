@@ -347,6 +347,7 @@ class MavlinkConnection(connection.Connection):
     def stop(self):
         # stop the dispatch and command while loops
         self._running = False
+        time.sleep(2)
 
         # NOTE: no need to call join on the threads
         # as both threads are daemon threads
