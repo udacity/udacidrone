@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from io import BytesIO
 
-import uvloop
+import platform
 import websockets
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
@@ -27,7 +27,9 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 # CONNECTION_TYPE_PARROT = 3
 # CONNECTION_TYPE_DJI = 4
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+if platform.system() is not 'Windows':
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logging.getLogger('asyncio').setLevel(logging.DEBUG)
 
 

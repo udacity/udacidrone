@@ -1,4 +1,5 @@
 import sys
+import platform
 
 from setuptools import find_packages, setup
 
@@ -32,8 +33,7 @@ setup(
         'pymavlink>=2.2'
         'utm>=0.4',
         'websockets>=4.0.1',
-        'uvloop>=0.9.1'
-    ],
+    ] + (['uvloop>=0.9.1'] if platform.system() is not 'Windows' else []),
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',
     license='MIT License',
