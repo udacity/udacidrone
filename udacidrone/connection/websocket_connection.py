@@ -366,18 +366,16 @@ class WebSocketConnection(connection.Connection):
                 elif msg.get_type() == 'ATTITUDE_QUATERNION':
                     timestamp = msg.time_boot_ms
                     # TODO: check if mask notifies us to ignore a field
-    
-    
+
                     fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
                     self.notify_message_listeners(MsgID.ATTITUDE, fm)
-    
+
                     gyro = mt.BodyFrameMessage(timestamp, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
                     self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
                 # DEBUG
                 elif msg.get_type() == 'STATUSTEXT':
                     print("[autopilot message] " + msg.text.decode("utf-8"))
-
 
         await self._shutdown_event_loop()
 

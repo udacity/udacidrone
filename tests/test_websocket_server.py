@@ -12,16 +12,21 @@ Instructions:
     - Run a file using a WebSocketConnection, such as test_websocket_connection.py
       in this directory.
 """
-import uvloop
 import asyncio
-import time
+import logging
 import signal
-import websockets
-from pymavlink.dialects.v20 import ardupilotmega as mavlink
+import time
 from collections import Counter
 from io import BytesIO
 
+import uvloop
+import websockets
+from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+logger = logging.getLogger('websockets.server')
+logger.setLevel(logging.ERROR)
+logger.addHandler(logging.StreamHandler())
 
 HOST = '127.0.0.1'
 PORT = 5760
@@ -33,6 +38,7 @@ mav = mavlink.MAVLink(f)
 # a connection's messages to all the other connections.
 connections = set()
 message_rates = Counter()
+
 
 async def relay(ws, path):
     global connections
@@ -46,8 +52,8 @@ async def relay(ws, path):
             print('Connection closed, remaining connected clients', len(connections))
             connections.remove(ws)
         else:
-            msg = mav.decode(bytearray(msg))
-            mt = msg.get_type()
+            dm = mav.decode(bytearray(msg))
+            mt = dm.get_type()
             now = time.time()
             message_rates[mt] += 1
             diff = now - prev_time

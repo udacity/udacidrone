@@ -237,7 +237,6 @@ class MavlinkConnection(connection.Connection):
                 timestamp = msg.time_boot_ms
                 # TODO: check if mask notifies us to ignore a field
 
-
                 fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
                 self.notify_message_listeners(MsgID.ATTITUDE, fm)
 

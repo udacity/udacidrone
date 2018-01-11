@@ -51,7 +51,7 @@ class BackyardFlyer(Drone):
                 if len(self.all_waypoints) > 0:
                     self.waypoint_transition()
                 else:
-                    if np.linalg.norm(self.local_velocity[0:2])<1.0:
+                    if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
                         self.landing_transition()
 
     def velocity_callback(self):
@@ -134,8 +134,8 @@ class BackyardFlyer(Drone):
 
 
 if __name__ == "__main__":
-    conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
-    # conn = WebSocketConnection('ws://127.0.0.1:5760')
+    # conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)
+    conn = WebSocketConnection('ws://127.0.0.1:5760')
     drone = BackyardFlyer(conn)
     time.sleep(2)
     drone.start()
