@@ -130,11 +130,18 @@ class MavlinkConnection(connection.Connection):
 
         last_msg_time = time.time()
         while self._running:
-            current_time = time.time()
 
             # wait for a new message
             msg = self.wait_for_message()
-            #print('Message received', msg)
+
+            # if no message or a bad message was received, just move along
+            if msg is None:
+                continue
+
+            print('Message received', msg)
+            current_time = time.time()
+
+            print("Time between messages", current_time - last_msg_time)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
@@ -145,10 +152,6 @@ class MavlinkConnection(connection.Connection):
 
                 # stop this read loop
                 self._running = False
-
-            # if no message or a bad message was received, just move along
-            if msg is None:
-                continue
 
             # update the time of the last message
             last_msg_time = current_time
@@ -229,22 +232,20 @@ class MavlinkConnection(connection.Connection):
                                                 float(msg.current_distance) / 100, float(msg.covariance) / 100)
                 self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
-            # http://mavlink.org/messages/common#ATTITUDE_TARGET
-            elif msg.get_type() == 'ATTITUDE_TARGET':
+            # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
+            elif msg.get_type() == 'ATTITUDE_QUATERNION':
                 timestamp = msg.time_boot_ms
                 # TODO: check if mask notifies us to ignore a field
-                mask = msg.type_mask
-                quat = msg.q
 
-                fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
+                fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
                 self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
-                gyro = mt.BodyFrameMessage(timestamp, msg.body_roll_rate, msg.body_pitch_rate, msg.body_yaw_rate)
+                gyro = mt.BodyFrameMessage(timestamp, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
                 self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
             # DEBUG
             elif msg.get_type() == 'STATUSTEXT':
-                #print("[autopilot message] " + msg.text.decode("utf-8"))
+                # print("[autopilot message] " + msg.text.decode("utf-8"))
                 pass
 
     def command_loop(self):
@@ -415,20 +416,18 @@ class MavlinkConnection(connection.Connection):
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
 
     def cmd_attitude(self, roll, pitch, yawrate, thrust):
-                
-        
         time_boot_ms = 0  # this does not need to be set to a specific time
         # TODO: convert the attitude to a quaternion
-        frame_msg = mt.FrameMessage(0.0,roll,pitch,0.0)        
+        frame_msg = mt.FrameMessage(0.0, roll, pitch, 0.0)
         q = [frame_msg.q0, frame_msg.q1, frame_msg.q2, frame_msg.q3]
         mask = 0b00000011
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, 0, 0, yawrate, thrust)
         self.send_message(msg)
 
-    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
+    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        q = [0, 0, 0, 0]
+        q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_rate, pitch_rate, yaw_rate, thrust)

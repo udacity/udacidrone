@@ -51,7 +51,8 @@ class BackyardFlyer(Drone):
                 if len(self.all_waypoints) > 0:
                     self.waypoint_transition()
                 else:
-                    self.landing_transition()
+                    if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
+                        self.landing_transition()
 
     def velocity_callback(self):
         if self.flight_state == States.LANDING:
@@ -67,7 +68,7 @@ class BackyardFlyer(Drone):
                 if self.armed:
                     self.takeoff_transition()
             elif self.flight_state == States.DISARMING:
-                if ~self.armed:
+                if ~self.armed & ~self.guided:
                     self.manual_transition()
 
     def calculate_box(self):
@@ -107,17 +108,16 @@ class BackyardFlyer(Drone):
     def disarming_transition(self):
         print("disarm transition")
         self.disarm()
+        self.release_control()
         self.flight_state = States.DISARMING
 
     def manual_transition(self):
         print("manual transition")
-        self.release_control()
         self.stop()
         self.in_mission = False
         self.flight_state = States.MANUAL
 
     def start(self):
-
         self.start_log("Logs", "NavLog.txt")
         # self.connect()
 
