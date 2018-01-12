@@ -141,7 +141,7 @@ class Drone(object):
 
     @property
     def connected(self):
-        return self.connection.connected
+        return self.connection.open
 
     def _update_state(self, msg):
         self._armed = msg.armed

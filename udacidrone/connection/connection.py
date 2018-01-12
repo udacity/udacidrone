@@ -102,7 +102,7 @@ class Connection(object):
     # @abstractpropert
     @property
     @abstractmethod
-    def connected(self):
+    def open(self):
         """
         Returns:
             Boolean. True if connection is able to send and/or receive messages, False otherwise.

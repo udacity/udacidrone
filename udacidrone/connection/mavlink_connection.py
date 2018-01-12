@@ -109,7 +109,7 @@ class MavlinkConnection(connection.Connection):
         self._timeout = 5
 
     @property
-    def connected(self):
+    def open(self):
         if self._master.port.fileno() == -1:
             return False
         return True
