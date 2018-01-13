@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import time
-import threading
 from enum import Enum
 from io import BytesIO
 
@@ -30,6 +29,8 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logging.getLogger('asyncio').setLevel(logging.WARNING)
+
+logger = logging.getLogger('udacidrone')
 
 
 class MainMode(Enum):
@@ -67,17 +68,15 @@ class WebSocketConnection(connection.Connection):
 
     """
 
-    def __init__(self, uri, threaded=False, timeout=5):
+    def __init__(self, uri, timeout=5):
         """
         Args:
             uri: address of the websocket server, e.g. "ws://127.0.0.1:5760"
-            threaded: whether to run the event loop on a background thread. Set this
-            to True if you're working in an interactive environment such as a Jupuyter notebook.
             timeout: the time limit in seconds to wait for a message prior to closing connection
         """
 
         # call the superclass constructor
-        super().__init__(threaded=threaded)
+        super().__init__(threaded=False)
 
         self._uri = uri
         self._f = BytesIO()
@@ -127,7 +126,8 @@ class WebSocketConnection(connection.Connection):
         while self._running:
             msg = await self._q.get()
             current_time = time.time()
-            print('Message received', msg)
+            logger.debug('Message received', msg)
+            # print('Message received', msg)
 
             if msg.get_type() == 'BAD_DATA' or msg is None:
                 continue
@@ -263,9 +263,9 @@ class WebSocketConnection(connection.Connection):
                 if msg.get_type() == 'BAD_DATA' or msg is None:
                     continue
 
-                print('Message received', msg)
+                # print('Message received', msg)
+                # logger.debug('Message received', msg)
                 current_time = time.time()
-                print("Time between messages", current_time - last_msg_time)
 
                 # send a heartbeat message back, since this needs to be
                 # constantly sent so the autopilot knows this exists
@@ -380,17 +380,16 @@ class WebSocketConnection(connection.Connection):
 
         await self._shutdown_event_loop()
 
-    def _start_event_loop(self, loop=None):
+    def _start_event_loop(self):
         # asyncio.ensure_future(self._read_loop())
         # asyncio.ensure_future(self._do_message())
         self._running = True
-        if loop:
-            asyncio.set_event_loop(loop)
-            asyncio.ensure_future(self._dispatch_loop())
+        loop = asyncio.get_event_loop()
+        asyncio.ensure_future(self._dispatch_loop())
+        if not loop.is_running():
             loop.run_forever()
         else:
-            asyncio.ensure_future(self._dispatch_loop())
-            asyncio.get_event_loop().run_forever()
+            print("Loop is already running. This might be due to running '%gui async in a interactive shell")
 
     def start(self):
         """
@@ -398,13 +397,7 @@ class WebSocketConnection(connection.Connection):
         loop runs until `self.stop` is called or the connection timeouts.
 
         """
-        if self._threaded:
-            loop = asyncio.new_event_loop()
-            self._loop = loop
-            t = threading.Thread(target=self._start_event_loop, args=(loop,))
-            t.start()
-        else:
-            self._start_event_loop()
+        self._start_event_loop()
 
     async def _shutdown_event_loop(self):
         print('Shutting down event loop')
@@ -457,9 +450,7 @@ class WebSocketConnection(connection.Connection):
         """
         Send an arm command.
         """
-        # asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1))
-        if self._loop:
-            self._loop.call_soon_threadsafe(self.send_long_command, (mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1))
+        asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1))
 
     def disarm(self):
         """
