@@ -11,7 +11,7 @@ from enum import Enum
 import numpy as np
 
 from udacidrone import Drone
-from udacidrone.connection import MavlinkConnection, WebSocketConnection
+from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 from udacidrone.messaging import MsgID
 
 

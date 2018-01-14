@@ -1,7 +1,7 @@
 import time
 
 from udacidrone import Drone
-from udacidrone.connection import MavlinkConnection, WebSocketConnection
+from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 
 if __name__ == "__main__":
     conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=False, PX4=False)

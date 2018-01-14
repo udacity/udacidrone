@@ -2,8 +2,8 @@
 """
 Helper functions
 """
-import utm
 import numpy as np
+import utm
 
 
 def global_to_local(global_position, global_home):

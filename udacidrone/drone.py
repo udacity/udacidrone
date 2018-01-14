@@ -1,14 +1,16 @@
+import traceback
+
 import numpy as np
 
 from udacidrone.logging import Logger
 from udacidrone.messaging import MsgID
-import traceback
 
 
 class Drone(object):
     """
     Drone class
     """
+
     def __init__(self, connection, tlog_name="TLog.txt"):
         self.connection = connection
 
@@ -82,7 +84,7 @@ class Drone(object):
 
         def on_message_receive(msg_name, msg):
             """Sorts incoming messages, updates the drone state variables and runs callbacks"""
-            #print('Message received', msg_name, msg)
+            # print('Message received', msg_name, msg)
             if msg_name == MsgID.CONNECTION_CLOSED:
                 self.stop()
             if msg_name in self._update_property.keys():
@@ -271,7 +273,7 @@ class Drone(object):
         """Passes the message to the appropriate listeners"""
         for fn in self._callbacks.get(name, []):
             try:
-                #print('Drone executing {0} callback'.format(name))
+                # print('Drone executing {0} callback'.format(name))
                 fn()
             except Exception as e:
                 traceback.print_exc()
@@ -343,10 +345,10 @@ class Drone(object):
             self.connection.land(self.local_position[0], self.local_position[1])
         except Exception as e:
             traceback.print_exc()
-            
+
     def cmd_attitude(self, roll, pitch, yawrate, thrust):
         """Command the drone through attitude command
-        
+
         Args:
             roll: in radians
             pitch: in randians
@@ -368,10 +370,10 @@ class Drone(object):
             thrust: upward acceleration in meters/second^2
         """
         try:
-            #thrust = np.clip(thrust, -1, 1)
-            #yaw_rate = np.clip(yaw_rate, -1, 1)
-            #roll_rate = np.clip(roll_rate, -1, 1)
-            #pitch_rate = np.clip(pitch_rate, -1, 1)
+            # thrust = np.clip(thrust, -1, 1)
+            # yaw_rate = np.clip(yaw_rate, -1, 1)
+            # roll_rate = np.clip(roll_rate, -1, 1)
+            # pitch_rate = np.clip(pitch_rate, -1, 1)
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
