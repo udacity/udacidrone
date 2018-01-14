@@ -67,7 +67,9 @@ jobs:
     branches:
       ignore: gh-pages
     steps:
-      -run: echo "Skipping tests on gh-pages branch"
+      -run: 
+        name: skip gh-pages test
+        command: echo "Skipping tests on gh-pages branch"
           
   website:
     machine:
