@@ -1,9 +1,6 @@
-.PHONY: install lint format test clean FORCE
+.PHONY: lint format test FORCE
 
 all: lint test
-
-# install: FORCE
-# 	pip install -e .
 
 lint: FORCE
 	flake8 examples/ udacidrone/ tests/
