@@ -1,26 +1,16 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
-general:
-  branches:
-    ignore:
-      - gh-pages
-
 version: 2
 jobs:
-  build_code:
+  build:
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
       - image: circleci/python:3.6.1
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+
+      # - image: circleci/node:6.10.3
 
     working_directory: ~/udacidrone
+
+    branches:
+      ignore:
+        - gh-pages
 
     steps:
       - checkout
@@ -63,6 +53,7 @@ jobs:
             yapf -i --recursive *.py examples/ udacidrone/ tests/
             isort --recursive *.py examples/ udacidrone/ tests/
 
+
       - store_artifacts:
           path: test-reports
           destination: test-reports
@@ -70,27 +61,25 @@ jobs:
   deploy_website:
     docker:
       - image: circleci/node:6.10.3
-    # machine:
-    #   node:
-    #     version: 6.11.2
-    #   npm:
-    #     version: 3.10.10
+    working_directory: ~/udacidrone/website
+    steps:
+      - run:
+        name: deploy udacidrone website
+        command: |
+          git config --global user.email "domluna@users.noreply.github.com"
+          git config --global user.name "Dominique Luna"
+          echo "machine github.com login domluna password $GITHUB_TOKEN" > ~/.netrc
+          npm install && GIT_USER=domluna npm run publish-gh-pages
 
-    working_directory: ~/udacidrone
-    deployment:
-      website:
-        branch: master
-        steps:
-          - run:
-            command: |
-              git config --global user.email "domluna@users.noreply.github.com"
-              git config --global user.name "Dominique Luna"
-              echo "machine github.com login domluna password $GITHUB_TOKEN" > ~/.netrc
-              cd website && npm install && GIT_USER=domluna npm run publish-gh-pages
 
 workflows:
   version: 2
-  build-and-deploy:
+  build-deploy:
     jobs:
-      - build_code
-      - deploy_website
+      - build
+      - deploy-website:
+          requires:
+            -build
+          filters:
+            branches:
+              only: master
