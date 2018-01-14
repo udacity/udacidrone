@@ -2,6 +2,11 @@
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
+general:
+  branches:
+    ignore:
+      - gh-pages
+
 version: 2
 jobs:
   build_code:
@@ -62,30 +67,26 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  # gh-pages:
-  #   machine: true
-  #   branches:
-  #     ignore: gh-pages
-  #   steps:
-  #     -run: echo "Skipping tests on gh-pages branch"
-          
   deploy_website:
-    machine:
-      node:
-        version: 6.11.2
-      npm:
-        version: 3.10.10
+    docker:
+      - image: circleci/node:6.10.3
+    # machine:
+    #   node:
+    #     version: 6.11.2
+    #   npm:
+    #     version: 3.10.10
 
     working_directory: ~/udacidrone
     deployment:
       website:
         branch: master
         steps:
-          - checkout
-          - run: git config --global user.email "domluna@users.noreply.github.com"
-          - run: git config --global user.name "Dominique Luna"
-          - run: echo "machine github.com login <GITHUB_USERNAME> password $GITHUB_TOKEN" > ~/.netrc
-          - run: cd website && npm install && GIT_USER=<GIT_USER> npm run publish-gh-pages
+          - run:
+            command: |
+              git config --global user.email "domluna@users.noreply.github.com"
+              git config --global user.name "Dominique Luna"
+              echo "machine github.com login domluna password $GITHUB_TOKEN" > ~/.netrc
+              cd website && npm install && GIT_USER=domluna npm run publish-gh-pages
 
 workflows:
   version: 2
