@@ -76,12 +76,10 @@ jobs:
 
 workflows:
   version: 2
-  build-deploy:
+  build_and_deploy:
     jobs:
       - build
       - deploy-website:
-          requires:
-            -build
           filters:
             branches:
               only: master
