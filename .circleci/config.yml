@@ -57,7 +57,7 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  deploy_website:
+  deploy-website:
     docker:
       - image: circleci/node:6.10.3
     working_directory: ~/udacidrone/website
@@ -79,9 +79,9 @@ workflows:
   build-deploy:
     jobs:
       - build
-      # - deploy-website:
-      #     requires:
-      #       -build
-      #     filters:
-      #       branches:
-      #         only: master
+      - deploy-website:
+          requires:
+            -build
+          filters:
+            branches:
+              only: master
