@@ -17,7 +17,7 @@ const siteConfig = {
     {doc: 'getting-started', label: 'Docs'},
     {languages: true},
     {search: true},
-    { href: "https://github.com/udacity/FCND-Drone-API", label: "GitHub" }
+    { href: "https://github.com/udacity/udacidrone", label: "GitHub" }
     // {blog: true, label: 'Blog'},
   ],
   /* path to images for header/footer */
