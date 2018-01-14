@@ -59,15 +59,16 @@ jobs:
   deploy-website:
     docker:
       - image: circleci/node:6.10.3
-    working_directory: ~/udacidrone/website
+    working_directory: ~/udacidrone
     steps:
+      - checkout
       - run:
         name: deploy website
         command: |
           git config --global user.email "domluna@users.noreply.github.com"
           git config --global user.name "Dominique Luna"
           echo "machine github.com login domluna password $GITHUB_TOKEN" > ~/.netrc
-          npm install && GIT_USER=domluna npm run publish-gh-pages
+          cd website && npm install && GIT_USER=domluna npm run publish-gh-pages
 
 
 workflows:
@@ -75,7 +76,7 @@ workflows:
   build_and_deploy:
     jobs:
       - build
-      - deploy-website:
-          filters:
-            branches:
-              only: master
+      - deploy-website
+          # filters:
+          #   branches:
+          #     only: master
