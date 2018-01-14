@@ -12,14 +12,9 @@ except (IOError, ImportError, OSError) as e:
 
 __version__ = '0.1.0'
 
-with open('./udacidrone/__version__.py') as f:
-    for line in f:
-        if line.startswith('__version__ = '):
-            version = line.strip().split()[2][1:-1]
-
 setup(
     name='udacidrone',
-    version=version,
+    version=__version__,
     description="Drone API for Udacity's Flying Car Nanodegree",
     long_description=long_description,
     packages=find_packages(exclude=('tests*',)),
