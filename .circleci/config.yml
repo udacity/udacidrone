@@ -80,11 +80,12 @@ jobs:
     deployment:
       website:
         branch: master
-        commands:
-          - git config --global user.email "domluna@users.noreply.github.com"
-          - git config --global user.name "Dominique Luna"
-          - echo "machine github.com login <GITHUB_USERNAME> password $GITHUB_TOKEN" > ~/.netrc
-          - cd website && npm install && GIT_USER=<GIT_USER> npm run publish-gh-pages
+        steps:
+          - checkout
+          - run: git config --global user.email "domluna@users.noreply.github.com"
+          - run: git config --global user.name "Dominique Luna"
+          - run: echo "machine github.com login <GITHUB_USERNAME> password $GITHUB_TOKEN" > ~/.netrc
+          - run: cd website && npm install && GIT_USER=<GIT_USER> npm run publish-gh-pages
 
 workflows:
   version: 2
