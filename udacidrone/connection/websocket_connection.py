@@ -231,7 +231,7 @@ class WebSocketConnection(connection.Connection):
             elif msg.get_type() == 'ATTITUDE_TARGET':
                 timestamp = msg.time_boot_ms
                 # TODO: check if mask notifies us to ignore a field
-                mask = msg.type_mask
+                # mask = msg.type_mask
                 quat = msg.q
 
                 fm = mt.FrameMessage(timestamp, quat[0], quat[1], quat[2], quat[3])
