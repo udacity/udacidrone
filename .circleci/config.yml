@@ -38,13 +38,25 @@ jobs:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "circleci_requirements.txt" }}
-        
-      # run tests!
+
       - run:
-          name: run tests
+          name: lint
           command: |
             . venv/bin/activate
-            python manage.py test
+            flake8
+        
+      - run:
+          name: test
+          command: |
+            . venv/bin/activate
+            pytest -vx
+
+      - run:
+          name: format
+          command: |
+            . venv/bin/activate
+            yapf -i -r *.py examples/ udacidrone/ tests/
+            isort --recursive *.py examples/ udacidrone/ tests/
 
       - store_artifacts:
           path: test-reports
