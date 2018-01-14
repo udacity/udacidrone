@@ -64,7 +64,7 @@ jobs:
     working_directory: ~/udacidrone/website
     steps:
       - run:
-        name: deploy udacidrone website
+        name: deploy website
         command: |
           git config --global user.email "domluna@users.noreply.github.com"
           git config --global user.name "Dominique Luna"
