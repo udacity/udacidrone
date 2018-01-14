@@ -62,6 +62,9 @@ jobs:
     docker:
       - image: circleci/node:6.10.3
     working_directory: ~/udacidrone/website
+    branches:
+      ignore:
+        - gh-pages
     steps:
       - run:
         name: deploy website
