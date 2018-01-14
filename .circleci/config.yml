@@ -1,10 +1,13 @@
+general:
+  branches:
+    ignore:
+      - gh-pages
+
 version: 2
 jobs:
   build:
     docker:
       - image: circleci/python:3.6.1
-
-      # - image: circleci/node:6.10.3
 
     working_directory: ~/udacidrone
 
@@ -42,12 +45,12 @@ jobs:
             . venv/bin/activate
             pytest -vx
 
-      - run:
-          name: format
-          command: |
-            . venv/bin/activate
-            yapf -i --recursive *.py examples/ udacidrone/ tests/
-            isort --recursive *.py examples/ udacidrone/ tests/
+      # - run:
+      #     name: format
+      #     command: |
+      #       . venv/bin/activate
+      #       yapf -i --recursive *.py examples/ udacidrone/ tests/
+      #       isort --recursive *.py examples/ udacidrone/ tests/
 
       - store_artifacts:
           path: test-reports
@@ -73,6 +76,6 @@ workflows:
     jobs:
       - build
       - deploy-website:
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master

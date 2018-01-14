@@ -4,10 +4,10 @@ Defines a class to be subclassed by specific protocol implementations for
 communication with a drone.
 """
 
+import traceback
 from abc import ABCMeta, abstractmethod
 
 from udacidrone.messaging import MsgID
-import traceback
 
 
 class Connection(object):

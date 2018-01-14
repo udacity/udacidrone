@@ -1,14 +1,16 @@
+import traceback
+
 import numpy as np
 
 from udacidrone.logging import Logger
 from udacidrone.messaging import MsgID
-import traceback
 
 
 class Drone(object):
     """
     Drone class
     """
+
     def __init__(self, connection, tlog_name="TLog.txt"):
         self.connection = connection
 
