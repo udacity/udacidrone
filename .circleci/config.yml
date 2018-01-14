@@ -62,14 +62,14 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  gh-pages:
-    machine: true
-    branches:
-      ignore: gh-pages
-    steps:
-      -run: 
-        name: skip gh-pages test
-        command: echo "Skipping tests on gh-pages branch"
+  # gh-pages:
+  #   machine: true
+  #   branches:
+  #     ignore: gh-pages
+  #   steps:
+  #     -run: 
+  #       name: skip gh-pages test
+  #       command: echo "Skipping tests on gh-pages branch"
           
   website:
     machine:
