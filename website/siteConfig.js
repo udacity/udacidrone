@@ -9,7 +9,7 @@
 const siteConfig = {
   title: 'Udacidrone' /* title for your website */,
   tagline: 'An API for working with flying objects, simulated, unidentified and otherwise.',
-  url: 'https://udacidrone.github.io' /* your website url */,
+  url: 'https://udacity.github.io/udacidrone/' /* your website url */,
   sourceCodeButton: null,
   baseUrl: '/',
   headerLinks: [
