@@ -3,3 +3,7 @@ pymavlink>=2.2
 utm>=0.4
 websockets>=4.0.1
 uvloop>=0.9.1
+flake8
+yapf
+isort
+pytest
