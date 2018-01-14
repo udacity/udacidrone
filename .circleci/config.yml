@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  build:
+  code:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -62,24 +62,25 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  build:
+  gh-pages:
     machine: true
     branches:
       ignore: gh-pages
     steps:
       -run: echo "Skipping tests on gh-pages branch"
           
-  machine:
-    node:
-      version: 6.11.2
-    npm:
-      version: 3.10.10
+  website:
+    machine:
+      node:
+        version: 6.11.2
+      npm:
+        version: 3.10.10
 
-  deployment:
-    website:
-      branch: master
-      commands:
-        - git config --global user.email "domluna@users.noreply.github.com"
-        - git config --global user.name "Dominique Luna"
-        - echo "machine github.com login <GITHUB_USERNAME> password $GITHUB_TOKEN" > ~/.netrc
-        - cd website && npm install && GIT_USER=<GIT_USER> npm run publish-gh-pages
+    deployment:
+      website:
+        branch: master
+        commands:
+          - git config --global user.email "domluna@users.noreply.github.com"
+          - git config --global user.name "Dominique Luna"
+          - echo "machine github.com login <GITHUB_USERNAME> password $GITHUB_TOKEN" > ~/.netrc
+          - cd website && npm install && GIT_USER=<GIT_USER> npm run publish-gh-pages
