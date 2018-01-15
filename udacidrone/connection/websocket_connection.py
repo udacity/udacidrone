@@ -30,7 +30,7 @@ CONNECTION_TYPE_MAVLINK_PX4 = 1
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
-logger = logging.getLogger('udacidrone')
+# logger = logging.getLogger('udacidrone')
 
 
 class MainMode(Enum):
@@ -126,7 +126,7 @@ class WebSocketConnection(connection.Connection):
         while self._running:
             msg = await self._q.get()
             current_time = time.time()
-            logger.debug('Message received', msg)
+            # logger.debug('Message received', msg)
             # print('Message received', msg)
 
             if msg.get_type() == 'BAD_DATA' or msg is None:
@@ -263,10 +263,6 @@ class WebSocketConnection(connection.Connection):
                 if msg.get_type() == 'BAD_DATA' or msg is None:
                     continue
 
-                # print('Message received', msg)
-                # logger.debug('Message received', msg)
-                current_time = time.time()
-
                 # send a heartbeat message back, since this needs to be
                 # constantly sent so the autopilot knows this exists
                 if msg.get_type() == 'HEARTBEAT':
@@ -275,6 +271,11 @@ class WebSocketConnection(connection.Connection):
                                                         mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0,
                                                         mavutil.mavlink.MAV_STATE_ACTIVE)
                     await self.send_message(outmsg)
+
+                print('Message received', msg)
+                current_time = time.time()
+
+                print("Time between messages", current_time - last_msg_time)
 
                 # If we haven't heard a message in a given amount of time
                 # terminate connection and event loop.
@@ -301,7 +302,7 @@ class WebSocketConnection(connection.Connection):
                     self.notify_message_listeners(MsgID.GLOBAL_POSITION, gps)
 
                     # parse out the velocity and trigger that callback
-                    vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vx) / 100)
+                    vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vz) / 100)
                     self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
                 # http://mavlink.org/messages/common/#HEARTBEAT
@@ -363,7 +364,7 @@ class WebSocketConnection(connection.Connection):
                                                     float(msg.current_distance) / 100, float(msg.covariance) / 100)
                     self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
-                # http://mavlink.org/messages/common#ATTITUDE_TARGET
+                # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
                 elif msg.get_type() == 'ATTITUDE_QUATERNION':
                     timestamp = msg.time_boot_ms
                     # TODO: check if mask notifies us to ignore a field
@@ -376,7 +377,8 @@ class WebSocketConnection(connection.Connection):
 
                 # DEBUG
                 elif msg.get_type() == 'STATUSTEXT':
-                    print("[autopilot message] " + msg.text.decode("utf-8"))
+                    # print("[autopilot message] " + msg.text.decode("utf-8"))
+                    pass
 
         await self._shutdown_event_loop()
 
@@ -488,13 +490,14 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_rate, pitch_rate, yaw_rate, thrust)
         asyncio.ensure_future(self.send_message(msg))
-        
+
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
-        msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
-                                                          mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
+        msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
+                                                   roll_moment, pitch_moment, yaw_moment, thrust)
+        print('SENDING MOMENTS MSG', msg)
         asyncio.ensure_future(self.send_message(msg))
 
     def cmd_velocity(self, vn, ve, vd, heading):
