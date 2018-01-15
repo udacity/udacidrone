@@ -4,6 +4,7 @@ import os
 import time
 from enum import Enum
 from io import BytesIO
+import numpy as np
 
 import uvloop
 import websockets
@@ -260,7 +261,7 @@ class WebSocketConnection(connection.Connection):
                 msg = await ws.recv()
                 msg = self.decode_message(msg)
 
-                if msg.get_type() == 'BAD_DATA' or msg is None:
+                if msg is None or msg.get_type() == 'BAD_DATA':
                     continue
 
                 # send a heartbeat message back, since this needs to be
@@ -275,7 +276,7 @@ class WebSocketConnection(connection.Connection):
                 print('Message received', msg)
                 current_time = time.time()
 
-                print("Time between messages", current_time - last_msg_time)
+                # print("Time between messages", current_time - last_msg_time)
 
                 # If we haven't heard a message in a given amount of time
                 # terminate connection and event loop.
@@ -495,9 +496,9 @@ class WebSocketConnection(connection.Connection):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
+        # thrust = np.clip(thrust, -1, 1)
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_moment, pitch_moment, yaw_moment, thrust)
-        print('SENDING MOMENTS MSG', msg)
         asyncio.ensure_future(self.send_message(msg))
 
     def cmd_velocity(self, vn, ve, vd, heading):

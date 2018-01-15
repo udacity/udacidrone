@@ -141,7 +141,7 @@ class MavlinkConnection(connection.Connection):
             print('Message received', msg)
             current_time = time.time()
 
-            print("Time between messages", current_time - last_msg_time)
+            # print("Time between messages", current_time - last_msg_time)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
