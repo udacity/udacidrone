@@ -488,6 +488,14 @@ class WebSocketConnection(connection.Connection):
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_rate, pitch_rate, yaw_rate, thrust)
         asyncio.ensure_future(self.send_message(msg))
+        
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+        time_boot_ms = 0  # this does not need to be set to a specific time
+        q = [0.0, 0.0, 0.0, 0.0]
+        mask = 0b10000000
+        msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
+                                                          mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
+        asyncio.ensure_future(self.send_message(msg))
 
     def cmd_velocity(self, vn, ve, vd, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
