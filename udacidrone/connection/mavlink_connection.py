@@ -167,7 +167,7 @@ class MavlinkConnection(connection.Connection):
                 self.notify_message_listeners(MsgID.GLOBAL_POSITION, gps)
 
                 # parse out the velocity and trigger that callback
-                vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vx) / 100)
+                vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vz) / 100)
                 self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
             # http://mavlink.org/messages/common/#HEARTBEAT
@@ -433,6 +433,14 @@ class MavlinkConnection(connection.Connection):
                                                           mask, q, roll_rate, pitch_rate, yaw_rate, thrust)
         self.send_message(msg)
 
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+        time_boot_ms = 0  # this does not need to be set to a specific time
+        q = [0.0, 0.0, 0.0, 0.0]
+        mask = 0b10000000
+        msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
+                                                          mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
+        self.send_message(msg)
+        
     def cmd_velocity(self, vn, ve, vd, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |

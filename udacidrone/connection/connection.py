@@ -170,6 +170,18 @@ class Connection(object):
             thrust: the normalized desired thrust level on [0, 1]
         """
         pass
+    
+    @abstractmethod
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+        """Command to set the desired moments and thrust
+
+        Args:
+            roll_moment: the desired roll moment in Newton*meter
+            yaw_moment: the desired yaw moment in Newton*meter
+            pitch_moment: the desired pitch moment in Newton*meter
+            thrust: the normalized desired thrust level in Newton
+        """
+        pass
 
     @abstractmethod
     def cmd_velocity(self, vn, ve, vd, heading):
