@@ -1,5 +1,7 @@
 from .connection import Connection
-from .mavlink_connection import MavlinkConnection, MainMode, PositionMask
-#from .websocket_connection import WebSocketConnection
-from .message_types import Message, StateMessage, GlobalFrameMessage, LocalFrameMessage, BodyFrameMessage, FrameMessage, DistanceSensorMessage
+from .mavlink_connection import MainMode, MavlinkConnection, PositionMask
+from .message_types import (BodyFrameMessage, DistanceSensorMessage, FrameMessage, GlobalFrameMessage,
+                            LocalFrameMessage, Message, StateMessage)
+from .websocket_connection import WebSocketConnection
+
 # flake8: noqa

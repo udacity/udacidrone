@@ -4,10 +4,10 @@ Defines a class to be subclassed by specific protocol implementations for
 communication with a drone.
 """
 
+import traceback
 from abc import ABCMeta, abstractmethod
 
 from udacidrone.messaging import MsgID
-import traceback
 
 
 class Connection(object):
@@ -79,14 +79,14 @@ class Connection(object):
         """
         for fn in self._message_listeners.get(name, []):
             try:
-                #print('Executing {0} callback'.format(name))
+                # print('Executing {0} callback'.format(name))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
 
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                #print('Executing {0} callback'.format(MsgID.ANY))
+                # print('Executing {0} callback'.format(MsgID.ANY))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
@@ -102,7 +102,7 @@ class Connection(object):
     # @abstractpropert
     @property
     @abstractmethod
-    def connected(self):
+    def open(self):
         """
         Returns:
             Boolean. True if connection is able to send and/or receive messages, False otherwise.

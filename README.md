@@ -1,7 +1,10 @@
 
 ## Drone API
 
+
 This is the Udacity Drone API. It provides an interface for communicating with your quadcopter in the simulators provided in the Flying Car Nanodegree Program, and for communicating with a real drone if you wish to do so.
+
+[![CircleCI](https://circleci.com/gh/udacity/udacidrone.svg?style=svg)](https://circleci.com/gh/udacity/udacidrone)
 
 To use this package, you'll need to first install the [Python Starter Kit](https://github.com/udacity/FCND-Term1-Starter-Kit) provided for this Nanodegree Program.  
 

@@ -9,15 +9,14 @@
 const siteConfig = {
   title: 'Udacidrone' /* title for your website */,
   tagline: 'An API for working with flying objects, simulated, unidentified and otherwise.',
-  url: 'https://udacidrone.github.io' /* your website url */,
+  url: 'https://udacity.github.io/udacidrone/' /* your website url */,
   sourceCodeButton: null,
   baseUrl: '/',
-  projectName: '',
   headerLinks: [
     {doc: 'getting-started', label: 'Docs'},
     {languages: true},
     {search: true},
-    { href: "https://github.com/udacity/FCND-Drone-API", label: "GitHub" }
+    { href: "https://github.com/udacity/udacidrone", label: "GitHub" }
     // {blog: true, label: 'Blog'},
   ],
   /* path to images for header/footer */
@@ -30,6 +29,7 @@ const siteConfig = {
     secondaryColor: '#02CCBA',
     codeColor: "rgba(243, 136, 136, 0.03)"
   },
+  users: [],
   // This copyright info is used in /core/Footer.js and blog rss/atom feeds.
   copyright:
     'Copyright © ' +
