@@ -1,4 +1,5 @@
 import sys
+import platform
 
 from setuptools import find_packages, setup
 
@@ -22,8 +23,12 @@ setup(
     author='Udacity FCND Team',
     # TODO: Add team email
     author_email='',
-    install_requires=['numpy>=1.10', 'pymavlink>=2.2'
-                      'utm>=0.4', 'websockets>=4.0.1', 'uvloop>=0.9.1'],
+    install_requires=[
+        'numpy>=1.10',
+        'pymavlink>=2.2'
+        'utm>=0.4',
+        'websockets>=4.0.1',
+    ] + (['uvloop>=0.9.1'] if platform.system() is not 'Windows' else []),
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',
     license='MIT License',

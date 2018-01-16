@@ -12,6 +12,7 @@ Instructions:
     - Run a file using a WebSocketConnection, such as test_websocket_connection.py
       in this directory.
 """
+import platform
 import asyncio
 import logging
 import signal
@@ -19,11 +20,12 @@ import time
 from collections import Counter
 from io import BytesIO
 
-import uvloop
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+if platform.system() is not 'Windows':
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logger = logging.getLogger('websockets.server')
 logger.setLevel(logging.ERROR)
 logger.addHandler(logging.StreamHandler())
@@ -80,7 +82,12 @@ if __name__ == '__main__':
 
     # The stop condition is set when receiving SIGTERM.
     stop = asyncio.Future()
-    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+    try:
+        loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+    except NotImplementedError:
+        print("this will result in an error on windows")
+        if platform.system() is 'Windows':
+            pass
 
     # Run the server until the stop condition is met.
     loop.run_until_complete(server(stop))

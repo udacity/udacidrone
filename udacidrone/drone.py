@@ -442,14 +442,3 @@ class Drone(object):
 
         # close the telemetry log
         self.tlog.close()
-
-    def run(self):
-        """
-        Runs the connection in a while loop, same as "start" for a non-threaded connection
-        """
-        if self.connection.threaded:
-            self.connect()
-            while self.connected:
-                pass
-        else:
-            self.start()
