@@ -4,7 +4,6 @@ import os
 import time
 from enum import Enum
 from io import BytesIO
-import numpy as np
 
 import uvloop
 import websockets
