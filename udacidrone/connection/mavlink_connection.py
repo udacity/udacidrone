@@ -102,7 +102,6 @@ class MavlinkConnection(connection.Connection):
 
         # PX4 management
         self._using_px4 = PX4
-
         self._send_rate = 5
 
         # seconds to wait of no messages before termination
@@ -138,7 +137,6 @@ class MavlinkConnection(connection.Connection):
             if msg is None:
                 continue
 
-            print('Message received', msg)
             current_time = time.time()
 
             # print("Time between messages", current_time - last_msg_time)
@@ -146,7 +144,6 @@ class MavlinkConnection(connection.Connection):
             # if we haven't heard a message in a given amount of time
             # send a termination message
             if current_time - last_msg_time > self._timeout:
-                # print("timeout too long!")
                 # notify listeners that the connection is closing
                 self.notify_message_listeners(MsgID.CONNECTION_CLOSED, 0)
 
@@ -155,10 +152,8 @@ class MavlinkConnection(connection.Connection):
 
             # update the time of the last message
             last_msg_time = current_time
-
-            # this does indeed get timestamp, should double check format
-            # TODO: decide on timestamp format for messages
             timestamp = msg._timestamp
+
             # parse out the message based on the type and call
             # the appropriate callbacks
 
