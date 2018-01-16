@@ -20,7 +20,6 @@ import time
 from collections import Counter
 from io import BytesIO
 
-import uvloop
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
