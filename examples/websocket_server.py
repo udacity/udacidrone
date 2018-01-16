@@ -70,6 +70,7 @@ async def relay(ws, path):
 
 
 async def server(stop):
+    print("Starting WebSocket server @ {0}:{1}".format(HOST, PORT))
     async with websockets.serve(relay, HOST, PORT):
         await stop
 

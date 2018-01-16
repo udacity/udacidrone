@@ -377,7 +377,7 @@ class Drone(object):
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
-            
+
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
         """Command the drone moments.
 
@@ -391,7 +391,6 @@ class Drone(object):
             self.connection.cmd_moment(roll_moment, pitch_moment, yaw_moment, thrust)
         except Exception as e:
             traceback.print_exc()
-        
 
     def cmd_velocity(self, velocity_north, velocity_east, velocity_down, heading):
         """Command the drone velocity.

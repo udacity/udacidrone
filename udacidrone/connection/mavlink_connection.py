@@ -141,7 +141,7 @@ class MavlinkConnection(connection.Connection):
             print('Message received', msg)
             current_time = time.time()
 
-            print("Time between messages", current_time - last_msg_time)
+            # print("Time between messages", current_time - last_msg_time)
 
             # if we haven't heard a message in a given amount of time
             # send a termination message
@@ -439,6 +439,7 @@ class MavlinkConnection(connection.Connection):
         mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
+        print('SENDING MOMENTS MSG', msg)
         self.send_message(msg)
         
     def cmd_velocity(self, vn, ve, vd, heading):
