@@ -1,4 +1,5 @@
 .DS_Store
+.cache
 
 # backyard flyer solution for testing
 
@@ -13,6 +14,7 @@ Logs
 
 # python 
 __pycache__/
+*.pyc
 build
 dist
 *.egg-info

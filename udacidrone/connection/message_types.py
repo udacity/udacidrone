@@ -3,15 +3,15 @@ TODO: This likely to undergo some changes.
 
 Message Types
 
-custom set of message types to use between a specific connection type and 
+custom set of message types to use between a specific connection type and
 the drone class.
-this enables abstracting away the protocol specific messages so different 
+this enables abstracting away the protocol specific messages so different
 protocols can be used with the same student facing interface and code.
 
-NOTE: besides the state message, all messages are in the frame they are 
+NOTE: besides the state message, all messages are in the frame they are
 defined in.
 
-NOTE: to ensure minimal errors due to typos, use the MSG_* constants when 
+NOTE: to ensure minimal errors due to typos, use the MSG_* constants when
 registering for specific messages
 
 Attributes:
@@ -32,7 +32,7 @@ import numpy as np
 
 class Message:
     """Message super class
-    
+
     Attributes:
         _time: the message time
     """
@@ -48,9 +48,9 @@ class Message:
 
 class StateMessage(Message):
     """State information message
-    
+
     message to carry drone state information
-    
+
     Attributes:
         _armed: whether or not drone is armed
         _guided: whether or not drone can be commanded from python

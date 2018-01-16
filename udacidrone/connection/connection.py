@@ -4,10 +4,10 @@ Defines a class to be subclassed by specific protocol implementations for
 communication with a drone.
 """
 
+import traceback
 from abc import ABCMeta, abstractmethod
 
 from udacidrone.messaging import MsgID
-import traceback
 
 
 class Connection(object):
@@ -79,14 +79,14 @@ class Connection(object):
         """
         for fn in self._message_listeners.get(name, []):
             try:
-                #print('Executing {0} callback'.format(name))
+                # print('Executing {0} callback'.format(name))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
 
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                #print('Executing {0} callback'.format(MsgID.ANY))
+                # print('Executing {0} callback'.format(MsgID.ANY))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
@@ -102,7 +102,7 @@ class Connection(object):
     # @abstractpropert
     @property
     @abstractmethod
-    def connected(self):
+    def open(self):
         """
         Returns:
             Boolean. True if connection is able to send and/or receive messages, False otherwise.
@@ -160,7 +160,7 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_attitude_rate(self, yaw_rate, pitch_rate, roll_rate, thrust):
+    def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
 
         Args:
@@ -168,6 +168,18 @@ class Connection(object):
             pitch_rate: the desired pitch rate in radians/second
             roll_rate: the desired roll rate in radians/second
             thrust: the normalized desired thrust level on [0, 1]
+        """
+        pass
+    
+    @abstractmethod
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
+        """Command to set the desired moments and thrust
+
+        Args:
+            roll_moment: the desired roll moment in Newton*meter
+            yaw_moment: the desired yaw moment in Newton*meter
+            pitch_moment: the desired pitch moment in Newton*meter
+            thrust: the normalized desired thrust level in Newton
         """
         pass
 
