@@ -1,15 +1,15 @@
 import asyncio
 import logging
 import os
+import platform
 import time
 from enum import Enum
 from io import BytesIO
 
-import platform
 import websockets
+
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
-
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
@@ -128,8 +128,6 @@ class WebSocketConnection(connection.Connection):
         while self._running:
             msg = await self._q.get()
             current_time = time.time()
-            # logger.debug('Message received', msg)
-            # print('Message received', msg)
 
             if msg.get_type() == 'BAD_DATA' or msg is None:
                 continue
@@ -274,7 +272,7 @@ class WebSocketConnection(connection.Connection):
                                                         mavutil.mavlink.MAV_STATE_ACTIVE)
                     await self.send_message(outmsg)
 
-                print('Message received', msg)
+                # print('Message received', msg)
                 current_time = time.time()
 
                 # print("Time between messages", current_time - last_msg_time)

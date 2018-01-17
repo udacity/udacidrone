@@ -12,15 +12,17 @@ Instructions:
     - Run a file using a WebSocketConnection, such as test_websocket_connection.py
       in this directory.
 """
-import platform
+import argparse
 import asyncio
 import logging
+import platform
 import signal
 import time
 from collections import Counter
 from io import BytesIO
 
 import websockets
+
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
 if platform.system() is not 'Windows':
@@ -29,9 +31,6 @@ if platform.system() is not 'Windows':
 logger = logging.getLogger('websockets.server')
 logger.setLevel(logging.ERROR)
 logger.addHandler(logging.StreamHandler())
-
-HOST = '127.0.0.1'
-PORT = 5760
 
 f = BytesIO()
 mav = mavlink.MAVLink(f)
@@ -71,13 +70,18 @@ async def relay(ws, path):
                     await conn.send(msg)
 
 
-async def server(stop):
-    print("Starting WebSocket server @ {0}:{1}".format(HOST, PORT))
-    async with websockets.serve(relay, HOST, PORT):
+async def server(host, port, stop):
+    print("Starting WebSocket server @ {0}:{1}".format(host, port))
+    async with websockets.serve(relay, host, port):
         await stop
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=3001, help='Port number')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help="host address, i.e. '127.0.0.1'")
+    args = parser.parse_args()
+
     loop = asyncio.get_event_loop()
 
     # The stop condition is set when receiving SIGTERM.
@@ -90,4 +94,4 @@ if __name__ == '__main__':
             pass
 
     # Run the server until the stop condition is met.
-    loop.run_until_complete(server(stop))
+    loop.run_until_complete(server(args.host, args.port, stop))
