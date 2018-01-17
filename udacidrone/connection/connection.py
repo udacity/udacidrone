@@ -170,7 +170,7 @@ class Connection(object):
             thrust: the normalized desired thrust level on [0, 1]
         """
         pass
-    
+
     @abstractmethod
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
         """Command to set the desired moments and thrust

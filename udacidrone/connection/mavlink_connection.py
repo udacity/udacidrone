@@ -5,7 +5,6 @@ import time
 from enum import Enum
 
 from pymavlink import mavutil
-
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
@@ -437,7 +436,7 @@ class MavlinkConnection(connection.Connection):
                                                           mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
         print('SENDING MOMENTS MSG', msg)
         self.send_message(msg)
-        
+
     def cmd_velocity(self, vn, ve, vd, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
