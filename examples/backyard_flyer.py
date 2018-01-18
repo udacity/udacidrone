@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Oct 24 16:17:28 2017
 
@@ -140,8 +139,9 @@ if __name__ == "__main__":
     parser.add_argument('--host', type=str, default='0.0.0.0', help="host address, i.e. '127.0.0.1'")
     args = parser.parse_args()
 
-    # conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
-    conn = WebSocketConnection('ws://{0}:{1}'.format(args.host, args.port))
+    print('tcp:{0}:{1}'.format(args.host, args.port))
+    conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port))
+    # conn = WebSocketConnection('ws://{0}:{1}'.format(args.host, args.port))
     drone = BackyardFlyer(conn)
     time.sleep(2)
     drone.start()
