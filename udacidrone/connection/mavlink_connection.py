@@ -2,44 +2,16 @@ import os
 import queue
 import threading
 import time
-from enum import Enum
 
 from pymavlink import mavutil
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
 from . import connection
+from .mavlink_utils import MainMode, PositionMask, dispatch_message
 
 # force use of mavlink v2.0
 os.environ['MAVLINK20'] = '1'
-"""
-Set of enums for the different possible connection types
-NOTE: right now the only implemented type is PX4 mavlink
-"""
-CONNECTION_TYPE_MAVLINK_PX4 = 1
-
-# CONNECTION_TYPE_MAVLINK_APM = 2
-# CONNECTION_TYPE_PARROT = 3
-# CONNECTION_TYPE_DJI = 4
-
-
-class MainMode(Enum):
-    """Constant which isn't defined in Mavlink but is useful for PX4"""
-    PX4_MODE_MANUAL = 1
-    PX4_MODE_OFFBOARD = 6
-
-
-class PositionMask(Enum):
-    """Useful masks for sending commands used in set_position_target_local_ned"""
-    MASK_IGNORE_POSITION = 0x007
-    MASK_IGNORE_VELOCITY = 0x038
-    MASK_IGNORE_ACCELERATION = 0x1C0
-    MASK_IGNORE_YAW = 0x400
-    MASK_IGNORE_YAW_RATE = 0x800
-    MASK_IS_FORCE = (1 << 9)
-    MASK_IS_TAKEOFF = 0x1000
-    MASK_IS_LAND = 0x2000
-    MASK_IS_LOITER = 0x3000
 
 
 class MavlinkConnection(connection.Connection):
@@ -57,7 +29,7 @@ class MavlinkConnection(connection.Connection):
         conn = MavlinkConnection('5760:921600')
     """
 
-    def __init__(self, device, threaded=False, PX4=False, send_rate=5):
+    def __init__(self, device, threaded=False, PX4=False, send_rate=5, timeout=5):
         """Constructor for Mavlink based drone connection.
 
         Note: When threaded, the read loop runs as a daemon, meaning once all
@@ -71,6 +43,7 @@ class MavlinkConnection(connection.Connection):
             PX4: bool for whether or not connected to a PX4 autopilot. Determines the behavior of the
                 command loop (write thread)
             send_rate: the rate in Hertz (Hz) to send messages to the drone
+            timeout: how long to wait for a message before the connection times out (seconds)
         """
 
         # call the superclass constructor
@@ -101,10 +74,10 @@ class MavlinkConnection(connection.Connection):
 
         # PX4 management
         self._using_px4 = PX4
-        self._send_rate = 5
+        self._send_rate = send_rate
 
         # seconds to wait of no messages before termination
-        self._timeout = 5
+        self._timeout = timeout
 
     @property
     def open(self):
@@ -151,96 +124,8 @@ class MavlinkConnection(connection.Connection):
 
             # update the time of the last message
             last_msg_time = current_time
-            timestamp = msg._timestamp
 
-            # parse out the message based on the type and call
-            # the appropriate callbacks
-
-            # http://mavlink.org/messages/common/#GLOBAL_POSITION_INT
-            if msg.get_type() == 'GLOBAL_POSITION_INT':
-                # parse out the gps position and trigger that callback
-                gps = mt.GlobalFrameMessage(timestamp, float(msg.lat) / 1e7, float(msg.lon) / 1e7,
-                                            float(msg.alt) / 1000)
-                self.notify_message_listeners(MsgID.GLOBAL_POSITION, gps)
-
-                # parse out the velocity and trigger that callback
-                vel = mt.LocalFrameMessage(timestamp, float(msg.vx) / 100, float(msg.vy) / 100, float(msg.vz) / 100)
-                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
-
-            # http://mavlink.org/messages/common/#HEARTBEAT
-            elif msg.get_type() == 'HEARTBEAT':
-                motors_armed = (msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
-
-                # TODO: determine if want to broadcast all current mode types
-                # not just boolean on manual
-                guided_mode = False
-
-                # extract whether or not we are in offboard mode for PX4
-                # (the main mode)
-                main_mode = (msg.custom_mode & 0x000F0000) >> 16
-                if main_mode == MainMode.PX4_MODE_OFFBOARD.value:
-                    guided_mode = True
-
-                state = mt.StateMessage(timestamp, motors_armed, guided_mode)
-                self.notify_message_listeners(MsgID.STATE, state)
-
-            # http://mavlink.org/messages/common#LOCAL_POSITION_NED
-            elif msg.get_type() == 'LOCAL_POSITION_NED':
-                # parse out the local positin and trigger that callback
-                pos = mt.LocalFrameMessage(timestamp, msg.x, msg.y, msg.z)
-                self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
-
-                # parse out the velocity and trigger that callback
-                vel = mt.LocalFrameMessage(timestamp, msg.vx, msg.vy, msg.vz)
-                self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
-
-            # http://mavlink.org/messages/common#HOME_POSITION
-            elif msg.get_type() == 'HOME_POSITION':
-                home = mt.GlobalFrameMessage(timestamp,
-                                             float(msg.latitude) / 1e7,
-                                             float(msg.longitude) / 1e7, float(msg.altitude) / 1000)
-                self.notify_message_listeners(MsgID.GLOBAL_HOME, home)
-
-            # http://mavlink.org/messages/common/#SCALED_IMU
-            elif msg.get_type() == 'SCALED_IMU':
-                # break out the message into its respective messages for here
-                accel = mt.BodyFrameMessage(timestamp, msg.xacc, msg.yacc, msg.zacc)  # units are [mg]
-                self.notify_message_listeners(MsgID.RAW_ACCELEROMETER, accel)
-
-                gyro = mt.BodyFrameMessage(timestamp, msg.xgyro, msg.ygyro, msg.zgyro)  # units are [millirad/sec]
-                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
-
-            # http://mavlink.org/messages/common#SCALED_PRESSURE
-            elif msg.get_type() == 'SCALED_PRESSURE':
-                pressure = mt.BodyFrameMessage(timestamp, 0, 0, msg.press_abs)  # unit is [hectopascal]
-                self.notify_message_listeners(MsgID.BAROMETER, pressure)
-
-            # http://mavlink.org/messages/common#DISTANCE_SENSOR
-            elif msg.get_type() == 'DISTANCE_SENSOR':
-                direction = 0
-                # TODO: parse orientation
-                # orientation = msg.orientation
-                meas = mt.DistanceSensorMessage(timestamp,
-                                                float(msg.min_distance) / 100,
-                                                float(msg.max_distance) / 100, direction,
-                                                float(msg.current_distance) / 100, float(msg.covariance) / 100)
-                self.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
-
-            # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
-            elif msg.get_type() == 'ATTITUDE_QUATERNION':
-                timestamp = msg.time_boot_ms
-                # TODO: check if mask notifies us to ignore a field
-
-                fm = mt.FrameMessage(timestamp, msg.q1, msg.q2, msg.q3, msg.q4)
-                self.notify_message_listeners(MsgID.ATTITUDE, fm)
-
-                gyro = mt.BodyFrameMessage(timestamp, msg.rollspeed, msg.pitchspeed, msg.yawspeed)
-                self.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
-
-            # DEBUG
-            elif msg.get_type() == 'STATUSTEXT':
-                # print("[autopilot message] " + msg.text.decode("utf-8"))
-                pass
+            dispatch_message(self, msg)
 
     def command_loop(self):
         """
@@ -434,7 +319,6 @@ class MavlinkConnection(connection.Connection):
         mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
-        print('SENDING MOMENTS MSG', msg)
         self.send_message(msg)
 
     def cmd_velocity(self, vn, ve, vd, heading):
