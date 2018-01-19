@@ -25,7 +25,9 @@ setup(
     author_email='',
     install_requires=[
         'numpy>=1.10',
-        'pymavlink>=2.2'
+        'future>=0.16.0',
+        'lxml>=4.1.1',
+        'pymavlink>=2.2',
         'utm>=0.4',
         'websockets>=4.0.1',
     ] + (['uvloop>=0.9.1'] if platform.system() is not 'Windows' else []),
