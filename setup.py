@@ -25,6 +25,8 @@ setup(
     author_email='',
     install_requires=[
         'numpy>=1.10',
+        'future',
+        'lxml',
         'pymavlink>=2.2'
         'utm>=0.4',
         'websockets>=4.0.1',
