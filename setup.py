@@ -27,7 +27,7 @@ setup(
         'numpy>=1.10',
         'future',
         'lxml',
-        'pymavlink>=2.2'
+        'pymavlink>=2.2',
         'utm>=0.4',
         'websockets>=4.0.1',
     ] + (['uvloop>=0.9.1'] if platform.system() is not 'Windows' else []),
