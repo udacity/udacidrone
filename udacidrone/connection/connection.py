@@ -6,6 +6,8 @@ communication with a drone.
 
 import traceback
 from abc import ABCMeta, abstractmethod
+from typing import Iterable
+from typing_extensions import Protocol
 
 from udacidrone.messaging import MsgID
 
