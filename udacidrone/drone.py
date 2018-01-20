@@ -111,6 +111,7 @@ class Drone(object):
         return np.array([self._home_longitude, self._home_latitude, self._home_altitude])
 
     def _update_global_home(self, msg):
+        print(msg)
         self._home_longitude = msg.longitude
         self._home_latitude = msg.latitude
         self._home_altitude = msg.altitude
@@ -280,7 +281,7 @@ class Drone(object):
 
         for fn in self._callbacks.get(MsgID.ANY, []):
             try:
-                print('Drone executing {0} callback'.format(MsgID.ANY))
+                # print('Drone executing {0} callback'.format(MsgID.ANY))
                 fn(name)
             except Exception as e:
                 traceback.print_exc()

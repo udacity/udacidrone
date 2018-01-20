@@ -128,7 +128,6 @@ class WebSocketConnection(connection.Connection):
                 # update the time of the last message
                 last_msg_time = current_time
 
-                # this does indeed get timestamp, should double check format
                 dispatch_message(self, msg)
 
         await self._shutdown_event_loop()

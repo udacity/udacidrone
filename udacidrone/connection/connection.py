@@ -6,8 +6,6 @@ communication with a drone.
 
 import traceback
 from abc import ABCMeta, abstractmethod
-from typing import Iterable
-from typing_extensions import Protocol
 
 from udacidrone.messaging import MsgID
 
@@ -81,14 +79,12 @@ class Connection(object):
         """
         for fn in self._message_listeners.get(name, []):
             try:
-                # print('Executing {0} callback'.format(name))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
 
         for fn in self._message_listeners.get(MsgID.ANY, []):
             try:
-                # print('Executing {0} callback'.format(MsgID.ANY))
                 fn(name, msg)
             except Exception as e:
                 traceback.print_exc()
