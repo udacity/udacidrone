@@ -1,0 +1,111 @@
+<html lang="en"><head><meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>old-readme · Udacidrone</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta property="og:title" content="old-readme · Udacidrone"/><meta property="og:type" content="website"/><meta property="og:url" content="https://udacity.github.io/udacidrone//index.html"/><meta property="og:description" content="## Drone API"/><link rel="shortcut icon" href="/img/favicon.png"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/></head><body class="sideNavVisible"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/docusaurus.svg"/><h2 class="headerTitle">Udacidrone</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li><a href="/docs/getting-started.html" target="_self">Docs</a></li><li><a target="_self"></a></li><li><a href="https://github.com/udacity/udacidrone" target="_self">GitHub</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1>old-readme</h1></header><article><div><span><h2><a class="anchor" aria-hidden="true" name="drone-api"></a><a href="#drone-api" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Drone API</h2>
+<p>This is the Udacity Drone API. It provides an interface for communicating with your quadcopter in the simulators provided in the Flying Car Nanodegree Program, and for communicating with a real drone if you wish to do so.</p>
+<p><a href="https://circleci.com/gh/udacity/udacidrone"><img src="https://circleci.com/gh/udacity/udacidrone.svg?style=svg" alt="CircleCI"></a></p>
+<p>To use this package, you'll need to first install the <a href="https://github.com/udacity/FCND-Term1-Starter-Kit">Python Starter Kit</a> provided for this Nanodegree Program.</p>
+<h3><a class="anchor" aria-hidden="true" name="the-code"></a><a href="#the-code" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The Code</h3>
+<p>Within <code>drone.py</code> we wrote a wrapper <code>Drone</code> superclass to handle all the communication between Python and the drone simulator. The <code>Drone</code> class contains commands to be passed to the simulator and allows you to register callbacks/listeners on messages coming from the simulator.</p>
+<h3><a class="anchor" aria-hidden="true" name="incoming-message-types"></a><a href="#incoming-message-types" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Incoming Message Types</h3>
+<p>The following incoming message types are available for use with the Drone API:</p>
+<ul>
+<li><code>state_msg</code>: Information about whether the drone is armed and in guided mode</li>
+<li><code>global_position_msg</code>: latitude, longitude, altitude</li>
+<li><code>local_position_msg</code>: local north, local east, local down</li>
+<li><code>local_velocity_msg</code>: local north velocity, local east velocity, local vertical velocity (positive up)</li>
+</ul>
+<p>All message types also contain the time. More information about the properties of each message can be found in <code>message_types.py</code>. The data for these messages are retrieved using callbacks.</p>
+<h3><a class="anchor" aria-hidden="true" name="registering-callbacks"></a><a href="#registering-callbacks" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Registering Callbacks</h3>
+<p>The incoming message data is receiving using callback methods. These methods are only called when a message of their respective type is received.  Callbacks are member functions of the drone class and are registered/unregistered using <code>self.register_callback(msg_type, callback_fn)</code> and <code>self.remove_callback(msg_type, callback_fn)</code>, respectively.</p>
+<p>To register a callback for a particular message type (<code>MSG_GLOBAL_POSITION</code> in this case):</p>
+<pre><code class="hljs css python">self.register_callback(message_types.MSG_GLOBAL_POSITION,                               self.global_position_callback)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">global_position_callback</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-comment"># do whatever you want knowing that the drone global position attribute has new information</span>
+</code></pre>
+<p>Callbacks are triggered when the corresponding attributes of the drone class have been updated with new information from the simulator or real drone.  For this reason, you will notice that the callbacks do not require any input variables (besides the <code>self</code> parameter required for a class member function).</p>
+<p>In some cases, you may find it useful to have a single callback for all attribute changes, which can be done by passing <code>MsgID.ANY</code> as the message type.  For this callback, an additional parameter of the name of the attribute set that has been updated is also passed to the callback.</p>
+<pre><code class="hljs css python">self.register_callback(<span class="hljs-string">'*'</span>, self.all_msg_callback)
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">all_msg_callback</span><span class="hljs-params">(self, name)</span>:</span>
+    <span class="hljs-comment"># this is a listener for all message types, so break out the msg as defined by the name</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" name="drone-attributes"></a><a href="#drone-attributes" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Drone Attributes</h3>
+<p>In addition to being passed to appropriate callbacks, the message data is also saved into the following attributes of the <code>Drone</code> class:</p>
+<ul>
+<li><code>global_position</code>: latitude (deg), longitude (deg), altitude (meter)</li>
+<li><code>local_position</code>: north (meter), east (meter), down (meter)</li>
+<li><code>local_velocity</code>: north velocity (m/s), east velocity (m/s), vertical velocity (m/s, positive up)</li>
+<li><code>armed</code>: True/False</li>
+<li><code>guided</code>: True/False</li>
+</ul>
+<p>Drone attributes can be used if information is required from multiple messages. For example:</p>
+<pre><code class="hljs css python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">global_position_callback</span><span class="hljs-params">(self)</span>:</span>
+    <span class="hljs-keyword">if</span> self.global_position[<span class="hljs-number">2</span>] &lt; <span class="hljs-number">0.05</span>: <span class="hljs-comment"># Checks the global altitude</span>
+        <span class="hljs-keyword">if</span> self.local_velocity[<span class="hljs-number">2</span>] &lt; <span class="hljs-number">0.05</span> <span class="hljs-comment"># Checks the latest drone velocity, since it isn't part of the message</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" name="outgoing-commands"></a><a href="#outgoing-commands" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Outgoing Commands</h3>
+<p>The following commands are implemented within the <code>Drone</code> superclass:</p>
+<ul>
+<li><code>connect()</code>: Starts receiving messages from the drone. Blocks the code until the first message is received</li>
+<li><code>start()</code>: Start receiving messages from the drone. If the connection is not threaded, this will block the code.</li>
+<li><code>arm()</code>: Arms the motors of the quad, the rotors will spin slowly. The drone cannot takeoff until armed first</li>
+<li><code>disarm()</code>: Disarms the motors of the quad. The quadcopter cannot be disarmed in the air</li>
+<li><code>take_control()</code>: Set the command mode of the quad to guided</li>
+<li><code>release_control()</code>: Set the command mode of the quad to manual</li>
+<li><code>cmd_position(north, east, down, heading)</code>: Command the drone to travel to the local position (north, east, down). Also commands the quad to maintain a specified heading</li>
+<li><code>takeoff(target_altitude)</code>: Takeoff from the current location to the specified global altitude</li>
+<li><code>land()</code>: Land in the current position</li>
+<li><code>stop()</code>: Terminate the connection with the drone and close the telemetry log</li>
+</ul>
+<p>These can be called directly from other methods within the <code>Drone</code> class, i.e.:</p>
+<pre><code class="hljs css python">self.arm() <span class="hljs-comment"># Sends an arm command to the drone</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" name="manual-flight-using-the-drone-api"></a><a href="#manual-flight-using-the-drone-api" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Manual Flight Using the Drone API</h3>
+<p>To log data while flying manually, run the <code>drone.py</code> script as shown below:</p>
+<pre><code class="hljs css sh">python drone.py
+</code></pre>
+<p>Run this script after starting the simulator. It connects to the simulator using the <code>Drone</code> class and runs until the tcp connection is broken. The connection will timeout if it doesn't receive a heartbeat message once every 10 seconds. The GPS data is automatically logged.</p>
+<p>To stop logging data, stop the simulator first and the script will automatically terminate after approximately 10 seconds.</p>
+<p>Alternatively, the drone can be manually started/stopped from a Python/iPython shell:</p>
+<pre><code class="hljs css python"><span class="hljs-keyword">from</span> drone <span class="hljs-keyword">import</span> Drone
+drone = Drone()
+drone.start(threaded=<span class="hljs-keyword">True</span>, tlog_name=<span class="hljs-string">"TLog-manual.txt"</span>)
+</code></pre>
+<p>When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as &quot;TLog-manual.txt&quot; as shown above).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.  Note that when running the drone from <code>python drone.py</code> for manual flight, the telemetry log will default to &quot;TLog-manual.txt&quot;.</p>
+<p>If <code>threaded</code> is set to <code>False</code>, the code will block and the drone logging can only be stopped by terminating the simulation. If the connection is threaded, the drone can be commanded using the commands described above, and the connection can be stopped (and the log properly closed) using:</p>
+<pre><code class="hljs css python">drone.stop()
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" name="message-logging"></a><a href="#message-logging" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Message Logging</h3>
+<p>The telemetry data is automatically logged in &quot;Logs\TLog.txt&quot; or &quot;Logs\TLog-manual.txt&quot; for logs created when running <code>python drone.py</code>. Each row contains a comma seperated representation of each message. The first row is the incoming message type. The second row is the time. The rest of the rows contain all the message properties.</p>
+<h4><a class="anchor" aria-hidden="true" name="reading-telemetry-logs"></a><a href="#reading-telemetry-logs" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reading Telemetry Logs</h4>
+<p>Logs can be read using:</p>
+<pre><code class="hljs css python">t_log = drone.read_telemetry_data(filename)
+</code></pre>
+<p>The data is stored as a dictionary of message types. For each message type, there is a list of numpy arrays. For example, to access the longitude and latitude from a <code>global_position_msg</code>:</p>
+<pre><code class="hljs css python"><span class="hljs-comment"># Time is always the first entry in the list</span>
+time = t_log[<span class="hljs-string">'global_position_msg'</span>][<span class="hljs-number">0</span>][:]
+longitude = t_log[<span class="hljs-string">'global_position_msg'</span>][<span class="hljs-number">1</span>][:]
+latitude = t_log[<span class="hljs-string">'global_position_msg'</span>][<span class="hljs-number">2</span>][:]
+</code></pre>
+<p>The data between different messages will not be time synced since they are recorded at different times.</p>
+<h2><a class="anchor" aria-hidden="true" name="autonomous-control-state-machine"></a><a href="#autonomous-control-state-machine" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Autonomous Control State Machine</h2>
+<p>After getting familiar with how the drone flies, you will fill in the missing pieces of a state machine to fly the drone autonomously. The state machine is run continuously until either the mission is ended or the MAVLink connection is lost.</p>
+<p>The six states predefined for the state machine:</p>
+<ul>
+<li><code>MANUAL</code>: the drone is being controlled by the user</li>
+<li><code>ARMING</code>: the drone is in guided mode and being armed</li>
+<li><code>TAKEOFF</code>: the drone is taking off from the ground</li>
+<li><code>WAYPOINT</code>: the drone is flying to a specified target position</li>
+<li><code>LANDING</code>: the drone is landing on the ground</li>
+<li><code>DISARMING</code>: the drone is disarming</li>
+</ul>
+<p>While the drone is in each state, you will need to check transition criteria with a registered callback. If the transition criteria are met, you will set the next state and pass along any commands to the drone. For example:</p>
+<pre><code class="hljs css python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">state_callback</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">if</span> self.state == States.DISARMING:
+        <span class="hljs-keyword">if</span> ~self.armed:
+            self.release_control()
+            self.in_mission = <span class="hljs-keyword">False</span>
+            self.state = States.MANUAL
+</code></pre>
+<p>This is an example of a callback on the state message. It only checks criteria if it's in the <code>DISARMING</code> state. If it detects that the drone is successfully disarmed, it sets the mode back to manual and terminates the mission. More information about which callbacks you need to define will be provided in the context of the projects.</p>
+<h3><a class="anchor" aria-hidden="true" name="reference-frames"></a><a href="#reference-frames" aria-hidden="true" class="hash-link" ><svg aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reference Frames</h3>
+<p>Two different reference frames are defined and used within the Drone API. Global positions are defined as [longitude, latitude, altitude (positive up)]. Local reference frames are defined [North, East, Down (positive up)] and is relative to a nearby global home provided. Both reference frames are defined in a proper right-handed reference frame. The global reference frame is what is provided by the Drone's GPS. Two convenience functions, <code>global_to_local()</code> and <code>local_to_global()</code> are provided within the <code>frame_utils.py</code> script to convert between the two frames. These functions are wrappers on <code>utm</code> library functions.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div></div><footer class="nav-footer" id="footer"><section class="copyright">Copyright © 2018 Udacity Inc.</section></footer></div></body></html>
