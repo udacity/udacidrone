@@ -64,18 +64,18 @@ def test_drone_state_update():
 
     # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
     # Calculate euler angles with http://quaternions.online/
-    q1 = -0.880
-    q2 = -0.001
-    q3 = 0.450
-    q4 = 0.150
-    expect_euler = np.deg2rad(np.array([-12.635, -52.446, -25.589]))
+    q1 = 0.56098553
+    q2 = 0.43045933
+    q3 = -0.09229596
+    q4 = 0.70105738
+    expect_euler = np.deg2rad(np.array([30, -45, 90]))
     rollspeed = 33
     pitchspeed = 88
     yawspeed = 47
     msg = mav.attitude_quaternion_encode(time.time(), q1, q2, q3, q4, rollspeed, pitchspeed, yawspeed)
     dispatch_message(c, msg)
-    assert np.array_equal(d.gyro_raw, np.array([rollspeed, pitchspeed, yawspeed]))
-    assert np.array_equal(d.attitude, expect_euler)
+    assert np.isclose(d.gyro_raw, np.array([rollspeed, pitchspeed, yawspeed])).all()
+    assert np.isclose(d.attitude, expect_euler).all()
 
     # NOTE: Not using these on the simulator backend yet
 
