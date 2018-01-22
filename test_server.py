@@ -7,6 +7,7 @@ import signal
 from io import BytesIO
 
 import numpy as np
+import pytest
 import websockets
 
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
@@ -14,17 +15,16 @@ from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 
 
-# if platform.system() is not 'Windows':
-#     import uvloop
-#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-# logger = logging.getLogger('websockets.server')
-# logger.setLevel(logging.ERROR)
-# logger.addHandler(logging.StreamHandler())
+def exception_handler(loop, context):
+    print(context)
+    e = context["exception"]
+    pytest.fail(msg=str(e))
+    loop.close()
+
+
 async def ws_server(host, port, stop):
     print("Starting WebSocket server @ {0}:{1}".format(host, port))
     await websockets.serve(ws_receive_msgs, host, port)
-    # async with websockets.serve(ws_receive_msgs, host, port):
-    #     await stop
 
 
 async def ws_receive_msgs(ws, path):
@@ -36,14 +36,10 @@ async def ws_receive_msgs(ws, path):
             #                           mavutil.mavlink.MAV_STATE_ACTIVE)
             # ws.send(hb)
             msg = await ws.recv()
+            mav.decode(bytearray(msg))
         except Exception as e:
-            print(e)
-        else:
-            try:
-                dm = mav.decode(bytearray(msg))
-            except mavlink.MAVError as e:
-                print(dm)
-                print(e)
+            pytest.fail(e)
+            break
 
 
 async def ws_client(host, port, stop):
@@ -110,6 +106,7 @@ async def f():
     port = 3002
     stop = asyncio.Future()
     asyncio.get_event_loop().add_signal_handler(signal.SIGALRM, stop.set_result, None)
+    asyncio.get_event_loop().set_exception_handler(exception_handler)
 
     signal.alarm(2)
     await ws_server(host, port, stop)
