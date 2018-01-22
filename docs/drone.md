@@ -47,3 +47,42 @@ Function | Description
 `set_home_position(longitude, latitude, altitude)` | set the GPS home position for the drone.  This changes the origin point of the local NED frame and therefore adjusts the local position information.
 `start_log(directory, name)` | start logging telemetry data to the specified directory with the specified filename.
 `stop_log()` | stop logging telemetry data
+
+## Logging ##
+
+The `Drone` will also log telemetry data while a connection to a drone exists.  When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as "TLog-manual.txt" as shown belo).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.
+
+```python
+>>> from drone import Drone
+>>> drone = Drone()
+>>> drone.start(threaded=True, tlog_name="TLog-manual.txt")
+```
+
+If `threaded` is set to `False`, the code will block and the drone logging can only be stopped by terminating the simulation. If the connection is threaded, the drone can be commanded using the commands described above, and the connection can be stopped (and the log properly closed) using:
+
+```python
+drone.stop()
+```
+
+### Message Logging
+
+The telemetry data is automatically logged in "Logs\TLog.txt. Each row contains a comma separated representation of each message. The first row is the incoming message type. The second row is the time. The rest of the rows contain all the message properties. 
+
+#### Reading Telemetry Logs
+
+Logs can be read using:
+
+```python
+t_log = drone.read_telemetry_data(filename)
+```
+
+The data is stored as a dictionary of message types. For each message type, there is a list of numpy arrays. For example, to access the longitude and latitude from a `global_position_msg`:
+
+```python
+# Time is always the first entry in the list
+time = t_log['global_position_msg'][0][:]
+longitude = t_log['global_position_msg'][1][:]
+latitude = t_log['global_position_msg'][2][:]
+```
+
+The data between different messages will not be time synced since they are recorded at different times.
