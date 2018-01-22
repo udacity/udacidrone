@@ -175,6 +175,7 @@ class WebSocketConnection(connection.Connection):
         if self._ws is not None and self._ws.open:
             msg.pack(self._mav)
             buf = bytes(msg.get_msgbuf())
+            # buf = msg.get_msgbuf()
             await self._ws.send(buf)
 
     async def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):

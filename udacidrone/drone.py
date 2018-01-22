@@ -292,10 +292,10 @@ class Drone(object):
 
     def arm(self):
         """Send an arm command to the drone"""
-        # try:
-        self.connection.arm()
-        # except Exception as e:
-        #     traceback.print_exc()
+        try:
+            self.connection.arm()
+        except Exception as e:
+            traceback.print_exc()
 
     def disarm(self):
         """Send a disarm command to the drone"""
