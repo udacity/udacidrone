@@ -10,6 +10,6 @@ format: FORCE
 	isort --recursive *.py examples/ udacidrone/ tests/
 
 test: FORCE
-	pytest -vx
+	pytest -vxs tests/
 
 FORCE:

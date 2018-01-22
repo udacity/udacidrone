@@ -128,7 +128,6 @@ class WebSocketConnection(connection.Connection):
                 # update the time of the last message
                 last_msg_time = current_time
 
-                # this does indeed get timestamp, should double check format
                 dispatch_message(self, msg)
 
         await self._shutdown_event_loop()
@@ -176,6 +175,7 @@ class WebSocketConnection(connection.Connection):
         if self._ws is not None and self._ws.open:
             msg.pack(self._mav)
             buf = bytes(msg.get_msgbuf())
+            # buf = msg.get_msgbuf()
             await self._ws.send(buf)
 
     async def send_long_command(self, command_type, param1, param2=0, param3=0, param4=0, param5=0, param6=0, param7=0):

@@ -76,3 +76,6 @@ workflows:
     jobs:
       - build
       - deploy-website
+          # filters:
+          #   branches:
+          #     only: master
