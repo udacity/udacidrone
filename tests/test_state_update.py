@@ -4,9 +4,9 @@ Test updates to the `Drone` class given a message
 import os
 import time
 from io import BytesIO
+
 import numpy as np
 
-from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 from udacidrone import Drone
 from udacidrone.connection import Connection
@@ -77,7 +77,6 @@ def test_drone_state_update():
     assert np.array_equal(d.gyro_raw, np.array([rollspeed, pitchspeed, yawspeed]))
     assert np.array_equal(d.attitude, expect_euler)
 
-    # return np.array([self._roll, self._pitch, self._yaw])
     # NOTE: Not using these on the simulator backend yet
 
     # http://mavlink.org/messages/common/#SCALED_IMU
@@ -97,4 +96,3 @@ def test_drone_state_update():
     # http://mavlink.org/messages/common#DISTANCE_SENSOR
     # msg = mav.distance_sensor_encode()
     # dispatch_message(c, msg)
-
