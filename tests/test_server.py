@@ -57,7 +57,6 @@ async def handle_ws(ws, path):
         #                           mavutil.mavlink.MAV_STATE_ACTIVE)
         # ws.send(hb)
         msg = await ws.recv()
-        # print(msg)
         mav.decode(bytearray(msg))
 
 

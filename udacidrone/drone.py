@@ -111,7 +111,6 @@ class Drone(object):
         return np.array([self._home_longitude, self._home_latitude, self._home_altitude])
 
     def _update_global_home(self, msg):
-        print(msg)
         self._home_longitude = msg.longitude
         self._home_latitude = msg.latitude
         self._home_altitude = msg.altitude
