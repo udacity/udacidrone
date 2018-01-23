@@ -280,7 +280,7 @@ class Drone(object):
 
         for fn in self._callbacks.get(MsgID.ANY, []):
             try:
-                print('Drone executing {0} callback'.format(MsgID.ANY))
+                # print('Drone executing {0} callback'.format(MsgID.ANY))
                 fn(name)
             except Exception as e:
                 traceback.print_exc()
@@ -305,7 +305,6 @@ class Drone(object):
 
     def take_control(self):
         """If the drone is in guided mode this will switch to manual mode"""
-        print('Take Control Messsage')
         try:
             self.connection.take_control()
         except Exception as e:
@@ -346,17 +345,17 @@ class Drone(object):
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_attitude(self, roll, pitch, yawrate, thrust):
+    def cmd_attitude(self, roll, pitch, yaw_rate, thrust):
         """Command the drone through attitude command
 
         Args:
             roll: in radians
             pitch: in randians
-            yawrate: in radians/second
+            yaw_rate: in radians/second
             thrust: upward acceleration in meters/second^2
         """
         try:
-            self.connection.cmd_attitude(roll, pitch, yawrate, thrust)
+            self.connection.cmd_attitude(roll, pitch, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
 
