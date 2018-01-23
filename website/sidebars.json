@@ -1,7 +1,15 @@
 {
   "docs": {
     "Introduction": [
+      "welcome",
       "getting-started"
+    ],
+    "Drone API": [
+    	"drone-api",
+    	"drone-attributes"
+    ],
+    "Connection API": [
+    	"connection-api"
     ]
   }
 }

@@ -1,29 +1,122 @@
 ---
 id: getting-started
 title: Getting Started
-sidebar_label: Example Page
+sidebar_label: Getting Started
 ---
 
-Check the [documentation](https://docusaurus.io) for how to use Docusaurus.
+This a short guide with snippets on how to install UdaciDrone and get familiar with using some of the key parts to the UdaciDrone API.
 
-## Lorem
+To be able to demonstrate how the UdaciDrone API works, we'll need ourselves a fake drone.  To get this part, [download Udacity's drone simulator](https://github.com/udacity/FCND-Simulator-Releases/releases/tag/0.0.1) so you can run some of the example code below!
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum dignissim ultricies. Fusce rhoncus ipsum tempor eros aliquam consequat. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus elementum massa eget nulla aliquet sagittis. Proin odio tortor, vulputate ut odio in, ultrices ultricies augue. Cras ornare ultrices lorem malesuada iaculis. Etiam sit amet libero tempor, pulvinar mauris sed, sollicitudin sapien.
+## Requirements ##
 
-## Mauris In Code
+This API requires Python 3, and depends on the following packages:
 
+ - numpy
+ - matplotlib
+ - jupyter
+ - lxml
+ - pymavlink
+ - pyserial
+ - websockets
+ - utm
+
+To simplify installing all the dependencies and this library, you can install the [Python Starter Kit](https://github.com/udacity/FCND-Term1-Starter-Kit) provided for the Udacity Flying Car Nanodegree.
+
+Or you can manually install all the above dependencies and then simply install udacidrone using `pip install`:
+
+```sh
+pip install udacidrone
 ```
-Mauris vestibulum ullamcorper nibh, ut semper purus pulvinar ut. Donec volutpat orci sit amet mauris malesuada, non pulvinar augue aliquam. Vestibulum ultricies at urna ut suscipit. Morbi iaculis, erat at imperdiet semper, ipsum nulla sodales erat, eget tincidunt justo dui quis justo. Pellentesque dictum bibendum diam at aliquet. Sed pulvinar, dolor quis finibus ornare, eros odio facilisis erat, eu rhoncus nunc dui sed ex. Nunc gravida dui massa, sed ornare arcu tincidunt sit amet. Maecenas efficitur sapien neque, a laoreet libero feugiat ut.
+
+## Using UdaciDrone ##
+
+The UdaciDrone API can be used either in Python scripts or it can be used in the Python terminal itself.  For this Getting Started Guide, we will be walking through an example using the UdaciDrone API in a Python terminal paired with the [Udacity Simulator](https://github.com/udacity/FCND-Simulator-Releases/releases/tag/0.0.1).
+
+There are two main parts to the UdaciDrone API, the `Drone` and different types of connections.  For now, the main connection type that will be used is the `MavlinkConnection`.
+
+```python
+>>> from udacidrone import Drone
+>>> from udacidrone.connection import MavlinkConnection
 ```
 
-## Nulla
+These are the imports that will let you get started working with a drone that is connected using the mavlink communication protocol.
 
-Nulla facilisi. Maecenas sodales nec purus eget posuere. Sed sapien quam, pretium a risus in, porttitor dapibus erat. Sed sit amet fringilla ipsum, eget iaculis augue. Integer sollicitudin tortor quis ultricies aliquam. Suspendisse fringilla nunc in tellus cursus, at placerat tellus scelerisque. Sed tempus elit a sollicitudin rhoncus. Nulla facilisi. Morbi nec dolor dolor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Cras et aliquet lectus. Pellentesque sit amet eros nisi. Quisque ac sapien in sapien congue accumsan. Nullam in posuere ante. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Proin lacinia leo a nibh fringilla pharetra.
+## Setting Up a Connection ##
 
-## Orci
+Before we can have a `Drone`, we first must create a connection object which will be used by `Drone` to communicate with the actual drone.
 
-Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Proin venenatis lectus dui, vel ultrices ante bibendum hendrerit. Aenean egestas feugiat dui id hendrerit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Curabitur in tellus laoreet, eleifend nunc id, viverra leo. Proin vulputate non dolor vel vulputate. Curabitur pretium lobortis felis, sit amet finibus lorem suscipit ut. Sed non mollis risus. Duis sagittis, mi in euismod tincidunt, nunc mauris vestibulum urna, at euismod est elit quis erat. Phasellus accumsan vitae neque eu placerat. In elementum arcu nec tellus imperdiet, eget maximus nulla sodales. Curabitur eu sapien eget nisl sodales fermentum.
+```python
+>>> conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=True)
+```
 
-## Phasellus
+Note: If you are not running this in a python terminal (e.g. a simply script), the `threaded=True` parameter is not needed.  For more detail on what this parameter does [check out the connection api documentation](connection.md)
 
-Phasellus pulvinar ex id commodo imperdiet. Praesent odio nibh, sollicitudin sit amet faucibus id, placerat at metus. Donec vitae eros vitae tortor hendrerit finibus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Quisque vitae purus dolor. Duis suscipit ac nulla et finibus. Phasellus ac sem sed dui dictum gravida. Phasellus eleifend vestibulum facilisis. Integer pharetra nec enim vitae mattis. Duis auctor, lectus quis condimentum bibendum, nunc dolor aliquam massa, id bibendum orci velit quis magna. Ut volutpat nulla nunc, sed interdum magna condimentum non. Sed urna metus, scelerisque vitae consectetur a, feugiat quis magna. Donec dignissim ornare nisl, eget tempor risus malesuada quis.
+## Setting Up the Drone ##
+
+Once we have a connection set up, we're ready to set up our `Drone`!  We just need to tell it over which connection it is receiving information and it is ready to go.
+
+```python
+>>> drone = Drone(conn)
+```
+
+In order to start controlling it, etc, we do need to start the connection between our code and the drone itself:
+
+```python
+>>> drone.start()
+```
+
+
+## Example ##
+
+So now we have something that looks a little like this:
+
+```python
+>>> from udacidrone import Drone
+>>> from udacidrone.connection import MavlinkConnection
+>>> conn = MavlinkConnection('tcp:127.0.0.1:5760', threaded=True)
+>>> drone = Drone(conn)
+>>> drone.start()
+```
+
+So now what can we do?
+
+Well we would love to be able to takeoff, however before we can take off, we first much get the drone ready for takeoff.  This is a process that requires both taking control of the drone and arming it for takeoff.
+
+```python
+>>> drone.take_control()
+>>> drone.arm()
+```
+
+Now we are ready to send some more fun commands, for example if we run:
+
+```python
+>>> drone.takeoff(3)
+```
+
+you should see the drone takeoff to 3 meters above the ground in the simulator!
+
+To see all the other commands you have available to you and to further explore the Drone API [check out the Drone API's detailed documentation](drone.md)!
+
+## Message Logging
+
+The telemetry data is automatically logged in "Logs\TLog.txt. Each row contains a comma separated representation of each message. The first row is the incoming message type. The second row is the time. The rest of the rows contain all the message properties. 
+
+### Reading Telemetry Logs
+
+Logs can be read using:
+
+```python
+t_log = drone.read_telemetry_data(filename)
+```
+
+The data is stored as a dictionary of message types. For each message type, there is a list of numpy arrays. For example, to access the longitude and latitude from a `global_position_msg`:
+
+```python
+# Time is always the first entry in the list
+time = t_log['global_position_msg'][0][:]
+longitude = t_log['global_position_msg'][1][:]
+latitude = t_log['global_position_msg'][2][:]
+```
+
+The data between different messages will not be time synced since they are recorded at different times.
