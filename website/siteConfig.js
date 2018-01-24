@@ -20,9 +20,9 @@ const siteConfig = {
     // {blog: true, label: 'Blog'},
   ],
   /* path to images for header/footer */
-  headerIcon: 'img/docusaurus.svg',
-  footerIcon: 'img/docusaurus.svg',
-  favicon: 'img/favicon.png',
+  // headerIcon: 'img/docusaurus.svg',
+  // footerIcon: 'img/docusaurus.svg',
+  // favicon: 'img/favicon.png',
   /* colors for website */
   colors: {
     primaryColor: '#02B3E4',
