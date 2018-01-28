@@ -21,16 +21,17 @@ from udacidrone.messaging import MsgID
 
 class MyDrone(Drone):
 
-    def __init__(self, connection):
+    def __init__(self, connection, qsize):
         super().__init__(connection)
         # default opens up to http://localhost:8097
         self.v = visdom.Visdom()
         assert self.v.check_connection()
+        self.qsize = qsize
 
         # plot local position
 
         # create q and initial point
-        self.local_position_q = deque(maxlen=400)
+        self.local_position_q = deque(maxlen=self.qsize)
         self.local_position_q.append([self.local_position[0], self.local_position[1]])
 
         # turn queue into a numpy array
@@ -40,9 +41,9 @@ class MyDrone(Drone):
 
         # plot altitude (meters)
 
-        self.altitude_q = deque(maxlen=400)
+        self.altitude_q = deque(maxlen=self.qsize)
         self.altitude_q.append(self.local_position[2])
-        self.altitude_timestep_q = deque(maxlen=400)
+        self.altitude_timestep_q = deque(maxlen=self.qsize)
         self.altitude_timestep_q.append(0)
 
         Y = np.array(self.altitude_q)
@@ -70,10 +71,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
     parser.add_argument('--port', type=int, default=5760, help='Port number')
+    parser.add_argument('--qsize', type=int, default=200, help='Maximum number of points to plot at a given time')
     args = parser.parse_args()
 
     conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
-    drone = MyDrone(conn)
+    drone = MyDrone(conn, args.qsize)
     drone.start()
 
 
