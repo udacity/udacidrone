@@ -35,7 +35,8 @@ class MyDrone(Drone):
 
         # turn queue into a numpy array
         X = np.array(self.local_position_q).reshape(-1, 2)
-        self.local_position_plot = self.v.scatter(X, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
+        self.local_position_plot = self.v.scatter(
+            X, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
 
         # plot altitude (meters)
 
