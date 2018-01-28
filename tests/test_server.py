@@ -137,7 +137,6 @@ async def f(connection_type):
 
 
 @pytest.fixture(scope="module", params=[ConnectionProtocol.WebSocket, ConnectionProtocol.TCP])
-# @pytest.fixture(scope="module", params=[ConnectionProtocol.TCP])
 def connection_type(request):
     return request.param
 
