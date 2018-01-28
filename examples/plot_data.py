@@ -1,10 +1,16 @@
 """
-Plot streaming data. Requires realtime plotting library `visdom`, https://github.com/facebookresearch/visdom/
+Example plotting realtime drone data using `visdom`, https://github.com/facebookresearch/visdom/
 
-
+1. Start visdom server `python -m visdom.server` and go to the link.
+This is where the plots will appear.
+2. Start the simulator.
+3. Run this script.
+4. Fly around in the simulator manually. You should see the local position and altitude plots updating.
 """
 
+import argparse
 from collections import deque
+
 import numpy as np
 import visdom
 
@@ -17,7 +23,8 @@ class MyDrone(Drone):
 
     def __init__(self, connection):
         super().__init__(connection)
-        self.v = visdom.Visdom(server='http://localhost', port=3003)
+        # default opens up to http://localhost:8097
+        self.v = visdom.Visdom()
         assert self.v.check_connection()
 
         # plot local position
@@ -28,7 +35,7 @@ class MyDrone(Drone):
 
         # turn queue into a numpy array
         X = np.array(self.local_position_q).reshape(-1, 2)
-        self.local_position_plot = self.v.scatter(X, opts=dict(title="Local position (x, y)", xlabel='X', ylabel='Y'))
+        self.local_position_plot = self.v.scatter(X, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
 
         # plot altitude (meters)
 
@@ -39,8 +46,9 @@ class MyDrone(Drone):
 
         Y = np.array(self.altitude_q)
         X = np.array(self.altitude_timestep_q)
-        self.altitude_plot = self.v.line(Y, X=X, opts=dict(title="Altitude (meters)", xlabel='Timestep'))
+        self.altitude_plot = self.v.line(Y, X=X, opts=dict(title="Altitude (meters)", xlabel='Timestep', ylable='Down'))
 
+        # register plotting callbacks
         self.register_callback(MsgID.LOCAL_POSITION, self.update_local_pos_plot_callback)
         self.register_callback(MsgID.LOCAL_POSITION, self.update_altitude_plot_callback)
 
@@ -58,7 +66,12 @@ class MyDrone(Drone):
 
 
 def main():
-    conn = MavlinkConnection('tcp:127.0.0.1:5760')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
+    parser.add_argument('--port', type=int, default=5760, help='Port number')
+    args = parser.parse_args()
+
+    conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
     drone = MyDrone(conn)
     drone.start()
 
