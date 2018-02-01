@@ -10,6 +10,10 @@
     ],
     "Connection API": [
     	"connection-api"
+    ],
+    "Development": [
+      "dev-setup",
+      "how-it-works"
     ]
   }
 }
