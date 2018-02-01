@@ -6,11 +6,14 @@
     "tagline": "An API for working with flying objects, simulated, unidentified and otherwise.",
     "connection-api": "Connection API Overview",
     "Overview": "Overview",
+    "dev-setup": "Development Setup",
+    "Setup": "Setup",
     "drone-attributes": "Drone Attributes",
     "Attributes": "Attributes",
     "drone-api": "Drone API Overview",
     "getting-started": "Getting Started",
     "Getting Started": "Getting Started",
+    "how-it-works": "How It Works",
     "old-readme": "old-readme",
     "welcome": "Welcome",
     "Welcome": "Welcome",
@@ -18,7 +21,8 @@
     "GitHub": "GitHub",
     "Introduction": "Introduction",
     "Drone API": "Drone API",
-    "Connection API": "Connection API"
+    "Connection API": "Connection API",
+    "Development": "Development"
   },
   "pages-strings": {
     "Help Translate|recruit community translators for your project": "Help Translate",
