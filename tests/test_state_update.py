@@ -6,8 +6,8 @@ import time
 from io import BytesIO
 
 import numpy as np
-
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 from udacidrone import Drone
 from udacidrone.connection import Connection
 from udacidrone.connection.mavlink_utils import dispatch_message

@@ -1,4 +1,5 @@
 import argparse
+
 import numpy as np
 import visdom
 
@@ -18,20 +19,14 @@ class MyDrone(Drone):
 
         # Plot NE
         ne = np.array([self.local_position[0], self.local_position[1]]).reshape(-1, 2)
-        self.ne_plot = self.v.scatter(ne, opts=dict(
-            title="Local position (north, east)", 
-            xlabel='North', 
-            ylabel='East'
-        ))
+        self.ne_plot = self.v.scatter(
+            ne, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
 
         # Plot D
         d = np.array([self.local_position[2]])
         self.t = 0
-        self.d_plot = self.v.line(d, X=np.array([self.t]), opts=dict(
-            title="Altitude (meters)", 
-            xlabel='Timestep', 
-            ylabel='Down'
-        ))
+        self.d_plot = self.v.line(
+            d, X=np.array([self.t]), opts=dict(title="Altitude (meters)", xlabel='Timestep', ylabel='Down'))
 
         self.register_callback(MsgID.LOCAL_POSITION, self.update_ne_plot)
         self.register_callback(MsgID.LOCAL_POSITION, self.update_d_plot)
