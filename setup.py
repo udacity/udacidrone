@@ -14,7 +14,7 @@ setup(
     # TODO: Add team email
     author_email='',
     install_requires=[
-        'numpy>=1.14',
+        'numpy>=1.12',
         'future==0.16.0',
         'lxml==4.1.1',
         'pymavlink==2.2',
