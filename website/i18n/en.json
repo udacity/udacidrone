@@ -13,8 +13,9 @@
     "drone-api": "Drone API Overview",
     "getting-started": "Getting Started",
     "Getting Started": "Getting Started",
-    "how-it-works": "How It Works",
     "old-readme": "old-readme",
+    "visdom-tutorial": "Plotting Streams Of Data",
+    "Plotting Streams Of Data": "Plotting Streams Of Data",
     "welcome": "Welcome",
     "Welcome": "Welcome",
     "Docs": "Docs",
@@ -22,6 +23,7 @@
     "Introduction": "Introduction",
     "Drone API": "Drone API",
     "Connection API": "Connection API",
+    "Tutorials": "Tutorials",
     "Development": "Development"
   },
   "pages-strings": {

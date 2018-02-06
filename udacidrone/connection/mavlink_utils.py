@@ -2,6 +2,7 @@ import time
 from enum import Enum
 
 from pymavlink import mavutil
+
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt

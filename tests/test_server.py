@@ -11,8 +11,8 @@ from io import BytesIO
 import numpy as np
 import pytest
 import websockets
-
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 

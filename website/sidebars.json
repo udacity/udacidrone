@@ -11,9 +11,11 @@
     "Connection API": [
     	"connection-api"
     ],
+    "Tutorials": [
+      "visdom-tutorial"
+    ],
     "Development": [
-      "dev-setup",
-      "how-it-works"
+      "dev-setup"
     ]
   }
 }
