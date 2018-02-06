@@ -19,6 +19,8 @@ Currently only the Mavlink protocol is supported, but for those interested in ex
 
 TODO: need to explain all of the input parameters, specifically explain when to use threaded and not threaded!!
 
+TODO: also need to explain how the `Connection` class interacts with the 
+
 
 ## Messages ##
 
