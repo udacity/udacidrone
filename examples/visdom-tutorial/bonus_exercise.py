@@ -19,7 +19,6 @@ from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 
 
-
 class MyDrone(Drone):
 
     def __init__(self, connection, qsize):

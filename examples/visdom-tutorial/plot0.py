@@ -4,7 +4,6 @@ import visdom
 
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
-from udacidrone.messaging import MsgID
 
 
 class MyDrone(Drone):
