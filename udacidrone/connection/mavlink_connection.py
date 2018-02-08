@@ -341,7 +341,12 @@ class MavlinkConnection(connection.Connection):
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        # mask = PositionMask.MASK_IS_LOITER.value
+        
+        # when using the simualtor, d is actually interpreted as altitude
+        # therefore need to do a sign change on d
+        if not self._using_px4:
+            d = -1.0*d
+
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
                 PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
