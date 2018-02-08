@@ -147,7 +147,6 @@ class MavlinkConnection(connection.Connection):
             0, 0, 0, 0, 0)
 
         last_write_time = time.time()
-        new_msg = False
         while self._running:
 
             # empty out the queue of pending messages
@@ -345,7 +344,7 @@ class MavlinkConnection(connection.Connection):
         # when using the simualtor, d is actually interpreted as altitude
         # therefore need to do a sign change on d
         if not self._using_px4:
-            d = -1.0*d
+            d = -1.0 * d
 
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
                 PositionMask.MASK_IGNORE_VELOCITY.value)
