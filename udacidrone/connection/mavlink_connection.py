@@ -137,23 +137,17 @@ class MavlinkConnection(connection.Connection):
         queue of messages to run.
         """
 
-        # default to sending a position command to (0,0,0)
+        # default to sending a velocity command to (0,0,0)
         # this needs to be sending commands at a rate of at lease 2Hz in order
         # for PX4 to allow a switch into offboard control.
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
-                PositionMask.MASK_IGNORE_VELOCITY.value)
+                PositionMask.MASK_IGNORE_POSITION.value)
         high_rate_command = self._master.mav.set_position_target_local_ned_encode(
             0, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0)
 
         last_write_time = time.time()
         while self._running:
-
-            # rate limit the loop
-            current_time = time.time()
-            if (current_time - last_write_time) < 1.0 / self._send_rate:
-                continue
-            last_write_time = time.time()
 
             # empty out the queue of pending messages
             # NOTE: Queue class is synchronized and is thread safe already!
@@ -169,9 +163,18 @@ class MavlinkConnection(connection.Connection):
                     # to repeatedly send or send it immediately
                     if msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET':
                         high_rate_command = msg
-                    else:
-                        self._master.mav.send(msg)
+                    
+                    # either way, want to send this command immediately
+                    self._master.mav.send(msg)
                     self._out_msg_queue.task_done()
+
+            # rate limit the loop
+            # though only do this after we have handled any new messages to send
+            # this ensures messages get sent off immediately
+            current_time = time.time()
+            if (current_time - last_write_time) < 1.0 / self._send_rate:
+                continue
+            last_write_time = time.time()
 
             # continually want to send the high rate command
             self._master.mav.send(high_rate_command)
@@ -337,7 +340,12 @@ class MavlinkConnection(connection.Connection):
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        # mask = PositionMask.MASK_IS_LOITER.value
+        
+        # when using the simualtor, d is actually interpreted as altitude
+        # therefore need to do a sign change on d
+        if not self._using_px4:
+            d = -1.0 * d
+
         mask = (PositionMask.MASK_IGNORE_YAW_RATE.value | PositionMask.MASK_IGNORE_ACCELERATION.value |
                 PositionMask.MASK_IGNORE_VELOCITY.value)
         msg = self._master.mav.set_position_target_local_ned_encode(
