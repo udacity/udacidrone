@@ -28,7 +28,7 @@
 <tr><td><code>disarm()</code></td><td>disarm the drone to put it in a state with the motors effectively turned off</td></tr>
 <tr><td><code>takeoff(target_altitude)</code></td><td>command the drone to takeoff to the specified altitude in meters</td></tr>
 <tr><td><code>land()</code></td><td>command the drone to land at the current position</td></tr>
-<tr><td><code>cmd_position(north, east, down, heading)</code></td><td>command the drone to move to a specific NED defined position (in meters) with a specific heading (in radians)</td></tr>
+<tr><td><code>cmd_position(north, east, altitude, heading)</code></td><td>command the drone to move to a specific (N, E, altitude) defined position (in meters) with a specific heading (in radians)</td></tr>
 <tr><td><code>cmd_velocity(velocity_north, velocity_east, velocity_down, heading)</code></td><td>command the drone to have the specified current velocity (in meters/second) and heading (in radians)</td></tr>
 <tr><td><code>cmd_attitude(roll, pitch, yawrate, thrust)</code></td><td>command the drone to the specified attitude, where roll and pitch are in radian, yawrate is the desired rate of heading change in radian/second and thrust is the desired vertical acceleration in meters/second^2</td></tr>
 <tr><td><code>cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)</code></td><td>command the drone to have the specified attitude rates in radians/second and thrust (vertical acceleration) in meters/second^2</td></tr>
