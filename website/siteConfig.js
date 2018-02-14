@@ -26,7 +26,7 @@ const siteConfig = {
   /* colors for website */
   colors: {
     primaryColor: '#02B3E4',
-    secondaryColor: '#02CCBA',
+    secondaryColor: '#2e3d49',
     codeColor: "rgba(243, 136, 136, 0.03)"
   },
   users: [],
