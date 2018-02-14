@@ -102,12 +102,16 @@ const Features = props => (
   <Block align="center" layout="fourColumn">
     {[
       {
-        title: 'Simple',
-        content: 'Designed with a handful of core extensible components.',
+        title: 'Minimal API',
+        content: 'Consists of a handful of **extensible components**.',
+      },
+      {
+	title: 'Simple & Practical',
+	content: 'Made first and foremost for teaching, but powerful enough for **real world use**.',
       },
       {
         title: 'Simulation -> Hardware',
-        content: 'Take your code from simulation to real hardware with **minimal** changes',
+        content: 'Take your code from simulation to hardware with **minimal changes**',
       },
     ]}
   </Block>
