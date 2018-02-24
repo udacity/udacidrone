@@ -36,6 +36,10 @@ class PositionMask(Enum):
     MASK_IS_TAKEOFF = 0x1000
     MASK_IS_LAND = 0x2000
     MASK_IS_LOITER = 0x3000
+    
+class AttitudeMask(Enum):
+    MASK_IGNORE_ATTITUDE = 0b10000000
+    MASK_IGNORE_RATES = 0b00000111
 
 
 def dispatch_message(conn, msg):
