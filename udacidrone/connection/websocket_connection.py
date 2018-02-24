@@ -6,9 +6,9 @@ import time
 from io import BytesIO
 
 import websockets
-
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt

@@ -38,7 +38,7 @@ Function | Description
 `disarm()` | disarm the drone to put it in a state with the motors effectively turned off
 `takeoff(target_altitude)` | command the drone to takeoff to the specified altitude in meters
 `land()` | command the drone to land at the current position
-`cmd_position(north, east, down, heading)` | command the drone to move to a specific NED defined position (in meters) with a specific heading (in radians)
+`cmd_position(north, east, altitude, heading)` | command the drone to move to a specific (N, E, altitude) defined position (in meters) with a specific heading (in radians)
 `cmd_velocity(velocity_north, velocity_east, velocity_down, heading)` | command the drone to have the specified current velocity (in meters/second) and heading (in radians)
 `cmd_attitude(roll, pitch, yawrate, thrust)` | command the drone to the specified attitude, where roll and pitch are in radian, yawrate is the desired rate of heading change in radian/second and thrust is the desired vertical acceleration in meters/second^2
 `cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)` | command the drone to have the specified attitude rates in radians/second and thrust (vertical acceleration) in meters/second^2

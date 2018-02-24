@@ -317,17 +317,19 @@ class Drone(object):
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_position(self, north, east, down, heading):
+    def cmd_position(self, north, east, altitude, heading):
         """Command the local position and drone heading.
 
         Args:
             north: local north in meters
             east: local east in meters
-            down: local down in meters (positive down)
+            altitude: altitude above ground in meters
             heading: drone yaw in radians
         """
         try:
-            self.connection.cmd_position(north, east, down, heading)
+            # connection cmd_position is defined as NED, so need to flip the sign
+            # on altitude
+            self.connection.cmd_position(north, east, -altitude, heading)
         except Exception as e:
             traceback.print_exc()
 
