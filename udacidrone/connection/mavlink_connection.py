@@ -320,8 +320,8 @@ class MavlinkConnection(connection.Connection):
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
-        #TODO: Give this it's own mask
-        mask = 0b10000000  #AttitudeMask.MASK_IGNORE_ATTITUDE #0b10000000
+        # TODO: Give this it's own mask
+        mask = 0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
         self.send_message(msg)
