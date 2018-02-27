@@ -1,15 +1,15 @@
 import os
-import queue
 import threading
 import time
 
 from pymavlink import mavutil
 
+import queue
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
 from . import connection
-from .mavlink_utils import MainMode, PositionMask, AttitudeMask, dispatch_message
+from .mavlink_utils import AttitudeMask, MainMode, PositionMask, dispatch_message
 
 # force use of mavlink v2.0
 os.environ['MAVLINK20'] = '1'
@@ -163,7 +163,7 @@ class MavlinkConnection(connection.Connection):
                     # to repeatedly send or send it immediately
                     if msg.get_type() == 'SET_POSITION_TARGET_LOCAL_NED' or msg.get_type() == 'SET_ATTITUDE_TARGET':
                         high_rate_command = msg
-                    
+
                     # either way, want to send this command immediately
                     self._master.mav.send(msg)
                     self._out_msg_queue.task_done()
@@ -321,7 +321,7 @@ class MavlinkConnection(connection.Connection):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         #TODO: Give this it's own mask
-        mask = 0b10000000#AttitudeMask.MASK_IGNORE_ATTITUDE #0b10000000
+        mask = 0b10000000  #AttitudeMask.MASK_IGNORE_ATTITUDE #0b10000000
         msg = self._master.mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component,
                                                           mask, q, roll_moment, pitch_moment, yaw_moment, thrust)
         self.send_message(msg)
@@ -341,7 +341,7 @@ class MavlinkConnection(connection.Connection):
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
-        
+
         # when using the simualtor, d is actually interpreted as altitude
         # therefore need to do a sign change on d
         if not self._using_px4:
@@ -383,36 +383,39 @@ class MavlinkConnection(connection.Connection):
 
     def set_home_position(self, lat, lon, alt):
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_HOME, 0, 0, 0, 0, lat, lon, alt)
-         
+
     def local_position_target(self, n, e, d, t=0):
         time_boot_ms = t
         mask = 0b1111111111111000
-        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms,mavutil.mavlink.MAV_FRAME_LOCAL_NED,mask,n,e,d,0,0,0,0,0,0,0,0)
+        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask,
+                                                                n, e, d, 0, 0, 0, 0, 0, 0, 0, 0)
         self.send_message(msg)
-        
+
     def local_velocity_target(self, vn, ve, vd, t=0):
         time_boot_ms = t
         mask = 0b1111111111000111
-        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms,mavutil.mavlink.MAV_FRAME_LOCAL_NED,mask,0,0,0,vn,ve,vd,0,0,0,0,0)
+        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask,
+                                                                0, 0, 0, vn, ve, vd, 0, 0, 0, 0, 0)
         self.send_message(msg)
-        
+
     def local_acceleration_target(self, an, ae, ad, t=0):
         time_boot_ms = t
         mask = 0b1111111000111111
-        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms,mavutil.mavlink.MAV_FRAME_LOCAL_NED,mask,0,0,0,0,0,0,an,ae,ad,0,0)
+        msg = self._master.mav.position_target_local_ned_encode(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask,
+                                                                0, 0, 0, 0, 0, 0, an, ae, ad, 0, 0)
         self.send_message(msg)
-        
+
     def attitude_target(self, roll, pitch, yaw, t=0):
         time_boot_ms = t
         mask = 0b01111111
         frame_msg = mt.FrameMessage(0.0, roll, pitch, yaw)
         q = [frame_msg.q0, frame_msg.q1, frame_msg.q2, frame_msg.q3]
-        msg = self._master.mav.attitude_target_encode(time_boot_ms, mask, q,0,0,0,0)
+        msg = self._master.mav.attitude_target_encode(time_boot_ms, mask, q, 0, 0, 0, 0)
         self.send_message(msg)
-        
+
     def body_rate_target(self, p, q, r, t=0):
         time_boot_ms = t
         mask = 0b11111000
-        quat = [0,0,0,0]
+        quat = [0, 0, 0, 0]
         msg = self._master.mav.attitude_target_encode(time_boot_ms, mask, quat, p, q, r, 0)
         self.send_message(msg)
