@@ -1,8 +1,8 @@
 import time
-from enum import Enum
 
 from pymavlink import mavutil
 
+from enum import Enum
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
@@ -36,6 +36,11 @@ class PositionMask(Enum):
     MASK_IS_TAKEOFF = 0x1000
     MASK_IS_LAND = 0x2000
     MASK_IS_LOITER = 0x3000
+
+
+class AttitudeMask(Enum):
+    MASK_IGNORE_ATTITUDE = 0b10000000
+    MASK_IGNORE_RATES = 0b00000111
 
 
 def dispatch_message(conn, msg):
@@ -87,7 +92,9 @@ def dispatch_message(conn, msg):
     # http://mavlink.org/messages/common#HOME_POSITION
     elif msg.get_type() == 'HOME_POSITION':
         home = mt.GlobalFrameMessage(timestamp,
-                                     float(msg.latitude) / 1e7, float(msg.longitude) / 1e7, float(msg.altitude) / 1000)
+                                     float(msg.latitude) / 1e7,
+                                     float(msg.longitude) / 1e7,
+                                     float(msg.altitude) / 1000)
         conn.notify_message_listeners(MsgID.GLOBAL_HOME, home)
 
     # http://mavlink.org/messages/common/#SCALED_IMU
@@ -112,7 +119,8 @@ def dispatch_message(conn, msg):
         meas = mt.DistanceSensorMessage(timestamp,
                                         float(msg.min_distance) / 100,
                                         float(msg.max_distance) / 100, direction,
-                                        float(msg.current_distance) / 100, float(msg.covariance) / 100)
+                                        float(msg.current_distance) / 100,
+                                        float(msg.covariance) / 100)
         conn.notify_message_listeners(MsgID.DISTANCE_SENSOR, meas)
 
     # http://mavlink.org/messages/common#ATTITUDE_QUATERNION
