@@ -22,17 +22,17 @@
         <span class="hljs-keyword">assert</span> self.v.check_connection()
 
         <span class="hljs-comment"># Plot NE</span>
-        ne = np.array(self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]).reshape(<span class="hljs-number">-1</span>, <span class="hljs-number">2</span>)
-        self.ne_lot = self.v.scatter(ne, opts=dict(
+        ne = np.array([self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]]).reshape(<span class="hljs-number">-1</span>, <span class="hljs-number">2</span>)
+        self.ne_plot = self.v.scatter(ne, opts=dict(
             title=<span class="hljs-string">"Local position (north, east)"</span>, 
             xlabel=<span class="hljs-string">'North'</span>, 
             ylabel=<span class="hljs-string">'East'</span>
         ))
 
         <span class="hljs-comment"># Plot D</span>
-        d = np.array(self.local_position[<span class="hljs-number">2</span>])
+        d = np.array([self.local_position[<span class="hljs-number">2</span>]])
         self.t = <span class="hljs-number">1</span>
-        self.d_plot = self.v.line(d, X=np.array(self.t), opts=dict(
+        self.d_plot = self.v.line(d, X=np.array([self.t]), opts=dict(
             title=<span class="hljs-string">"Altitude (meters)"</span>, 
             xlabel=<span class="hljs-string">'Timestep'</span>, 
             ylabel=<span class="hljs-string">'Down'</span>
