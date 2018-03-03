@@ -31,17 +31,17 @@ class MyDrone(Drone):
         assert self.v.check_connection()
 
 		# Plot NE
-		ne = np.array(self.local_position[0], self.local_position[1]).reshape(-1, 2)
-		self.ne_lot = self.v.scatter(ne, opts=dict(
+		ne = np.array([self.local_position[0], self.local_position[1]]).reshape(-1, 2)
+		self.ne_plot = self.v.scatter(ne, opts=dict(
 			title="Local position (north, east)", 
 			xlabel='North', 
 			ylabel='East'
 		))
 
 		# Plot D
-		d = np.array(self.local_position[2])
+		d = np.array([self.local_position[2]])
 		self.t = 1
-		self.d_plot = self.v.line(d, X=np.array(self.t), opts=dict(
+		self.d_plot = self.v.line(d, X=np.array([self.t]), opts=dict(
 			title="Altitude (meters)", 
 			xlabel='Timestep', 
 			ylabel='Down'
