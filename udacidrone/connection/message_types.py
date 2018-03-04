@@ -106,7 +106,7 @@ class GlobalFrameMessage(Message):
 
     @property
     def global_vector(self):
-        """float array: numpy array of [latitude, longitude, altitude] """
+        """float array: numpy array of [longitude, latitude, altitude] """
         return np.array([self._longitude, self._latitude, self._altitude])
 
 
