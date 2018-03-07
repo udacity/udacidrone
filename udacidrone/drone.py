@@ -371,10 +371,6 @@ class Drone(object):
             thrust: upward acceleration in meters/second^2
         """
         try:
-            # thrust = np.clip(thrust, -1, 1)
-            # yaw_rate = np.clip(yaw_rate, -1, 1)
-            # roll_rate = np.clip(roll_rate, -1, 1)
-            # pitch_rate = np.clip(pitch_rate, -1, 1)
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
