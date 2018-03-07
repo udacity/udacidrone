@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import platform
@@ -8,7 +9,6 @@ import websockets
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
-import asyncio
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
@@ -245,7 +245,6 @@ class WebSocketConnection(connection.Connection):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
-        # thrust = np.clip(thrust, -1, 1)
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_moment, pitch_moment, yaw_moment, thrust)
         asyncio.ensure_future(self.send_message(msg))
@@ -258,10 +257,6 @@ class WebSocketConnection(connection.Connection):
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, vn, ve,
                                                              vd, 0, 0, 0, heading, 0)
         asyncio.ensure_future(self.send_message(msg))
-
-    def cmd_motors(self, motor1, motor2, motor3, motor4):
-        # TODO: implement this
-        pass
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
