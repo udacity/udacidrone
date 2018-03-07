@@ -236,7 +236,6 @@ class MavlinkConnection(connection.Connection):
         # NOTE: no need to call join on the threads
         # as both threads are daemon threads
 
-        # close the connection
         print("Closing connection ...")
         self._master.close()
 
@@ -280,11 +279,9 @@ class MavlinkConnection(connection.Connection):
         self.send_message(msg)
 
     def arm(self):
-        # send an arm command through mavlink
         self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 1)
 
     def disarm(self):
-        # send a disarm command
         self.send_long_command(mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0)
 
     def take_control(self):
