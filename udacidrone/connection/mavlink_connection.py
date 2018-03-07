@@ -335,10 +335,6 @@ class MavlinkConnection(connection.Connection):
             0, vn, ve, vd, 0, 0, 0, heading, 0)
         self.send_message(msg)
 
-    def cmd_motors(self, motor1, motor2, motor3, motor4):
-        # TODO: implement this
-        pass
-
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
 

@@ -182,18 +182,6 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_motors(self, motor1, motor2, motor3, motor4):
-        """Command the thrust levels for each motor on a quadcopter
-
-        Args:
-            motor1: normalized thrust level for motor 1 on [0, 1]
-            motor2: normalized thrust level for motor 2 on [0, 1]
-            motor3: normalized thrust level for motor 3 on [0, 1]
-            motor4: normalized thrust level for motor 4 on [0, 1]
-        """
-        pass
-
-    @abstractmethod
     def cmd_position(self, n, e, d, heading):
         """Command to set the desired position (NED frame) and heading
 

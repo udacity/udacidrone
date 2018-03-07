@@ -407,13 +407,6 @@ class Drone(object):
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_motors(self, motor_rpm):
-        """Command the rmp of the motors"""
-        try:
-            self.connection.cmd_motors(motor_rpm)
-        except Exception as e:
-            traceback.print_exc()
-
     def set_home_position(self, longitude, latitude, altitude):
         """Set the drone's home position to these coordinates"""
         try:

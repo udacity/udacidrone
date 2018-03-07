@@ -107,7 +107,6 @@ async def run_client(drone):
         drone.cmd_attitude(roll, pitch, yaw_rate, thrust)
         drone.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         drone.cmd_velocity(north_velocity, east_velocity, down_velocity, yaw)
-        # drone.cmd_motors(rpm)  # not implemented
         drone.release_control()
         drone.disarm()
         await asyncio.sleep(0.02)

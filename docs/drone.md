@@ -43,7 +43,6 @@ Function | Description
 `cmd_attitude(roll, pitch, yawrate, thrust)` | command the drone to the specified attitude, where roll and pitch are in radian, yawrate is the desired rate of heading change in radian/second and thrust is the desired vertical acceleration in meters/second^2
 `cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)` | command the drone to have the specified attitude rates in radians/second and thrust (vertical acceleration) in meters/second^2
 `cmd_moment(roll_moment, pitch_moment, yaw_moment, thrust)` | command a moment in Newtom*meters and a vertical force in Netwons
-`cmd_motors(motor_rpm)` | command the exact RPM of the motors from a vector of 4 inputs bounded between 0 and 1 (TODO: check this)
 `set_home_position(longitude, latitude, altitude)` | set the GPS home position for the drone.  This changes the origin point of the local NED frame and therefore adjusts the local position information.
 `start_log(directory, name)` | start logging telemetry data to the specified directory with the specified filename.
 `stop_log()` | stop logging telemetry data
