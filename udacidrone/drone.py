@@ -304,14 +304,19 @@ class Drone(object):
             traceback.print_exc()
 
     def take_control(self):
-        """If the drone is in guided mode this will switch to manual mode"""
+        """Send a command to the drone to switch to guided (autonomous) mode.
+
+        Essentially control the drone with code.
+        """
         try:
             self.connection.take_control()
         except Exception as e:
             traceback.print_exc()
 
     def release_control(self):
-        """Take control of the drone """
+        """Send a command to the drone to switch to manual mode.
+        
+        Essentially you control the drone manually via some interface."""
         try:
             self.connection.release_control()
         except Exception as e:
