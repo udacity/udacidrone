@@ -26,7 +26,7 @@ To simplify installing all the dependencies and this library, you can install th
 Or you can manually install all the above dependencies and then simply install udacidrone using `pip install`:
 
 ```sh
-pip install git@github.com:udacity/udacidrone.git
+pip install https://github.com/udacity/udacidrone.git
 ```
 
 ## Using UdaciDrone ##
