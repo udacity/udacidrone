@@ -22,7 +22,7 @@
         <span class="hljs-keyword">assert</span> self.v.check_connection()
 
         <span class="hljs-comment"># Plot NE</span>
-        ne = np.array([self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]]).reshape(<span class="hljs-number">-1</span>, <span class="hljs-number">2</span>)
+        ne = np.array([self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]]).reshape(<span class="hljs-number">1</span>, <span class="hljs-number">-1</span>)
         self.ne_plot = self.v.scatter(ne, opts=dict(
             title=<span class="hljs-string">"Local position (north, east)"</span>, 
             xlabel=<span class="hljs-string">'North'</span>, 
@@ -31,7 +31,7 @@
 
         <span class="hljs-comment"># Plot D</span>
         d = np.array([self.local_position[<span class="hljs-number">2</span>]])
-        self.t = <span class="hljs-number">1</span>
+        self.t = <span class="hljs-number">0</span>
         self.d_plot = self.v.line(d, X=np.array([self.t]), opts=dict(
             title=<span class="hljs-string">"Altitude (meters)"</span>, 
             xlabel=<span class="hljs-string">'Timestep'</span>, 
@@ -49,7 +49,7 @@
     self.register_callback(MsgID.LOCAL_POSITION, self.update_d_plot)
 
     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">update_ne_plot</span><span class="hljs-params">(self)</span>:</span>
-        ne = np.array([self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]]).reshape(<span class="hljs-number">-1</span>, <span class="hljs-number">2</span>)
+        ne = np.array([self.local_position[<span class="hljs-number">0</span>], self.local_position[<span class="hljs-number">1</span>]]).reshape(<span class="hljs-number">1</span>, <span class="hljs-number">-1</span>)
         self.v.scatter(ne, win=self.ne_plot, update=<span class="hljs-string">'append'</span>)
 
     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">update_d_plot</span><span class="hljs-params">(self)</span>:</span>
