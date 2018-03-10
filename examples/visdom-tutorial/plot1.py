@@ -18,7 +18,7 @@ class MyDrone(Drone):
         assert self.v.check_connection()
 
         # Plot NE
-        ne = np.array([self.local_position[0], self.local_position[1]]).reshape(-1, 2)
+        ne = np.array([self.local_position[0], self.local_position[1]]).reshape(1, -1)
         self.ne_plot = self.v.scatter(
             ne, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
 
@@ -32,7 +32,7 @@ class MyDrone(Drone):
         self.register_callback(MsgID.LOCAL_POSITION, self.update_d_plot)
 
     def update_ne_plot(self):
-        ne = np.array([self.local_position[0], self.local_position[1]]).reshape(-1, 2)
+        ne = np.array([self.local_position[0], self.local_position[1]]).reshape(1, -1)
         self.v.scatter(ne, win=self.ne_plot, update='append')
 
     def update_d_plot(self):
