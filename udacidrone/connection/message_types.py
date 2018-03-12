@@ -260,7 +260,7 @@ class FrameMessage(Message):
     @property
     def quaternions(self):
         """float array: numpy array of the quaternion vector """
-        return np.array([self._q0, self._q1, self._q2, self.q3])
+        return np.array([self._q0, self._q1, self._q2, self._q3])
 
     @property
     def q0(self):
