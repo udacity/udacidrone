@@ -304,30 +304,37 @@ class Drone(object):
             traceback.print_exc()
 
     def take_control(self):
-        """If the drone is in guided mode this will switch to manual mode"""
+        """Send a command to the drone to switch to guided (autonomous) mode.
+
+        Essentially control the drone with code.
+        """
         try:
             self.connection.take_control()
         except Exception as e:
             traceback.print_exc()
 
     def release_control(self):
-        """Take control of the drone """
+        """Send a command to the drone to switch to manual mode.
+        
+        Essentially you control the drone manually via some interface."""
         try:
             self.connection.release_control()
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_position(self, north, east, down, heading):
+    def cmd_position(self, north, east, altitude, heading):
         """Command the local position and drone heading.
 
         Args:
             north: local north in meters
             east: local east in meters
-            down: local down in meters (positive down)
+            altitude: altitude above ground in meters
             heading: drone yaw in radians
         """
         try:
-            self.connection.cmd_position(north, east, down, heading)
+            # connection cmd_position is defined as NED, so need to flip the sign
+            # on altitude
+            self.connection.cmd_position(north, east, -altitude, heading)
         except Exception as e:
             traceback.print_exc()
 
@@ -369,10 +376,6 @@ class Drone(object):
             thrust: upward acceleration in meters/second^2
         """
         try:
-            # thrust = np.clip(thrust, -1, 1)
-            # yaw_rate = np.clip(yaw_rate, -1, 1)
-            # roll_rate = np.clip(roll_rate, -1, 1)
-            # pitch_rate = np.clip(pitch_rate, -1, 1)
             self.connection.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         except Exception as e:
             traceback.print_exc()
@@ -402,13 +405,6 @@ class Drone(object):
         """
         try:
             self.connection.cmd_velocity(velocity_north, velocity_east, velocity_down, heading)
-        except Exception as e:
-            traceback.print_exc()
-
-    def cmd_motors(self, motor_rpm):
-        """Command the rmp of the motors"""
-        try:
-            self.connection.cmd_motors(motor_rpm)
         except Exception as e:
             traceback.print_exc()
 

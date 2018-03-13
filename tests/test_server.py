@@ -11,8 +11,8 @@ from io import BytesIO
 import numpy as np
 import pytest
 import websockets
-
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 
@@ -107,7 +107,6 @@ async def run_client(drone):
         drone.cmd_attitude(roll, pitch, yaw_rate, thrust)
         drone.cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)
         drone.cmd_velocity(north_velocity, east_velocity, down_velocity, yaw)
-        # drone.cmd_motors(rpm)  # not implemented
         drone.release_control()
         drone.disarm()
         await asyncio.sleep(0.02)
@@ -137,7 +136,6 @@ async def f(connection_type):
 
 
 @pytest.fixture(scope="module", params=[ConnectionProtocol.WebSocket, ConnectionProtocol.TCP])
-# @pytest.fixture(scope="module", params=[ConnectionProtocol.TCP])
 def connection_type(request):
     return request.param
 

@@ -22,7 +22,6 @@ from collections import Counter
 from io import BytesIO
 
 import websockets
-
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
 if platform.system() is not 'Windows':

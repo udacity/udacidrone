@@ -67,7 +67,7 @@ jobs:
             git config --global user.email "domluna@users.noreply.github.com"
             git config --global user.name "Dominique Luna"
             echo "machine github.com login domluna password $GITHUB_TOKEN" > ~/.netrc
-            cd website && yarn --pure-lockfile && GIT_USER=domluna yarn run publish-gh-pages
+            cd website && yarn --pure-lockfile && GIT_USER=domluna USE_SSH=false yarn run publish-gh-pages
 
 
 workflows:
@@ -75,7 +75,7 @@ workflows:
   build_and_deploy:
     jobs:
       - build
-      - deploy-website
-          # filters:
-          #   branches:
-          #     only: master
+      - deploy-website:
+          filters:
+            branches:
+              only: master

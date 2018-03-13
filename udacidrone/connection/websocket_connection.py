@@ -6,11 +6,12 @@ import time
 from io import BytesIO
 
 import websockets
-
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
 from udacidrone.messaging import MsgID
 
+from . import message_types as mt
 from . import connection
 from .mavlink_utils import MainMode, PositionMask, dispatch_message
 
@@ -244,7 +245,6 @@ class WebSocketConnection(connection.Connection):
         time_boot_ms = 0  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         mask = 0b10000000
-        # thrust = np.clip(thrust, -1, 1)
         msg = self._mav.set_attitude_target_encode(time_boot_ms, self._target_system, self._target_component, mask, q,
                                                    roll_moment, pitch_moment, yaw_moment, thrust)
         asyncio.ensure_future(self.send_message(msg))
@@ -257,10 +257,6 @@ class WebSocketConnection(connection.Connection):
                                                              mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, vn, ve,
                                                              vd, 0, 0, 0, heading, 0)
         asyncio.ensure_future(self.send_message(msg))
-
-    def cmd_motors(self, motor1, motor2, motor3, motor4):
-        # TODO: implement this
-        pass
 
     def cmd_position(self, n, e, d, heading):
         time_boot_ms = 0  # this does not need to be set to a specific time
@@ -301,3 +297,39 @@ class WebSocketConnection(connection.Connection):
 
     def set_home_position(self, lat, lon, alt):
         asyncio.ensure_future(self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_HOME, 0, 0, 0, 0, lat, lon, alt))
+
+    def local_position_target(self, n, e, d, t=0):
+        time_boot_ms = t
+        mask = 0b1111111111111000
+        msg = self._mav.position_target_local_ned(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e, d, 0,
+                                                  0, 0, 0, 0, 0, 0, 0)
+        asyncio.ensure_future(self.send_message(msg))
+
+    def local_velocity_target(self, vn, ve, vd, t=0):
+        time_boot_ms = t
+        mask = 0b1111111111000111
+        msg = self._mav.position_target_local_ned(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, vn,
+                                                  ve, vd, 0, 0, 0, 0, 0)
+        asyncio.ensure_future(self.send_message(msg))
+
+    def local_acceleration_target(self, an, ae, ad, t=0):
+        time_boot_ms = t
+        mask = 0b1111111000111111
+        msg = self._mav.position_target_local_ned(time_boot_ms, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, 0, 0, 0, 0,
+                                                  0, 0, an, ae, ad, 0, 0)
+        asyncio.ensure_future(self.send_message(msg))
+
+    def attitude_target(self, roll, pitch, yaw, t=0):
+        time_boot_ms = t
+        mask = 0b11111110
+        frame_msg = mt.FrameMessage(0.0, roll, pitch, 0.0)
+        q = [frame_msg.q0, frame_msg.q1, frame_msg.q2, frame_msg.q3]
+        msg = self._mav.attitude_target(time_boot_ms, mask, q, 0, 0, 0, 0)
+        asyncio.ensure_future(self.send_message(msg))
+
+    def body_rate_target(self, p, q, r, t=0):
+        time_boot_ms = t
+        mask = 0b00011111
+        quat = [0, 0, 0, 0]
+        msg = self._mav.attitude_target(time_boot_ms, mask, quat, p, q, r, 0)
+        asyncio.ensure_future(self.send_message(msg))

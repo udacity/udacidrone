@@ -170,18 +170,6 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
-        """Command to set the desired moments and thrust
-
-        Args:
-            roll_moment: the desired roll moment in Newton*meter
-            yaw_moment: the desired yaw moment in Newton*meter
-            pitch_moment: the desired pitch moment in Newton*meter
-            thrust: the normalized desired thrust level in Newton
-        """
-        pass
-
-    @abstractmethod
     def cmd_velocity(self, vn, ve, vd, heading):
         """Command to set the desired velocity (NED frame) and heading
 
@@ -190,18 +178,6 @@ class Connection(object):
             ve: desired east velocity component in meters/second
             vd: desired down velocity component in meters/second (note: positive down!)
             heading: desired drone heading in radians
-        """
-        pass
-
-    @abstractmethod
-    def cmd_motors(self, motor1, motor2, motor3, motor4):
-        """Command the thrust levels for each motor on a quadcopter
-
-        Args:
-            motor1: normalized thrust level for motor 1 on [0, 1]
-            motor2: normalized thrust level for motor 2 on [0, 1]
-            motor3: normalized thrust level for motor 3 on [0, 1]
-            motor4: normalized thrust level for motor 4 on [0, 1]
         """
         pass
 
