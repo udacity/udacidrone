@@ -11,7 +11,7 @@ class Drone(object):
     Drone class
     """
 
-    def __init__(self, connection, tlog_name="TLog.txt"):
+    def __init__(self, connection, tlog_directory="Logs", tlog_name="TLog.txt"):
         self.connection = connection
 
         # Global position in degrees (int)
@@ -65,6 +65,9 @@ class Drone(object):
         # TODO: better explanation
         self._baro_altitude = 0.0
 
+        # Initializing telemetry logger
+        self.tlog = Logger(tlog_directory, tlog_name)
+
         self._update_property = {
             MsgID.STATE: self._update_state,
             MsgID.GLOBAL_POSITION: self._update_global_position,
@@ -94,8 +97,6 @@ class Drone(object):
 
         # add the above callback function as a listener for all connection messages
         self.connection.add_message_listener(MsgID.ANY, on_message_receive)
-
-        self.tlog = Logger("Logs", tlog_name)
 
     @property
     def global_position(self):
@@ -315,7 +316,7 @@ class Drone(object):
 
     def release_control(self):
         """Send a command to the drone to switch to manual mode.
-        
+
         Essentially you control the drone manually via some interface."""
         try:
             self.connection.release_control()
