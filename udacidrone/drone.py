@@ -184,7 +184,7 @@ class Drone(object):
         return np.array(self._baro_altitude)
 
     def _update_barometer(self, msg):
-        self._baro_altitude = msg.altitude
+        self._baro_altitude = msg.z
 
     def log_telemetry(self, msg_name, msg):
         """Save the msg information to the telemetry log"""
