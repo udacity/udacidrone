@@ -50,7 +50,7 @@ class Drone(object):
         self._pitch = 0.0
         self._yaw = 0.0
 
-        # Drone body accelerations
+        # Drone body accelerations in m/s^2
         self._acceleration_x = 0.0
         self._acceleration_y = 0.0
         self._acceleration_z = 0.0
