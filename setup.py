@@ -21,6 +21,7 @@ setup(
         'pymavlink==2.2.8',
         'utm==0.4',
         'websockets==4.0.1',
+        'cflib>=0.1.6',
     ] + (['uvloop==0.9.1'] if platform.system() is not 'Windows' else []),
     tests_require=['flake8', 'pytest'],
     keywords='drone api udacity flying car quadrotor',
