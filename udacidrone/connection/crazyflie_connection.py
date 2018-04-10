@@ -259,6 +259,8 @@ class CrazyflieConnection(connection.Connection):
                 self._scf.cf.commander.send_zdistance_setpoint(*current_cmd.cmd)
 
             elif current_cmd.type == CrazyflieCommand.CMD_TYPE_STOP:
+                # TODO: probably want to send appropriate flags that state disarmed, etc
+                # TODO: basically need to update the drone state here
                 self._scf.cf.commander.send_stop_setpoint()
 
             else:
