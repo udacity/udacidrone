@@ -437,7 +437,7 @@ class CrazyflieConnection(connection.Connection):
         
         print("current position: ({}, {}, {})".format(self._current_position[0], self._current_position[1], self._current_position[2]))
         dx = n - self._current_position[0]
-        dy = e - self._current_position[1]
+        dy = -(e - self._current_position[1])
         z = -1*d  # - self._current_position[2]
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
