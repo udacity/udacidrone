@@ -89,6 +89,14 @@ class CrazyflieConnection(connection.Connection):
         # the math necessary
         self._current_position = [0.0, 0.0, 0.0]  # [x, y, z]
 
+        # state information is to be updated and managed by this connection class
+        # for the crazyflie, since the crazyflie doesn't exactly pass down the 
+        # state information
+        # 
+        # defining the states to be:
+        # armed -> should roughly mimic connection state (though this does have a problem at the end...)
+        # guided -> this seems to only be used at the end condition.....
+
 
 
     @property
@@ -142,10 +150,10 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_vel.start()
         except KeyError as e:
-            print('Could not start position log configuration,'
+            print('Could not start velocity log configuration,'
                   '{} not found in TOC'.format(str(e)))
         except AttributeError:
-            print('Could not add Position log config, bad configuration.')
+            print('Could not add velocity log config, bad configuration.')
 
         log_att = LogConfig(name='Attitude', period_in_ms=50)
         log_att.add_variable('stabilizer.roll', 'float')
@@ -160,10 +168,27 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_att.start()
         except KeyError as e:
+            print('Could not start attitude log configuration,'
+                  '{} not found in TOC'.format(str(e)))
+        except AttributeError:
+            print('Could not add attitude log config, bad configuration.')
+
+
+        log_state = LogConfig(name='State', period_in_ms=1000)
+        log_state.add_variable('kalman.inFlight', 'int')  # TODO: check the data type
+        try:
+            self._scf.cf.log.add_config(log_state)
+
+            log_state.data_received_cb.add_callback(self._cf_callback_state)
+            log_state.error_cb.add_callback(self._cf_callback_error)
+            
+            # Start the logging
+            log_state.start()
+        except KeyError as e:
             print('Could not start position log configuration,'
                   '{} not found in TOC'.format(str(e)))
         except AttributeError:
-            print('Could not add Position log config, bad configuration.')
+            print('Could not add state log config, bad configuration.')
 
         # start the write thread now that the connection is open
         self._running = True
@@ -288,6 +313,20 @@ class CrazyflieConnection(connection.Connection):
         yaw = data['stabilizer.yaw']
         fm = mt.FrameMessage(timestamp, roll, pitch, yaw)
         self.notify_message_listeners(MsgID.ATTITUDE, fm)
+
+    def _cf_callback_state(self, timestamp, data, logconf):
+        inf_flight = data['kalman.inFlight']
+        armed = False
+        guided = False
+        if in_flight:
+            armed = True
+            guided = True
+
+        # TODO: probably need a better metric for armed / guided
+        # since the quad is basically always armed and guided comes into play
+        # once the connection is made, so basically the second the script starts...
+        state = mt.StateMessage(timestamp, armed, guided)
+        self.notify_message_listeners(MsgID.STATE, state)
 
     def _cf_callback_error(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
