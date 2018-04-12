@@ -130,7 +130,7 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add Position log config, bad configuration.')
 
-        log_vel = LogConfig(name='LocalVelocity', period_in_ms=100)
+        log_vel = LogConfig(name='LocalVelocity', period_in_ms=500)
         log_vel.add_variable('kalman.statePX', 'float')
         log_vel.add_variable('kalman.statePY', 'float')
         log_vel.add_variable('kalman.statePZ', 'float')
@@ -147,7 +147,7 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add velocity log config, bad configuration.')
 
-        log_att = LogConfig(name='Attitude', period_in_ms=50)
+        log_att = LogConfig(name='Attitude', period_in_ms=100)
         log_att.add_variable('stabilizer.roll', 'float')
         log_att.add_variable('stabilizer.pitch', 'float')
         log_att.add_variable('stabilizer.yaw', 'float')
