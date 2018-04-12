@@ -505,7 +505,7 @@ class CrazyflieConnection(connection.Connection):
         Args:
             n: current north position in meters
             e: current east position in meters
-            d: desired down position in meters (note: positive down!) TODO: this is wrong
+            altitde: desired altitude
         """
         # first step: reset the estimator to make sure all is good
         self._reset_position_estimator()
