@@ -175,7 +175,7 @@ class CrazyflieConnection(connection.Connection):
 
 
         log_state = LogConfig(name='State', period_in_ms=1000)
-        log_state.add_variable('kalman.inFlight', 'int')  # TODO: check the data type
+        log_state.add_variable('kalman.inFlight', 'uint8_t')  # TODO: check the data type
         try:
             self._scf.cf.log.add_config(log_state)
 
@@ -243,12 +243,16 @@ class CrazyflieConnection(connection.Connection):
                         cmd_start_time = time.time()
                         # TODO: maybe want to handle the command here...
                         self._out_msg_queue.task_done()
-                        print("recevied command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
+                        
+                        # DEBUG
+                        #print("recevied command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
 
             # first thing to check is the timer, if applicable
             if current_cmd.delay is not None:
                 if time.time() - cmd_start_time >= current_cmd.delay:
-                    print("command timer completed, completed command: {}, {}".format(current_cmd.type, current_cmd.cmd))
+                    # DEBUG
+                    #print("command timer completed, completed command: {}, {}".format(current_cmd.type, current_cmd.cmd))
+                    
                     # time to stop
                     new_cmd = True
                     if current_height > 0:
@@ -315,7 +319,7 @@ class CrazyflieConnection(connection.Connection):
         self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
     def _cf_callback_state(self, timestamp, data, logconf):
-        inf_flight = data['kalman.inFlight']
+        in_flight = data['kalman.inFlight']
         armed = False
         guided = False
         if in_flight:
@@ -325,8 +329,8 @@ class CrazyflieConnection(connection.Connection):
         # TODO: probably need a better metric for armed / guided
         # since the quad is basically always armed and guided comes into play
         # once the connection is made, so basically the second the script starts...
-        state = mt.StateMessage(timestamp, armed, guided)
-        self.notify_message_listeners(MsgID.STATE, state)
+        #state = mt.StateMessage(timestamp, armed, guided)
+        #self.notify_message_listeners(MsgID.STATE, state)
 
     def _cf_callback_error(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
@@ -435,10 +439,14 @@ class CrazyflieConnection(connection.Connection):
         # z is up
         # also completely ignoring heading for now
         
+        # DEBUG
         print("current position: ({}, {}, {})".format(self._current_position[0], self._current_position[1], self._current_position[2]))
+        print("commanded position: ({}, {}, {})".format(n, e, d))
+
+        # calculate the change vector needed
         dx = n - self._current_position[0]
         dy = -(e - self._current_position[1])
-        z = -1*d  # - self._current_position[2]
+        z = -1*d  # holding a specific altitude, so just pass altitude through directly
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
         distance = math.sqrt(dx*dx + dy*dy)
