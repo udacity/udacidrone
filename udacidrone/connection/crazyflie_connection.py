@@ -126,8 +126,7 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_pos.start()
         except KeyError as e:
-            print('Could not start position log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print('Could not start position log configuration,' '{} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add Position log config, bad configuration.')
 
@@ -144,8 +143,7 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_vel.start()
         except KeyError as e:
-            print('Could not start velocity log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print('Could not start velocity log configuration,' '{} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add velocity log config, bad configuration.')
 
@@ -162,8 +160,7 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_att.start()
         except KeyError as e:
-            print('Could not start attitude log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print('Could not start attitude log configuration,' '{} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add attitude log config, bad configuration.')
 
@@ -178,8 +175,7 @@ class CrazyflieConnection(connection.Connection):
             # Start the logging
             log_state.start()
         except KeyError as e:
-            print('Could not start position log configuration,'
-                  '{} not found in TOC'.format(str(e)))
+            print('Could not start position log configuration,' '{} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add state log config, bad configuration.')
 
