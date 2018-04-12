@@ -34,8 +34,8 @@ def test_drone_state_update():
     vy = 14.3 * 100  # m/s * 100
     vz = 18.3 * 100  # m/s * 100
     hdg = 88 * 100  # degrees * 100
-    msg = mav.global_position_int_encode(time.time(),
-                                         int(lat), int(lon), int(alt), int(alt), int(vx), int(vy), int(vz), int(hdg))
+    msg = mav.global_position_int_encode(time.time(), int(lat), int(lon), int(alt), int(alt), int(vx), int(vy), int(vz),
+                                         int(hdg))
     dispatch_message(c, msg)
     # NOTE: the order switch of longitude and latitude
     assert np.array_equal(d.global_position, np.array([float(lon) / 1e7, float(lat) / 1e7, float(alt) / 1000]))
