@@ -87,7 +87,7 @@ class CrazyflieConnection(connection.Connection):
         # since can only command velocities and not positions, the connection 
         # needs some awareness of the current position to be able to do 
         # the math necessary
-        self._current_position = [0.0, 0.0, 0.0]  # [x, y, z]
+        self._current_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
 
         # state information is to be updated and managed by this connection class
         # for the crazyflie, since the crazyflie doesn't exactly pass down the 
@@ -300,8 +300,8 @@ class CrazyflieConnection(connection.Connection):
         y = data['kalman.stateY']
         z = data['kalman.stateZ']
         #print("current height: {}".format(z))
-        self._current_position = [x, y, z]  # save for our internal use
-        pos = mt.LocalFrameMessage(timestamp, x, y, -z)
+        self._current_position_xyz = [x, y, z]  # save for our internal use
+        pos = mt.LocalFrameMessage(timestamp, x, -y, -z)
         self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
     def _cf_callback_vel(self, timestamp, data, logconf):
@@ -440,12 +440,14 @@ class CrazyflieConnection(connection.Connection):
         # also completely ignoring heading for now
         
         # DEBUG
-        print("current position: ({}, {}, {})".format(self._current_position[0], self._current_position[1], self._current_position[2]))
-        print("commanded position: ({}, {}, {})".format(n, e, d))
+        print("current position (x,y,z): ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
+        print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
 
         # calculate the change vector needed
-        dx = n - self._current_position[0]
-        dy = -(e - self._current_position[1])
+        # note the slight oddity that happens in converting NED to XYZ
+        # as things are used as XYZ internally for the crazyflie
+        dx = n - self._current_position_xyz[0]
+        dy = -e - self._current_position_xyz[1]
         z = -1*d  # holding a specific altitude, so just pass altitude through directly
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
@@ -513,7 +515,7 @@ class CrazyflieConnection(connection.Connection):
             e: current east position in meters
         """
         # need to know the current height here...
-        current_height = self._current_position[2]
+        current_height = self._current_position_xyz[2]
         decent_velocity = -self.DEFAULT_VELOCITY  # [m/s]
 
         # calculate how long that command should be executed for
