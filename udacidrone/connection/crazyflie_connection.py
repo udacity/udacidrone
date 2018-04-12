@@ -267,7 +267,9 @@ class CrazyflieConnection(connection.Connection):
                 if (current_time - last_write_time) < (1.0 / self._send_rate):
                     continue
                 last_write_time = time.time()
-                print("sending command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
+                
+                # DEBUG
+                #print("sending command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
 
             # TODO: probably need to constantly update the velocity commands here....
             # TODO: effectively need to wrap a high level control loop, at the very least on height
@@ -440,8 +442,8 @@ class CrazyflieConnection(connection.Connection):
         # also completely ignoring heading for now
         
         # DEBUG
-        print("current position (x,y,z): ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
-        print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
+        #print("current position (x,y,z): ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
+        #print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
 
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
@@ -449,16 +451,22 @@ class CrazyflieConnection(connection.Connection):
         dx = n - self._current_position_xyz[0]
         dy = -e - self._current_position_xyz[1]
         z = -1*d  # holding a specific altitude, so just pass altitude through directly
-        print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+        
+        # DEBUG
+        #print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
         distance = math.sqrt(dx*dx + dy*dy)
         delay_time = distance / self.DEFAULT_VELOCITY
-        print("the delay time for the move command: {}".format(delay_time))
+        
+        # DEBUG
+        #print("the delay time for the move command: {}".format(delay_time))
 
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
         vx = self.DEFAULT_VELOCITY * dx / distance
         vy = self.DEFAULT_VELOCITY * dy / distance
-        print("vel vector: ({}, {})".format(vx, vy))
+        
+        # DEBUG
+        #print("vel vector: ({}, {})".format(vx, vy))
 
         # create and send the command 
         # TODO: determine if would want to use the hover command instead of the velocity command....
@@ -522,7 +530,9 @@ class CrazyflieConnection(connection.Connection):
         # we aren't going to go all the way down before then sending a stop command
         # TODO: figure out a way to do this without sleeping!!
         delay_time = (current_height - 0.02) / (-1*decent_velocity) # the wait time in seconds
-        print("current height: {}, delay time: {}".format(current_height, delay_time));
+        
+        # DEBUG
+        #print("current height: {}, delay time: {}".format(current_height, delay_time));
 
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, decent_velocity, 0.0), delay_time)
         self._out_msg_queue.put(cmd)
