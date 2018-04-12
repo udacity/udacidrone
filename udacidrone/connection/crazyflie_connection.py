@@ -3,11 +3,9 @@
 [description]
 """
 
-import os
 import queue
 import threading
 import time
-import logging
 import math
 
 # udacidrone imports
@@ -20,16 +18,15 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
-from cflib.crazyflie.syncLogger import SyncLogger
 
 
 class CrazyflieCommand:
     """a very simple class to contain a command that should be sent to the CrazyFlie
-    
+
     there are a handful of different types of commands that are capable, so
     this wrapper just makes it easier to send them all through the same pipe
     to the thread handling the actual sending of the commands
-    
+
     Attributes:
         CMD_TYPE_VELOCITY: for sending a velocity command (vx, vy, vz, yawrate)
         CMD_TYPE_HOVER: for sending an altitude hold vel cmd (vx, vy, yawrate, zdist)
@@ -45,10 +42,10 @@ class CrazyflieCommand:
 
     def __init__(self, cmd_type, cmd, delay=None):
         """create a command
-        
+
         create all the necessary elements to be able to send a command to the
         crazyflie, using the crazyflie API
-        
+
         Args:
             cmd_type: the type of command to send (see class enum)
             cmd: the command itself formated as a tuple, (param1, param2, param3, param4)
@@ -59,7 +56,6 @@ class CrazyflieCommand:
         self.delay = delay
 
 
-
 class CrazyflieConnection(connection.Connection):
 
     DEFAULT_VELOCITY = 0.2  # [m/s] the default velocity to use for position commands
@@ -68,7 +64,7 @@ class CrazyflieConnection(connection.Connection):
         super().__init__(threaded)
 
         # TODO: maybe add a parameter so people can change the default velocity
-        
+
         # Initialize the low-level drivers (don't list the debug drivers)
         cflib.crtp.init_drivers(enable_debug_driver=False)
 
@@ -84,20 +80,18 @@ class CrazyflieConnection(connection.Connection):
         self._write_handle = threading.Thread(target=self.command_loop)
         self._write_handle.daemon = True
 
-        # since can only command velocities and not positions, the connection 
-        # needs some awareness of the current position to be able to do 
+        # since can only command velocities and not positions, the connection
+        # needs some awareness of the current position to be able to do
         # the math necessary
         self._current_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
 
         # state information is to be updated and managed by this connection class
-        # for the crazyflie, since the crazyflie doesn't exactly pass down the 
+        # for the crazyflie, since the crazyflie doesn't exactly pass down the
         # state information
-        # 
+        #
         # defining the states to be:
         # armed -> should roughly mimic connection state (though this does have a problem at the end...)
         # guided -> this seems to only be used at the end condition.....
-
-
 
     @property
     def open(self):
@@ -113,7 +107,7 @@ class CrazyflieConnection(connection.Connection):
     def start(self):
         """Command to start a connection with a drone"""
         self._scf.open_link()  # this is a blocking function that will not return until the link is opened
-        
+
         # TODO: need a better version of this
         self._is_open = True
 
@@ -173,7 +167,6 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add attitude log config, bad configuration.')
 
-
         log_state = LogConfig(name='State', period_in_ms=1000)
         log_state.add_variable('kalman.inFlight', 'uint8_t')  # TODO: check the data type
         try:
@@ -181,7 +174,7 @@ class CrazyflieConnection(connection.Connection):
 
             log_state.data_received_cb.add_callback(self._cf_callback_state)
             log_state.error_cb.add_callback(self._cf_callback_error)
-            
+
             # Start the logging
             log_state.start()
         except KeyError as e:
@@ -205,7 +198,7 @@ class CrazyflieConnection(connection.Connection):
         time.sleep(1)  # make sure the command thread has stopped
 
         self._scf.close_link()  # close the link
-        
+
         # TODO: find a better way to handle this...
         self._is_open = False
 
@@ -218,11 +211,20 @@ class CrazyflieConnection(connection.Connection):
 
     def command_loop(self):
         """loop to send commands at a specified rate"""
-        
-        last_write_time = time.time()  # the last time a command was sent -> to be used to ensure commands are at the desired rate
+
+        # the last time a command was sent
+        # to be used to ensure commands are at the desired rate
+        last_write_time = time.time()
+
         cmd_start_time = 0  # the time [s] that the command started -> needed for distance commands
-        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)  # the current command that should be being sent, default to 0 everything
-        current_height = 0  # the last commanded height -> if this is not 0, want the hold commands to be hover to hold the specific height
+
+        # the current command that should be being sent, default to 0 everything
+        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+
+        # the last commanded height
+        # if this is not 0, want the hold commands to be hover to hold the specific height
+        current_height = 0
+
         while self._running:
 
             # empty out the queue of pending messages -> want to always send the messages asap
@@ -243,16 +245,18 @@ class CrazyflieConnection(connection.Connection):
                         cmd_start_time = time.time()
                         # TODO: maybe want to handle the command here...
                         self._out_msg_queue.task_done()
-                        
+
                         # DEBUG
-                        #print("recevied command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
+                        # print("recevied command, type {}, cmd {}, delay {}".format(
+                        # current_cmd.type, current_cmd.cmd, current_cmd.delay))
 
             # first thing to check is the timer, if applicable
             if current_cmd.delay is not None:
                 if time.time() - cmd_start_time >= current_cmd.delay:
                     # DEBUG
-                    #print("command timer completed, completed command: {}, {}".format(current_cmd.type, current_cmd.cmd))
-                    
+                    # print("command timer completed, completed command: {}, {}".format(
+                    # current_cmd.type, current_cmd.cmd))
+
                     # time to stop
                     new_cmd = True
                     if current_height > 0:
@@ -267,9 +271,10 @@ class CrazyflieConnection(connection.Connection):
                 if (current_time - last_write_time) < (1.0 / self._send_rate):
                     continue
                 last_write_time = time.time()
-                
+
                 # DEBUG
-                #print("sending command, type {}, cmd {}, delay {}".format(current_cmd.type, current_cmd.cmd, current_cmd.delay))
+                # print("sending command, type {}, cmd {}, delay {}".format(
+                # current_cmd.type, current_cmd.cmd, current_cmd.delay))
 
             # TODO: probably need to constantly update the velocity commands here....
             # TODO: effectively need to wrap a high level control loop, at the very least on height
@@ -301,7 +306,7 @@ class CrazyflieConnection(connection.Connection):
         x = data['kalman.stateX']
         y = data['kalman.stateY']
         z = data['kalman.stateZ']
-        #print("current height: {}".format(z))
+        # print("current height: {}".format(z))
         self._current_position_xyz = [x, y, z]  # save for our internal use
         pos = mt.LocalFrameMessage(timestamp, x, -y, -z)
         self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
@@ -321,18 +326,19 @@ class CrazyflieConnection(connection.Connection):
         self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
     def _cf_callback_state(self, timestamp, data, logconf):
-        in_flight = data['kalman.inFlight']
-        armed = False
-        guided = False
-        if in_flight:
-            armed = True
-            guided = True
+        # in_flight = data['kalman.inFlight']
+        # armed = False
+        # guided = False
+        # if in_flight:
+        #     armed = True
+        #     guided = True
 
         # TODO: probably need a better metric for armed / guided
         # since the quad is basically always armed and guided comes into play
         # once the connection is made, so basically the second the script starts...
-        #state = mt.StateMessage(timestamp, armed, guided)
-        #self.notify_message_listeners(MsgID.STATE, state)
+        # state = mt.StateMessage(timestamp, armed, guided)
+        # self.notify_message_listeners(MsgID.STATE, state)
+        pass
 
     def _cf_callback_error(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
@@ -440,35 +446,36 @@ class CrazyflieConnection(connection.Connection):
         # y is left
         # z is up
         # also completely ignoring heading for now
-        
+
         # DEBUG
-        #print("current position (x,y,z): ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
-        #print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
+        # print("current position (x,y,z): ({}, {}, {})".format(
+        # self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
+        # print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
 
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
         # as things are used as XYZ internally for the crazyflie
         dx = n - self._current_position_xyz[0]
         dy = -e - self._current_position_xyz[1]
-        z = -1*d  # holding a specific altitude, so just pass altitude through directly
-        
-        # DEBUG
-        #print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+        z = -1 * d  # holding a specific altitude, so just pass altitude through directly
 
-        distance = math.sqrt(dx*dx + dy*dy)
-        delay_time = distance / self.DEFAULT_VELOCITY
-        
         # DEBUG
-        #print("the delay time for the move command: {}".format(delay_time))
+        # print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+
+        distance = math.sqrt(dx * dx + dy * dy)
+        delay_time = distance / self.DEFAULT_VELOCITY
+
+        # DEBUG
+        # print("the delay time for the move command: {}".format(delay_time))
 
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
         vx = self.DEFAULT_VELOCITY * dx / distance
         vy = self.DEFAULT_VELOCITY * dy / distance
-        
-        # DEBUG
-        #print("vel vector: ({}, {})".format(vx, vy))
 
-        # create and send the command 
+        # DEBUG
+        # print("vel vector: ({}, {})".format(vx, vy))
+
+        # create and send the command
         # TODO: determine if would want to use the hover command instead of the velocity command....
         # TODO: problem with the hover command is have no feedback on the current altitude!!
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
@@ -477,7 +484,7 @@ class CrazyflieConnection(connection.Connection):
     def cmd_relative_position(self, dx, dy, z, heading):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
-        distance = math.sqrt(dx*dx + dy*dy)
+        distance = math.sqrt(dx * dx + dy * dy)
         delay_time = distance / self.DEFAULT_VELOCITY
         print("the delay time for the move command: {}".format(delay_time))
 
@@ -486,7 +493,7 @@ class CrazyflieConnection(connection.Connection):
         vy = self.DEFAULT_VELOCITY * dy / distance
         print("vel vector: ({}, {})".format(vx, vy))
 
-        # create and send the command 
+        # create and send the command
         # TODO: determine if would want to use the hover command instead of the velocity command....
         # TODO: problem with the hover command is have no feedback on the current altitude!!
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
@@ -502,7 +509,7 @@ class CrazyflieConnection(connection.Connection):
         Args:
             n: current north position in meters
             e: current east position in meters
-            d: desired down position in meters (note: positive down!) -> TODO: it seems this is commanded as altitude....
+            d: desired down position in meters (note: positive down!) TODO: this is wrong
         """
         # first step: reset the estimator to make sure all is good
         self._reset_position_estimator()
@@ -529,14 +536,14 @@ class CrazyflieConnection(connection.Connection):
         # calculate how long that command should be executed for
         # we aren't going to go all the way down before then sending a stop command
         # TODO: figure out a way to do this without sleeping!!
-        delay_time = (current_height - 0.02) / (-1*decent_velocity) # the wait time in seconds
-        
+        delay_time = (current_height - 0.02) / (-1 * decent_velocity)  # the wait time in seconds
+
         # DEBUG
-        #print("current height: {}, delay time: {}".format(current_height, delay_time));
+        # print("current height: {}, delay time: {}".format(current_height, delay_time));
 
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, decent_velocity, 0.0), delay_time)
         self._out_msg_queue.put(cmd)
-        
+
         # wait the desired amount of time and then send a stop command to kill the motors
         time.sleep(delay_time)
         self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None))
