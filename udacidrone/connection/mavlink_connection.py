@@ -52,7 +52,13 @@ class MavlinkConnection(connection.Connection):
 
         # create the connection
         if device is not "":
-            self._master = mavutil.mavlink_connection(device)
+            while True:
+                try:
+                    self._master = mavutil.mavlink_connection(device)
+                    break
+                except Exception as e:
+                    print("Retrying connection in 1 second ...")
+                    time.sleep(1)
 
         # set up any of the threading, as needed
         self._out_msg_queue = queue.Queue()  # a queue for sending data between threads
