@@ -8,7 +8,7 @@ TODO: this should be a brief overview of the elements that make up the drone API
 
 Specifically the Drone class takes in a connection (this is how we abstract the communication protocol) that is a subclass of the abstract `Connection` class (the connection class can be seen like a contract or an interface -> all of the different implementations have to provide implementations of the functions listed)
 
-Through the connection, the Drone class keeps it's state attributed updated to the most recent values.
+Through the connection, the Drone class keeps its state attributed updated to the most recent values.
 
 Finally, through the Drone class, you can control the Drone's behavior (here the Drone ends up being a pass-through).
 
