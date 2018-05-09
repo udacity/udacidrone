@@ -424,4 +424,3 @@ class MavlinkConnection(connection.Connection):
         custom_mode = MainMode.PX4_MODE_OFFBOARD.value
         custom_sub_mode = sub_mode  # not used for manual/offboard
         self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
-        

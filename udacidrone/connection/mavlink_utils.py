@@ -23,7 +23,8 @@ class MainMode(Enum):
     """Constant which isn't defined in Mavlink but is useful for PX4"""
     PX4_MODE_MANUAL = 1
     PX4_MODE_OFFBOARD = 6
-    
+
+
 class PlaneMode(Enum):
     """Constant which isn't defined in Mavlink but useful when dealing with
     the airplane simulation"""
