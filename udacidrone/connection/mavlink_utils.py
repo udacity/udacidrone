@@ -25,6 +25,15 @@ class MainMode(Enum):
     PX4_MODE_OFFBOARD = 6
 
 
+class PlaneMode(Enum):
+    """Constant which isn't defined in Mavlink but useful when dealing with
+    the airplane simulation"""
+    SUB_MODE_MANUAL = 1
+    SUB_MODE_LONGITUDE = 2
+    SUB_MODE_LATERAL = 3
+    SUB_MODE_STABILIZED = 4
+
+
 class PositionMask(Enum):
     """Useful masks for sending commands used in set_position_target_local_ned"""
     MASK_IGNORE_POSITION = 0x007

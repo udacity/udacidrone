@@ -418,3 +418,9 @@ class MavlinkConnection(connection.Connection):
         quat = [0, 0, 0, 0]
         msg = self._master.mav.attitude_target_encode(time_boot_ms, mask, quat, p, q, r, 0)
         self.send_message(msg)
+        
+    def set_sub_mode(self, sub_mode):
+        mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
+        custom_mode = MainMode.PX4_MODE_OFFBOARD.value
+        custom_sub_mode = sub_mode  # not used for manual/offboard
+        self.send_long_command(mavutil.mavlink.MAV_CMD_DO_SET_MODE, mode, custom_mode, custom_sub_mode)
