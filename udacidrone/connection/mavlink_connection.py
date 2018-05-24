@@ -1,10 +1,10 @@
 import os
-import queue
 import threading
 import time
 
 from pymavlink import mavutil
 
+import queue
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt
@@ -320,8 +320,8 @@ class MavlinkConnection(connection.Connection):
                                                           mask, q, roll_rate, pitch_rate, yaw_rate, thrust)
         self.send_message(msg)
 
-    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
-        time_boot_ms = 0  # this does not need to be set to a specific time
+    def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust, t=0.0):
+        time_boot_ms = int(t * 1000)  # this does not need to be set to a specific time
         q = [0.0, 0.0, 0.0, 0.0]
         # TODO: Give this it's own mask
         mask = 0b10000000
@@ -418,7 +418,7 @@ class MavlinkConnection(connection.Connection):
         quat = [0, 0, 0, 0]
         msg = self._master.mav.attitude_target_encode(time_boot_ms, mask, quat, p, q, r, 0)
         self.send_message(msg)
-        
+
     def set_sub_mode(self, sub_mode):
         mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED  # tells system to use PX4 custom commands
         custom_mode = MainMode.PX4_MODE_OFFBOARD.value

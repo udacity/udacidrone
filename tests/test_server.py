@@ -1,10 +1,8 @@
 """
 Dummy mavlink server to test sending/receiving messages
 """
-import asyncio
 import signal
 import time
-from enum import Enum
 # import traceback
 from io import BytesIO
 
@@ -13,6 +11,8 @@ import pytest
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
+import asyncio
+from enum import Enum
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection, WebSocketConnection  # noqa: F401
 
