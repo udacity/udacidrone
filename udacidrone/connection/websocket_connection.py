@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import platform
@@ -9,6 +8,7 @@ import websockets
 from pymavlink import mavutil
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
 
+import asyncio
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt

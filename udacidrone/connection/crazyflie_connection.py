@@ -3,21 +3,21 @@
 [description]
 """
 
-import queue
+import math
 import threading
 import time
-import math
-
-# udacidrone imports
-from udacidrone.messaging import MsgID
-from udacidrone.connection import message_types as mt
-from udacidrone.connection import connection
 
 # crazyflie imports
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
+
+import queue
+from udacidrone.connection import message_types as mt
+from udacidrone.connection import connection
+# udacidrone imports
+from udacidrone.messaging import MsgID
 
 
 class CrazyflieCommand:

@@ -13,7 +13,6 @@ Instructions:
       in this directory.
 """
 import argparse
-import asyncio
 import logging
 import platform
 import signal
@@ -23,6 +22,8 @@ from io import BytesIO
 
 import websockets
 from pymavlink.dialects.v20 import ardupilotmega as mavlink
+
+import asyncio
 
 if platform.system() is not 'Windows':
     import uvloop
