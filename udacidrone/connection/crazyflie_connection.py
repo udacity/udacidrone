@@ -12,7 +12,7 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
-from cflib.crazyflie.SyncLogger import SyncLogger
+from cflib.crazyflie.syncLogger import SyncLogger
 
 import queue
 from udacidrone.connection import message_types as mt
@@ -95,6 +95,13 @@ class CrazyflieConnection(connection.Connection):
 
         self._armed = True
         self._guided = True
+
+        # kalman filter state
+        self._converged = False
+        self._var_y_history = [1000] * 10
+        self._var_x_history = [1000] * 10
+        self._var_z_history = [1000] * 10
+        self._filter_threshold = 0.001
 
     @property
     def open(self):
@@ -227,6 +234,10 @@ class CrazyflieConnection(connection.Connection):
 
         while self._running:
 
+            # want to make sure the kalman filter has converged before sending any command
+            while not self._converged:
+                continue
+
             # empty out the queue of pending messages -> want to always send the messages asap
             # NOTE: this effectively only sends the last command in the queue....
             # TODO: see if need to handle the fact that maybe want to send all the commands in the queue...
@@ -346,49 +357,53 @@ class CrazyflieConnection(connection.Connection):
         # self.notify_message_listeners(MsgID.STATE, state)
         pass
 
+    def _cf_callback_kf_variance(self, timestamp, data, logconf):
+        self._var_x_history.append(data['kalman.varPX'])
+        self._var_x_history.pop(0)
+        self._var_y_history.append(data['kalman.varPY'])
+        self._var_y_history.pop(0)
+        self._var_z_history.append(data['kalman.varPZ'])
+        self._var_z_history.pop(0)
+
+        min_x = min(self._var_x_history)
+        max_x = max(self._var_x_history)
+        min_y = min(self._var_y_history)
+        max_y = max(self._var_y_history)
+        min_z = min(self._var_z_history)
+        max_z = max(self._var_z_history)
+
+        # print("filter variances: {} {} {}".format(max_x - min_x, max_y - min_y, max_z - min_z))
+
+        if (max_x - min_x) < self._filter_threshold and (max_y - min_y) < self._filter_threshold and (max_z - min_z) < self._filter_threshold:
+            print("filter has converge, position is good!")
+            self._converged = True
+            self._kf_log_config.stop()  # no longer care to keep getting the kalman filter variance
+
     def _cf_callback_error(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
 
     def _wait_for_position_estimator(self):
-        """Wait for the position estimator to converge before using the position estimate"""
+        """Start listening for the kalman filter variance to determine when it converges"""
         print('Waiting for estimator to find position...')
 
-        log_config = LogConfig(name='Kalman Variance', period_in_ms=500)
-        log_config.add_variable('kalman.varPX', 'float')
-        log_config.add_variable('kalman.varPY', 'float')
-        log_config.add_variable('kalman.varPZ', 'float')
+        # configure the log for the variance
+        self._kf_log_config = LogConfig(name='Kalman Variance', period_in_ms=100)
+        self._kf_log_config.add_variable('kalman.varPX', 'float')
+        self._kf_log_config.add_variable('kalman.varPY', 'float')
+        self._kf_log_config.add_variable('kalman.varPZ', 'float')
 
-        var_y_history = [1000] * 10
-        var_x_history = [1000] * 10
-        var_z_history = [1000] * 10
-
-        threshold = 0.001
-
-        with SyncLogger(self._scf, log_config) as logger:
-            for log_entry in logger:
-                data = log_entry[1]
-
-                var_x_history.append(data['kalman.varPX'])
-                var_x_history.pop(0)
-                var_y_history.append(data['kalman.varPY'])
-                var_y_history.pop(0)
-                var_z_history.append(data['kalman.varPZ'])
-                var_z_history.pop(0)
-
-                min_x = min(var_x_history)
-                max_x = max(var_x_history)
-                min_y = min(var_y_history)
-                max_y = max(var_y_history)
-                min_z = min(var_z_history)
-                max_z = max(var_z_history)
-
-                # print("{} {} {}".
-                #       format(max_x - min_x, max_y - min_y, max_z - min_z))
-
-                if (max_x - min_x) < threshold and (
-                        max_y - min_y) < threshold and (
-                        max_z - min_z) < threshold:
-                    break
+        try:
+            self._scf.cf.log.add_config(self._kf_log_config)
+            # This callback will receive the data
+            self._kf_log_config.data_received_cb.add_callback(self._cf_callback_kf_variance)
+            # This callback will be called on errors
+            self._kf_log_config.error_cb.add_callback(self._cf_callback_error)
+            # Start the logging
+            self._kf_log_config.start()
+        except KeyError as e:
+            print('Could not start kalman log configuration,' '{} not found in TOC'.format(str(e)))
+        except AttributeError:
+            print('Could not add kalman log config, bad configuration.')
 
     def _reset_position_estimator(self):
         """reset the estimator to give the best performance possible"""
