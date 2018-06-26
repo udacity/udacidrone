@@ -489,8 +489,10 @@ class CrazyflieConnection(connection.Connection):
         pass
 
     def cmd_position(self, n, e, d, heading):
-        """ NOTE: THIS CURRENTLY COMMANDS RELATIVE POSITION!!!!! BODY ALIGNED!!!! """
-        """Command to set the desired position (NED frame) and heading
+        """Command to set the desired position ("NED" frame) and heading
+
+        Note: For the crazyflie, NED is really the body XYZ frame fixed 
+        unpon startup of the crazyflie to be a world frame
 
         Args:
             n: desired north position in meters
