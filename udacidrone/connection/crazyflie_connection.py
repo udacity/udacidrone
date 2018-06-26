@@ -123,7 +123,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to now register for callbacks on the data of interest from the crazyflie
         # TODO: decide on the appropriate rates
-        log_pos = LogConfig(name='LocalPosition', period_in_ms=100)
+        log_pos = LogConfig(name='LocalPosition', period_in_ms=500)
         log_pos.add_variable('kalman.stateX', 'float')
         log_pos.add_variable('kalman.stateY', 'float')
         log_pos.add_variable('kalman.stateZ', 'float')
@@ -157,7 +157,7 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add velocity log config, bad configuration.')
 
-        log_att = LogConfig(name='Attitude', period_in_ms=100)
+        log_att = LogConfig(name='Attitude', period_in_ms=500)
         log_att.add_variable('stabilizer.roll', 'float')
         log_att.add_variable('stabilizer.pitch', 'float')
         log_att.add_variable('stabilizer.yaw', 'float')
