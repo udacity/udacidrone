@@ -92,6 +92,9 @@ class CrazyflieConnection(connection.Connection):
         # armed -> should roughly mimic connection state (though this does have a problem at the end...)
         # guided -> this seems to only be used at the end condition.....
 
+        self._armed = True
+        self._guided = True
+
     @property
     def open(self):
         """
@@ -177,6 +180,7 @@ class CrazyflieConnection(connection.Connection):
             print('Could not start position log configuration,' '{} not found in TOC'.format(str(e)))
         except AttributeError:
             print('Could not add state log config, bad configuration.')
+
 
         # start the write thread now that the connection is open
         self._running = True
@@ -328,6 +332,12 @@ class CrazyflieConnection(connection.Connection):
         #     armed = True
         #     guided = True
 
+        # send a state message to the drone to set armed and guided to be True
+        # since these constructs don't exist for the crazyflie, but the armed -> guided transition needs to be 
+        # robust to work from the sim to the crazyflie with minimal changes
+        state = mt.StateMessage(timestamp, self._armed, self._guided)
+        self.notify_message_listeners(MsgID.STATE, state)
+
         # TODO: probably need a better metric for armed / guided
         # since the quad is basically always armed and guided comes into play
         # once the connection is made, so basically the second the script starts...
@@ -367,11 +377,17 @@ class CrazyflieConnection(connection.Connection):
         e.g. for PX4 this commands 'offboard' mode, while for APM this commands 'guided' mode
         """
         # NOTE: this doesn't exist for the crazyflie
+        # however, if this command is being used, want to make sure the state output conforms to the expected changes
+        self._armed = True
+        self._guided = True
         pass
 
     def release_control(self):
         """Command to return the drone to a manual mode"""
         # NOTE: this doesn't exist for the crazyflie
+        # however, if this command is being used, want to make sure the state output conforms to the expected changes
+        self._armed = False
+        self._guided = False
         pass
 
     def cmd_attitude(self, roll, pitch, yawrate, thrust):
