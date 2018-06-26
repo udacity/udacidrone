@@ -12,6 +12,7 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
+from cflib.crazyflie.SyncLogger import SyncLogger
 
 import queue
 from udacidrone.connection import message_types as mt
@@ -348,13 +349,55 @@ class CrazyflieConnection(connection.Connection):
     def _cf_callback_error(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
 
+    def _wait_for_position_estimator(self):
+        """Wait for the position estimator to converge before using the position estimate"""
+        print('Waiting for estimator to find position...')
+
+        log_config = LogConfig(name='Kalman Variance', period_in_ms=500)
+        log_config.add_variable('kalman.varPX', 'float')
+        log_config.add_variable('kalman.varPY', 'float')
+        log_config.add_variable('kalman.varPZ', 'float')
+
+        var_y_history = [1000] * 10
+        var_x_history = [1000] * 10
+        var_z_history = [1000] * 10
+
+        threshold = 0.001
+
+        with SyncLogger(self._scf, log_config) as logger:
+            for log_entry in logger:
+                data = log_entry[1]
+
+                var_x_history.append(data['kalman.varPX'])
+                var_x_history.pop(0)
+                var_y_history.append(data['kalman.varPY'])
+                var_y_history.pop(0)
+                var_z_history.append(data['kalman.varPZ'])
+                var_z_history.pop(0)
+
+                min_x = min(var_x_history)
+                max_x = max(var_x_history)
+                min_y = min(var_y_history)
+                max_y = max(var_y_history)
+                min_z = min(var_z_history)
+                max_z = max(var_z_history)
+
+                # print("{} {} {}".
+                #       format(max_x - min_x, max_y - min_y, max_z - min_z))
+
+                if (max_x - min_x) < threshold and (
+                        max_y - min_y) < threshold and (
+                        max_z - min_z) < threshold:
+                    break
+
     def _reset_position_estimator(self):
         """reset the estimator to give the best performance possible"""
         self._scf.cf.param.set_value('kalman.resetEstimation', '1')
         time.sleep(0.1)
         self._scf.cf.param.set_value('kalman.resetEstimation', '0')
         # TODO: instead of a sleep, probably want a condition on the variance
-        time.sleep(2)
+        # time.sleep(2)
+        self._wait_for_position_estimator()
 
     def set_velocity(self, velocity):
         """set the velocity the drone should use in flight"""
@@ -526,10 +569,11 @@ class CrazyflieConnection(connection.Connection):
             e: current east position in meters
             altitde: desired altitude
         """
-        # first step: reset the estimator to make sure all is good
+        # first step: reset the estimator to make sure all is good, this will take a variable amount of time
+        # as it waits for the filter to converge before returning
         self._reset_position_estimator()
 
-        # TODO: add to queue a command with 0 x,y vel, 0 yawrate, and the desired height off the ground
+        # add to queue a command with 0 x,y vel, 0 yawrate, and the desired height off the ground
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, d))
         self._out_msg_queue.put(cmd)
 
