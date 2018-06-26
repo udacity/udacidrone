@@ -346,6 +346,10 @@ class CrazyflieConnection(connection.Connection):
         # TODO: instead of a sleep, probably want a condition on the variance
         time.sleep(2)
 
+    def set_velocity(self, velocity):
+        """set the velocity the drone should use in flight"""
+        self._velocity = velocity
+
     def arm(self):
         """Command to arm the drone"""
         # NOTE: this doesn't exist for the crazyflie
