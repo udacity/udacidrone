@@ -58,12 +58,11 @@ class CrazyflieCommand:
 
 class CrazyflieConnection(connection.Connection):
 
-    DEFAULT_VELOCITY = 0.2  # [m/s] the default velocity to use for position commands
-
-    def __init__(self, uri, threaded=False):
+    def __init__(self, uri, velocity=0.2, threaded=False):
         super().__init__(threaded)
 
-        # TODO: maybe add a parameter so people can change the default velocity
+        # set the default velocity
+        self._velocity = velocity
 
         # Initialize the low-level drivers (don't list the debug drivers)
         cflib.crtp.init_drivers(enable_debug_driver=False)
@@ -459,14 +458,14 @@ class CrazyflieConnection(connection.Connection):
         # print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
         distance = math.sqrt(dx * dx + dy * dy)
-        delay_time = distance / self.DEFAULT_VELOCITY
+        delay_time = distance / self._velocity
 
         # DEBUG
         # print("the delay time for the move command: {}".format(delay_time))
 
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
-        vx = self.DEFAULT_VELOCITY * dx / distance
-        vy = self.DEFAULT_VELOCITY * dy / distance
+        vx = self._velocity * dx / distance
+        vy = self._velocity * dy / distance
 
         # DEBUG
         # print("vel vector: ({}, {})".format(vx, vy))
@@ -481,12 +480,12 @@ class CrazyflieConnection(connection.Connection):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
         distance = math.sqrt(dx * dx + dy * dy)
-        delay_time = distance / self.DEFAULT_VELOCITY
+        delay_time = distance / self._velocity
         print("the delay time for the move command: {}".format(delay_time))
 
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
-        vx = self.DEFAULT_VELOCITY * dx / distance
-        vy = self.DEFAULT_VELOCITY * dy / distance
+        vx = self._velocity * dx / distance
+        vy = self._velocity * dy / distance
         print("vel vector: ({}, {})".format(vx, vy))
 
         # create and send the command
@@ -527,7 +526,7 @@ class CrazyflieConnection(connection.Connection):
         """
         # need to know the current height here...
         current_height = self._current_position_xyz[2]
-        decent_velocity = -self.DEFAULT_VELOCITY  # [m/s]
+        decent_velocity = -self._velocity/2  # [m/s]
 
         # calculate how long that command should be executed for
         # we aren't going to go all the way down before then sending a stop command
