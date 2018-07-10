@@ -85,6 +85,14 @@ class CrazyflieConnection(connection.Connection):
         # the math necessary
         self._current_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
 
+        # due to a "bug" in the crazyflie's position estimator with the flow
+        # deck that results in the estimator to reset the position to 0,0,0 mid
+        # flight if there are changes in lighting or terrain (note: may also
+        # be under other conditions, but so far only seen in those conditions)
+        self._dynamic_home_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
+        self._home_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
+        self._cmd_position_xyz = [0.0, 0.0, 0.0]  # the commanded position
+
         # state information is to be updated and managed by this connection class
         # for the crazyflie, since the crazyflie doesn't exactly pass down the
         # state information
@@ -275,6 +283,15 @@ class CrazyflieConnection(connection.Connection):
                     else:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, 0.0, 0.0))
 
+                    # TODO: check for any large position estimation jump
+                    # this will be done checking the position that was commanded
+                    # and the current position.  Those should be fairly close
+                    # to each other.  In the event that there is a sizeable
+                    # difference, this means there was an estimator reset.
+                    # Will then need to adjust the dynamic home position to
+                    # reflect this error and allow future waypoints to still
+                    # be valid from the original frame to the new frame.
+
             # if this isn't a new command, want to rate limit accordingly
             # rate limit the loop
             if not new_cmd:
@@ -345,7 +362,7 @@ class CrazyflieConnection(connection.Connection):
         #     guided = True
 
         # send a state message to the drone to set armed and guided to be True
-        # since these constructs don't exist for the crazyflie, but the armed -> guided transition needs to be 
+        # since these constructs don't exist for the crazyflie, but the armed -> guided transition needs to be
         # robust to work from the sim to the crazyflie with minimal changes
         state = mt.StateMessage(timestamp, self._armed, self._guided)
         self.notify_message_listeners(MsgID.STATE, state)
@@ -506,7 +523,7 @@ class CrazyflieConnection(connection.Connection):
     def cmd_position(self, n, e, d, heading):
         """Command to set the desired position ("NED" frame) and heading
 
-        Note: For the crazyflie, NED is really the body XYZ frame fixed 
+        Note: For the crazyflie, NED is really the body XYZ frame fixed
         unpon startup of the crazyflie to be a world frame
 
         Args:
@@ -522,6 +539,15 @@ class CrazyflieConnection(connection.Connection):
         # z is up
         # also completely ignoring heading for now
 
+        # update the commanded position information
+        # want to be able to keep track of the desired "world frame"
+        # coordinates to be able to catch estimator errors.
+        self._cmd_position_xyz = [n, -e, -d]
+
+        # need to covert the commanded position to the crazyflie's
+        # "world" frame
+        cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
+
         # DEBUG
         # print("current position (x,y,z): ({}, {}, {})".format(
         # self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
@@ -530,31 +556,34 @@ class CrazyflieConnection(connection.Connection):
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
         # as things are used as XYZ internally for the crazyflie
-        dx = n - self._current_position_xyz[0]
-        dy = -e - self._current_position_xyz[1]
-        z = -1 * d  # holding a specific altitude, so just pass altitude through directly
+        dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
+        dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
+        z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
 
         # DEBUG
         # print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
-        distance = math.sqrt(dx * dx + dy * dy)
-        delay_time = distance / self._velocity
+        # command the relative position
+        self.cmd_relative_position(dx, dy, z, heading)
 
-        # DEBUG
-        # print("the delay time for the move command: {}".format(delay_time))
+        # distance = math.sqrt(dx * dx + dy * dy)
+        # delay_time = distance / self._velocity
 
-        # need to now calculate the velocity vector -> need to have a magnitude of default velocity
-        vx = self._velocity * dx / distance
-        vy = self._velocity * dy / distance
+        # # DEBUG
+        # # print("the delay time for the move command: {}".format(delay_time))
 
-        # DEBUG
-        # print("vel vector: ({}, {})".format(vx, vy))
+        # # need to now calculate the velocity vector -> need to have a magnitude of default velocity
+        # vx = self._velocity * dx / distance
+        # vy = self._velocity * dy / distance
 
-        # create and send the command
-        # TODO: determine if would want to use the hover command instead of the velocity command....
-        # TODO: problem with the hover command is have no feedback on the current altitude!!
-        cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
-        self._out_msg_queue.put(cmd)
+        # # DEBUG
+        # # print("vel vector: ({}, {})".format(vx, vy))
+
+        # # create and send the command
+        # # TODO: determine if would want to use the hover command instead of the velocity command....
+        # # TODO: problem with the hover command is have no feedback on the current altitude!!
+        # cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
+        # self._out_msg_queue.put(cmd)
 
     def cmd_relative_position(self, dx, dy, z, heading):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
@@ -627,10 +656,26 @@ class CrazyflieConnection(connection.Connection):
     def set_home_position(self, lat, lon, alt):
         """Command to change the home position of the drone.
 
+        Note: for the crazyflie, there is no global position coordinates.
+        Therefore when this command is called, the current local position
+        of the crazyflie will be used as the home position.
+        **This will therefore ignore all input arguments!**
+
         Args:
             lat: desired home latitude in decimal degrees
             lon: desired home longitude in decimal degrees
             alt: desired home altitude in meters (AMSL)
         """
-        # NOTE: this concept doesn't exist for the crazyflie
-        pass
+
+        # NOTE: for the crazyflie, this takes the current local position
+        # and sets that value to home.
+        # Therefore all of the inputs are ignored!
+
+        # update the home position to be the current position
+        # this will be added to all the waypoint commands to get the
+        # proper coordinate to command
+        self._home_position_xyz = self._current_position_xyz
+        self._home_position_xyz[2] = 0.0  # for now keep this at 0
+
+        # DEBUG
+        print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1], self._home_position_xyz[2]))
