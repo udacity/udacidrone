@@ -292,6 +292,23 @@ class CrazyflieConnection(connection.Connection):
                     # reflect this error and allow future waypoints to still
                     # be valid from the original frame to the new frame.
 
+                    # want to compare the distance between the current
+                    # commanded position and the current position
+                    cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
+                    dx = self._current_position_xyz[0] - cmd_pos_cf_xyz[0]
+                    dy = self._current_position_xyz[1] - cmd_pos_cf_xyz[1]
+                    dz = self._current_position_xyz[2] - cmd_pos_cf_xyz[2]
+
+                    # DEBUG
+                    print("end of command position error: ({}, {}, {})\n".format(dx, dy, dz))
+
+                    # TODO: come up with appropriate threshold here
+                    if math.sqrt(dx * dx + dy * dy) > 2.0:
+                        print("estimator has reset, adjusting dynamic home position!")
+                        self._dynamic_home_xyz = [dx, dy, 0.0]
+
+
+
             # if this isn't a new command, want to rate limit accordingly
             # rate limit the loop
             if not new_cmd:
@@ -427,8 +444,7 @@ class CrazyflieConnection(connection.Connection):
         self._scf.cf.param.set_value('kalman.resetEstimation', '1')
         time.sleep(0.1)
         self._scf.cf.param.set_value('kalman.resetEstimation', '0')
-        # TODO: instead of a sleep, probably want a condition on the variance
-        # time.sleep(2)
+        # wait for the variance of the estimator to become small enough
         self._wait_for_position_estimator()
 
     def set_velocity(self, velocity):
@@ -455,7 +471,6 @@ class CrazyflieConnection(connection.Connection):
         # however, if this command is being used, want to make sure the state output conforms to the expected changes
         self._armed = True
         self._guided = True
-        pass
 
     def release_control(self):
         """Command to return the drone to a manual mode"""
@@ -463,7 +478,6 @@ class CrazyflieConnection(connection.Connection):
         # however, if this command is being used, want to make sure the state output conforms to the expected changes
         self._armed = False
         self._guided = False
-        pass
 
     def cmd_attitude(self, roll, pitch, yawrate, thrust):
         """Command to set the desired attitude and thrust
@@ -538,15 +552,11 @@ class CrazyflieConnection(connection.Connection):
         # y is left
         # z is up
         # also completely ignoring heading for now
-
-        # update the commanded position information
-        # want to be able to keep track of the desired "world frame"
-        # coordinates to be able to catch estimator errors.
-        self._cmd_position_xyz = [n, -e, -d]
+        cmd_pos_xyz = [n, -e, -d]
 
         # need to covert the commanded position to the crazyflie's
         # "world" frame
-        cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
+        cmd_pos_cf_xyz = cmd_pos_xyz + self._dynamic_home_xyz + self._home_position_xyz
 
         # DEBUG
         # print("current position (x,y,z): ({}, {}, {})".format(
@@ -588,6 +598,12 @@ class CrazyflieConnection(connection.Connection):
     def cmd_relative_position(self, dx, dy, z, heading):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
 
+        # update the commanded position information
+        # want to be able to keep track of the desired "world frame"
+        # coordinates to be able to catch estimator errors.
+        self._cmd_position_xyz = self._current_position_xyz + [dx, dy, 0.0]
+        self._cmd_position_xyz[2] = z
+
         distance = math.sqrt(dx * dx + dy * dy)
         delay_time = distance / self._velocity
         print("the delay time for the move command: {}".format(delay_time))
@@ -619,6 +635,10 @@ class CrazyflieConnection(connection.Connection):
         # as it waits for the filter to converge before returning
         self._reset_position_estimator()
 
+        # set the command position
+        self._cmd_position_xyz = self._current_position_xyz
+        self._cmd_position_xyz[2] = -d
+
         # add to queue a command with 0 x,y vel, 0 yawrate, and the desired height off the ground
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, d))
         self._out_msg_queue.put(cmd)
@@ -634,6 +654,11 @@ class CrazyflieConnection(connection.Connection):
             n: current north position in meters
             e: current east position in meters
         """
+
+        # set the command position
+        self._cmd_position_xyz = self._current_position_xyz
+        self._cmd_position_xyz[2] = 0
+
         # need to know the current height here...
         current_height = self._current_position_xyz[2]
         decent_velocity = -self._velocity/2  # [m/s]
