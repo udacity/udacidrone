@@ -464,6 +464,20 @@ class CrazyflieConnection(connection.Connection):
         # wait for the variance of the estimator to become small enough
         self._wait_for_position_estimator()
 
+    def _convert_to_cf_xyz(self, pos):
+        """convert the position to a position in the crazyflie's current frame
+
+        handle the conversion from the user's drone frame to the frame being used in the crazyflie.
+
+        Args:
+            pos: numpy array of the desired position in the XYZ frame
+
+        Returns:
+            the XYZ position vector in the crazyflie's coordinate frame
+            numpy array
+        """
+        return pos + self._dynamic_home_xyz + self._home_position_xyz
+
     def set_velocity(self, velocity):
         """set the velocity the drone should use in flight"""
         self._velocity = velocity
@@ -573,7 +587,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to covert the commanded position to the crazyflie's
         # "world" frame
-        cmd_pos_cf_xyz = cmd_pos_xyz + self._dynamic_home_xyz + self._home_position_xyz
+        cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
 
         # DEBUG - position info
         print("current positions:")
