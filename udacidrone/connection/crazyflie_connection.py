@@ -225,6 +225,40 @@ class CrazyflieConnection(connection.Connection):
         # NOTE: connection class is nothing but a passthrough for those
         pass
 
+
+    def _send_command(self, cmd):
+        """helper function to send the appropriate CF command
+
+        based on the desired command type, send the corresponding setpoint command to the crazyflie.
+
+        Args:
+            cmd: the CrazyflieCommand to send
+        """
+
+        # based on the command type, send the appropriate crazyflie command
+        if cmd.type == CrazyflieCommand.CMD_TYPE_VELOCITY:
+            self._scf.cf.commander.send_velocity_world_setpoint(*cmd.cmd)
+
+        elif cmd.type == CrazyflieCommand.CMD_TYPE_HOVER:
+            current_height = cmd.cmd[3]
+            self._scf.cf.commander.send_hover_setpoint(*cmd.cmd)
+
+        elif cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST:
+            self._scf.cf.commander.send_setpoint(*cmd.cmd)
+
+        elif cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST:
+            current_height = cmd.cmd[3]
+            self._scf.cf.commander.send_zdistance_setpoint(*cmd.cmd)
+
+        elif cmd.type == CrazyflieCommand.CMD_TYPE_STOP:
+            # TODO: probably want to send appropriate flags that state disarmed, etc
+            # TODO: basically need to update the drone state here
+            self._scf.cf.commander.send_stop_setpoint()
+
+        else:
+            print("invalid command type!")
+
+
     def command_loop(self):
         """loop to send commands at a specified rate"""
 
@@ -248,8 +282,8 @@ class CrazyflieConnection(connection.Connection):
                 continue
 
             # empty out the queue of pending messages -> want to always send the messages asap
-            # NOTE: this effectively only sends the last command in the queue....
-            # TODO: see if need to handle the fact that maybe want to send all the commands in the queue...
+            # NOTE: the commands are immediately sent, which can result in fast back to back command sets, but
+            # ensures all the commands are sent
             cmd = None
             new_cmd = False
             while not self._out_msg_queue.empty():
@@ -263,14 +297,18 @@ class CrazyflieConnection(connection.Connection):
                         new_cmd = True
                         current_cmd = cmd
                         cmd_start_time = time.time()
-                        # TODO: maybe want to handle the command here...
+
+                        # mark this entity as being parsed
                         self._out_msg_queue.task_done()
+
+                        # immediately handle the new command
+                        self._send_command(current_cmd)
 
                         # DEBUG
                         # print("recevied command, type {}, cmd {}, delay {}".format(
                         # current_cmd.type, current_cmd.cmd, current_cmd.delay))
 
-            # first thing to check is the timer, if applicable
+            # now that have handled any potentially new commands, let's handle the timer
             if current_cmd.delay is not None:
                 if time.time() - cmd_start_time >= current_cmd.delay:
                     # DEBUG
@@ -283,6 +321,9 @@ class CrazyflieConnection(connection.Connection):
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
                     else:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, 0.0, 0.0))
+
+                    # now immediately handle the new command
+                    self._send_command(current_cmd)
 
                     # TODO: check for any large position estimation jump
                     # this will be done checking the position that was commanded
@@ -309,44 +350,15 @@ class CrazyflieConnection(connection.Connection):
                     #     self._dynamic_home_xyz = np.array([dx, dy, 0.0])
 
 
+            # want to make sure that the commands are set at minimum specified rate
+            # so send the command again if that rate timer requires it
+            current_time = time.time()
+            if (current_time - last_write_time) < (1.0 / self._send_rate):
+                continue
 
-            # if this isn't a new command, want to rate limit accordingly
-            # rate limit the loop
-            if not new_cmd:
-                current_time = time.time()
-                if (current_time - last_write_time) < (1.0 / self._send_rate):
-                    continue
-                last_write_time = time.time()
-
-                # DEBUG
-                # print("sending command, type {}, cmd {}, delay {}".format(
-                # current_cmd.type, current_cmd.cmd, current_cmd.delay))
-
-            # TODO: probably need to constantly update the velocity commands here....
-            # TODO: effectively need to wrap a high level control loop, at the very least on height
-
-            # now do the actual sending of the command
-            if current_cmd.type == CrazyflieCommand.CMD_TYPE_VELOCITY:
-                self._scf.cf.commander.send_velocity_world_setpoint(*current_cmd.cmd)
-
-            elif current_cmd.type == CrazyflieCommand.CMD_TYPE_HOVER:
-                current_height = current_cmd.cmd[3]
-                self._scf.cf.commander.send_hover_setpoint(*current_cmd.cmd)
-
-            elif current_cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST:
-                self._scf.cf.commander.send_setpoint(*current_cmd.cmd)
-
-            elif current_cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST:
-                current_height = current_cmd.cmd[3]
-                self._scf.cf.commander.send_zdistance_setpoint(*current_cmd.cmd)
-
-            elif current_cmd.type == CrazyflieCommand.CMD_TYPE_STOP:
-                # TODO: probably want to send appropriate flags that state disarmed, etc
-                # TODO: basically need to update the drone state here
-                self._scf.cf.commander.send_stop_setpoint()
-
-            else:
-                print("invalid command type!")
+            # resend the command and update the timestamp for when the last command was sent
+            last_write_time = current_time
+            self._send_command(current_cmd)
 
     def _cf_callback_pos(self, timestamp, data, logconf):
         x = data['kalman.stateX']
