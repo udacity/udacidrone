@@ -261,12 +261,6 @@ class CrazyflieConnection(connection.Connection):
             # TODO: basically need to update the drone state here
             self._scf.cf.commander.send_stop_setpoint()
 
-        elif cmd.type == CrazyflieCommand.CMD_TYPE_POSITION:
-            # need to convert the position command to a velocity command
-            # and then send the velocity command (hover setpoint)
-            hover_cmd = self._pos_cmd_to_cf_vel_cmd(np.array(cmd.cmd))
-            self._scf.cf.commander.send_hover_setpoint(*hover_cmd.cmd)
-
         else:
             print("invalid command type!")
 
@@ -311,6 +305,10 @@ class CrazyflieConnection(connection.Connection):
 
                         # mark this entity as being parsed
                         self._out_msg_queue.task_done()
+
+                        # convert the position command to a velocity (hover) command if needed
+                        if cmd.type == CrazyflieCommand.CMD_TYPE_POSITION:
+                            current_cmd = self._pos_cmd_to_cf_vel_cmd(np.array(cmd.cmd[0:3]), cmd.cmd[3])
 
                         # immediately handle the new command
                         self._send_command(current_cmd)
@@ -432,9 +430,7 @@ class CrazyflieConnection(connection.Connection):
         dy = max_y - min_y
         dz = max_z - min_z
 
-        if dx < self._filter_threshold and
-        dy < self._filter_threshold and
-        dz < self._filter_threshold:
+        if dx < self._filter_threshold and dy < self._filter_threshold and dz < self._filter_threshold:
             print("filter has converge, position is good!")
             self._converged = True
             self._kf_log_config.stop()  # no longer care to keep getting the kalman filter variance
