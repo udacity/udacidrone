@@ -35,12 +35,17 @@ class CrazyflieCommand:
         CMD_TYPE_ATTITUDE_THRUST: for sending attitude and thrust (roll, pitch, yaw, thrust)
         CMD_TYPE_ATTITUDE_DIST: for sending attitude and altitude (roll, pitch, yaw, zdist)
         CMD_TYPE_STOP: for telling the crazyflie to stop all motors
+        CMD_TYPE_POSITION: eventually for sending an alt hold vel cmd,
+                           but the command is only a position that needs to be
+                           converted into the cf frame for velocity calculation
     """
     CMD_TYPE_VELOCITY = 1
     CMD_TYPE_HOVER = 2
     CMD_TYPE_ATTITUDE_THRUST = 3
     CMD_TYPE_ATTITUDE_DIST = 4
     CMD_TYPE_STOP = 5
+
+    CMD_TYPE_POSITION = 6
 
     def __init__(self, cmd_type, cmd, delay=None):
         """create a command
@@ -255,6 +260,10 @@ class CrazyflieConnection(connection.Connection):
             # TODO: basically need to update the drone state here
             self._scf.cf.commander.send_stop_setpoint()
 
+        elif cmd.type == CrazyflieCommand.CMD_TYPE_POSITION:
+            # TODO: need to convert the position command to a velocity command
+            # and then send the velocity command
+
         else:
             print("invalid command type!")
 
@@ -317,7 +326,8 @@ class CrazyflieConnection(connection.Connection):
 
                     # time to stop
                     new_cmd = True
-                    if current_height > 0:
+                    current_height = self._current_position_xyz[2]
+                    if current_height > 0.05:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
                     else:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, 0.0, 0.0))
@@ -475,6 +485,65 @@ class CrazyflieConnection(connection.Connection):
         """
         return pos + self._dynamic_home_xyz + self._home_position_xyz
 
+    def _create_velocity_cmd(self, dx, dy, z, heading):
+        """helper function for calculating the necessary hover (velocity)
+           command given a relative motion command"""
+
+        # calculate the distance needed to travel and the delay time for the command
+        distance = math.sqrt(dx * dx + dy * dy)
+        delay_time = distance / self._velocity
+        print("the delay time for the move command: {}".format(delay_time))
+
+        # need to now calculate the velocity vector -> need to have a magnitude of default velocity
+        vx = self._velocity * dx / distance
+        vy = self._velocity * dy / distance
+        print("vel vector: ({}, {})".format(vx, vy))
+
+        # create and send the command
+        # TODO: determine if would want to use the hover command instead of the velocity command....
+        # TODO: problem with the hover command is have no feedback on the current altitude!!
+        return CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
+
+    def _pos_cmd_to_cf_vel_cmd(self, cmd_pos_xyz):
+
+        # convert from the user's frame to the cf's internal frame
+        cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
+
+        # DEBUG - position info
+        print("current positions:")
+        print("\tvehicle: ({}, {}, {})".format(
+            self._current_position_xyz[0],
+            self._current_position_xyz[1],
+            self._current_position_xyz[2]))
+        print("\thome: ({}, {}, {})".format(
+            self._home_position_xyz[0],
+            self._home_position_xyz[1],
+            self._home_position_xyz[2]))
+        print("\tdynamic: ({}, {}, {})".format(
+            self._dynamic_home_xyz[0],
+            self._dynamic_home_xyz[1],
+            self._dynamic_home_xyz[2]))
+
+        # DEBUG - command info
+        print("command detailed:")
+        print("\tuser xyz frame: ({}, {}, {})".format(
+            cmd_pos_xyz[0],
+            cmd_pos_xyz[1],
+            cmd_pos_xyz[2]))
+        print("\tcf frame: ({}, {}, {})".format(
+            cmd_pos_cf_xyz[0],
+            cmd_pos_cf_xyz[1],
+            cmd_pos_cf_xyz[2]))
+
+        # calculate the change vector needed
+        # note the slight oddity that happens in converting NED to XYZ
+        # as things are used as XYZ internally for the crazyflie
+        dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
+        dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
+        z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
+
+        return self._create_velocity_cmd(dx, dy, z, 0)
+
     def set_velocity(self, velocity):
         """set the velocity the drone should use in flight"""
         self._velocity = velocity
@@ -577,6 +646,11 @@ class CrazyflieConnection(connection.Connection):
             heading: desired drone heading in radians
         """
 
+        # consider the waypoint as reached, so command the cf to stop
+        current_height = self._current_position_xyz[2]
+        stop_moving_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
+        self._out_msg_queue.put(stop_moving_cmd)
+
         # need to know the current position: for now going to simply map NED to XYZ!!!
         # x is forward
         # y is left
@@ -631,20 +705,24 @@ class CrazyflieConnection(connection.Connection):
         self._cmd_position_xyz = self._current_position_xyz + np.array([dx, dy, 0.0])
         self._cmd_position_xyz[2] = z
 
-        distance = math.sqrt(dx * dx + dy * dy)
-        delay_time = distance / self._velocity
-        print("the delay time for the move command: {}".format(delay_time))
-
-        # need to now calculate the velocity vector -> need to have a magnitude of default velocity
-        vx = self._velocity * dx / distance
-        vy = self._velocity * dy / distance
-        print("vel vector: ({}, {})".format(vx, vy))
-
-        # create and send the command
-        # TODO: determine if would want to use the hover command instead of the velocity command....
-        # TODO: problem with the hover command is have no feedback on the current altitude!!
-        cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
+        # use the helper function for this
+        cmd = self._create_velocity_cmd(dx, dy, dz, heading)
         self._out_msg_queue.put(cmd)
+
+        # distance = math.sqrt(dx * dx + dy * dy)
+        # delay_time = distance / self._velocity
+        # print("the delay time for the move command: {}".format(delay_time))
+
+        # # need to now calculate the velocity vector -> need to have a magnitude of default velocity
+        # vx = self._velocity * dx / distance
+        # vy = self._velocity * dy / distance
+        # print("vel vector: ({}, {})".format(vx, vy))
+
+        # # create and send the command
+        # # TODO: determine if would want to use the hover command instead of the velocity command....
+        # # TODO: problem with the hover command is have no feedback on the current altitude!!
+        # cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
+        # self._out_msg_queue.put(cmd)
 
     def takeoff(self, n, e, d):
         """Command the drone to takeoff.
