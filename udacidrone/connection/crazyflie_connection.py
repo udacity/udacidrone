@@ -325,31 +325,6 @@ class CrazyflieConnection(connection.Connection):
                     # now immediately handle the new command
                     self._send_command(current_cmd)
 
-                    # TODO: check for any large position estimation jump
-                    # this will be done checking the position that was commanded
-                    # and the current position.  Those should be fairly close
-                    # to each other.  In the event that there is a sizeable
-                    # difference, this means there was an estimator reset.
-                    # Will then need to adjust the dynamic home position to
-                    # reflect this error and allow future waypoints to still
-                    # be valid from the original frame to the new frame.
-
-                    # want to compare the distance between the current
-                    # commanded position and the current position
-                    # cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
-                    # dx = self._current_position_xyz[0] - cmd_pos_cf_xyz[0]
-                    # dy = self._current_position_xyz[1] - cmd_pos_cf_xyz[1]
-                    # dz = self._current_position_xyz[2] - cmd_pos_cf_xyz[2]
-
-                    # # DEBUG
-                    # print("end of command position error: ({}, {}, {})\n".format(dx, dy, dz))
-
-                    # # TODO: come up with appropriate threshold here
-                    # if math.sqrt(dx * dx + dy * dy) > 2.0:
-                    #     print("estimator has reset, adjusting dynamic home position!")
-                    #     self._dynamic_home_xyz = np.array([dx, dy, 0.0])
-
-
             # want to make sure that the commands are set at minimum specified rate
             # so send the command again if that rate timer requires it
             current_time = time.time()
@@ -377,6 +352,11 @@ class CrazyflieConnection(connection.Connection):
 
         # DEBUG
         print("position change: ({}, {})".format(dx, dy))
+
+        # TODO: find the correct limit here for defining a jump
+        if pos_change >= 1:
+            print("esitmator has reset, adjusting home position")
+            self._dynamic_home_xyz += np.array([dx, dy, 0])
 
         self._current_position_xyz = np.array([x, y, z])  # save for our internal use
 
