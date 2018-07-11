@@ -230,7 +230,6 @@ class CrazyflieConnection(connection.Connection):
         # NOTE: connection class is nothing but a passthrough for those
         pass
 
-
     def _send_command(self, cmd):
         """helper function to send the appropriate CF command
 
@@ -245,14 +244,16 @@ class CrazyflieConnection(connection.Connection):
             self._scf.cf.commander.send_velocity_world_setpoint(*cmd.cmd)
 
         elif cmd.type == CrazyflieCommand.CMD_TYPE_HOVER:
-            current_height = cmd.cmd[3]
+            # TODO: see if maybe want to get this current height information
+            # back to the write loop...
+            # current_height = cmd.cmd[3]
             self._scf.cf.commander.send_hover_setpoint(*cmd.cmd)
 
         elif cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST:
             self._scf.cf.commander.send_setpoint(*cmd.cmd)
 
         elif cmd.type == CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST:
-            current_height = cmd.cmd[3]
+            # current_height = cmd.cmd[3]
             self._scf.cf.commander.send_zdistance_setpoint(*cmd.cmd)
 
         elif cmd.type == CrazyflieCommand.CMD_TYPE_STOP:
@@ -261,12 +262,13 @@ class CrazyflieConnection(connection.Connection):
             self._scf.cf.commander.send_stop_setpoint()
 
         elif cmd.type == CrazyflieCommand.CMD_TYPE_POSITION:
-            # TODO: need to convert the position command to a velocity command
-            # and then send the velocity command
+            # need to convert the position command to a velocity command
+            # and then send the velocity command (hover setpoint)
+            hover_cmd = self._pos_cmd_to_cf_vel_cmd(np.array(cmd.cmd))
+            self._scf.cf.commander.send_hover_setpoint(*hover_cmd.cmd)
 
         else:
             print("invalid command type!")
-
 
     def command_loop(self):
         """loop to send commands at a specified rate"""
@@ -504,7 +506,7 @@ class CrazyflieConnection(connection.Connection):
         # TODO: problem with the hover command is have no feedback on the current altitude!!
         return CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
 
-    def _pos_cmd_to_cf_vel_cmd(self, cmd_pos_xyz):
+    def _pos_cmd_to_cf_vel_cmd(self, cmd_pos_xyz, heading):
 
         # convert from the user's frame to the cf's internal frame
         cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
@@ -542,7 +544,7 @@ class CrazyflieConnection(connection.Connection):
         dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
         z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
 
-        return self._create_velocity_cmd(dx, dy, z, 0)
+        return self._create_velocity_cmd(dx, dy, z, heading)
 
     def set_velocity(self, velocity):
         """set the velocity the drone should use in flight"""
@@ -658,43 +660,49 @@ class CrazyflieConnection(connection.Connection):
         # also completely ignoring heading for now
         cmd_pos_xyz = np.array([n, -e, -d])
 
-        # need to covert the commanded position to the crazyflie's
-        # "world" frame
-        cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
+        # send a position command - this will allow the write loop
+        # to use the most up to date information for generating the
+        # corresponding velocity command
+        cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_POSITION, (n, -e, -d, heading))
+        self._out_msg_queue.put(cmd)
 
-        # DEBUG - position info
-        print("current positions:")
-        print("\tvehicle: ({}, {}, {})".format(
-            self._current_position_xyz[0],
-            self._current_position_xyz[1],
-            self._current_position_xyz[2]))
-        print("\thome: ({}, {}, {})".format(
-            self._home_position_xyz[0],
-            self._home_position_xyz[1],
-            self._home_position_xyz[2]))
-        print("\tdynamic: ({}, {}, {})".format(
-            self._dynamic_home_xyz[0],
-            self._dynamic_home_xyz[1],
-            self._dynamic_home_xyz[2]))
+        # # need to covert the commanded position to the crazyflie's
+        # # "world" frame
+        # cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
 
-        # DEBUG - command info
-        print("command detailed:")
-        print("\tuser xyz frame: ({}, {}, {})".format(n, -e, -d))
-        print("\tcf frame: ({}, {}, {})".format(
-            cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
+        # # DEBUG - position info
+        # print("current positions:")
+        # print("\tvehicle: ({}, {}, {})".format(
+        #     self._current_position_xyz[0],
+        #     self._current_position_xyz[1],
+        #     self._current_position_xyz[2]))
+        # print("\thome: ({}, {}, {})".format(
+        #     self._home_position_xyz[0],
+        #     self._home_position_xyz[1],
+        #     self._home_position_xyz[2]))
+        # print("\tdynamic: ({}, {}, {})".format(
+        #     self._dynamic_home_xyz[0],
+        #     self._dynamic_home_xyz[1],
+        #     self._dynamic_home_xyz[2]))
 
-        # calculate the change vector needed
-        # note the slight oddity that happens in converting NED to XYZ
-        # as things are used as XYZ internally for the crazyflie
-        dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
-        dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
-        z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
+        # # DEBUG - command info
+        # print("command detailed:")
+        # print("\tuser xyz frame: ({}, {}, {})".format(n, -e, -d))
+        # print("\tcf frame: ({}, {}, {})".format(
+        #     cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
 
-        # DEBUG
-        # print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+        # # calculate the change vector needed
+        # # note the slight oddity that happens in converting NED to XYZ
+        # # as things are used as XYZ internally for the crazyflie
+        # dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
+        # dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
+        # z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
 
-        # command the relative position
-        self.cmd_relative_position(dx, dy, z, heading)
+        # # DEBUG
+        # # print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+
+        # # command the relative position
+        # self.cmd_relative_position(dx, dy, z, heading)
 
     def cmd_relative_position(self, dx, dy, z, heading):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
