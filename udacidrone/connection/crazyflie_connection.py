@@ -295,18 +295,18 @@ class CrazyflieConnection(connection.Connection):
 
                     # want to compare the distance between the current
                     # commanded position and the current position
-                    cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
-                    dx = self._current_position_xyz[0] - cmd_pos_cf_xyz[0]
-                    dy = self._current_position_xyz[1] - cmd_pos_cf_xyz[1]
-                    dz = self._current_position_xyz[2] - cmd_pos_cf_xyz[2]
+                    # cmd_pos_cf_xyz = self._cmd_position_xyz + self._dynamic_home_xyz + self._home_position_xyz
+                    # dx = self._current_position_xyz[0] - cmd_pos_cf_xyz[0]
+                    # dy = self._current_position_xyz[1] - cmd_pos_cf_xyz[1]
+                    # dz = self._current_position_xyz[2] - cmd_pos_cf_xyz[2]
 
-                    # DEBUG
-                    print("end of command position error: ({}, {}, {})\n".format(dx, dy, dz))
+                    # # DEBUG
+                    # print("end of command position error: ({}, {}, {})\n".format(dx, dy, dz))
 
-                    # TODO: come up with appropriate threshold here
-                    if math.sqrt(dx * dx + dy * dy) > 2.0:
-                        print("estimator has reset, adjusting dynamic home position!")
-                        self._dynamic_home_xyz = np.array([dx, dy, 0.0])
+                    # # TODO: come up with appropriate threshold here
+                    # if math.sqrt(dx * dx + dy * dy) > 2.0:
+                    #     print("estimator has reset, adjusting dynamic home position!")
+                    #     self._dynamic_home_xyz = np.array([dx, dy, 0.0])
 
 
 
@@ -353,8 +353,24 @@ class CrazyflieConnection(connection.Connection):
         y = data['kalman.stateY']
         z = data['kalman.stateZ']
         # print("current height: {}".format(z))
-        self._current_position_xyz = [x, y, z]  # save for our internal use
-        pos = mt.LocalFrameMessage(timestamp, x, -y, -z)
+
+        # TODO: compute a difference between the previou current position and this one
+        # if there is a large jump, that means there is a chance the estimator has reset!
+        new_position = np.array([x, y, z])
+
+        dpos = new_position - self._current_position_xyz
+        dx = dpos[0]
+        dy = dpos[1]
+        pos_change = math.sqrt(dx * dx + dy * dy)
+
+        # DEBUG
+        print("position change: ({}, {})".format(dx, dy))
+
+        self._current_position_xyz = np.array([x, y, z])  # save for our internal use
+
+        # the position that should be published is an NED position, adjusted for the set home position
+        adjusted_pos = self._current_position_xyz - self._home_position_xyz
+        pos = mt.LocalFrameMessage(timestamp, adjusted_pos[0], -adjusted_pos[1], -adjusted_pos[2])
         self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
     def _cf_callback_vel(self, timestamp, data, logconf):
@@ -559,9 +575,8 @@ class CrazyflieConnection(connection.Connection):
         # "world" frame
         cmd_pos_cf_xyz = cmd_pos_xyz + self._dynamic_home_xyz + self._home_position_xyz
 
-
         # DEBUG - position info
-        #print("current positions:")
+        print("current positions:")
         print("\tvehicle: ({}, {}, {})".format(
             self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
         print("\thome: ({}, {}, {})".format(
@@ -681,7 +696,11 @@ class CrazyflieConnection(connection.Connection):
         delay_time = (current_height - 0.02) / (-1 * decent_velocity)  # the wait time in seconds
 
         # DEBUG
-        # print("current height: {}, delay time: {}".format(current_height, delay_time));
+        print("current height: {}, delay time: {}".format(current_height, delay_time))
+
+        # make sure delay time is always positive and non-zero
+        if delay_time < 0:
+            delay_time = 0.1
 
         cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (0.0, 0.0, decent_velocity, 0.0), delay_time)
         self._out_msg_queue.put(cmd)
