@@ -416,8 +416,13 @@ class CrazyflieConnection(connection.Connection):
         max_z = max(self._var_z_history)
 
         # print("filter variances: {} {} {}".format(max_x - min_x, max_y - min_y, max_z - min_z))
+        dx = max_x - min_x
+        dy = max_y - min_y
+        dz = max_z - min_z
 
-        if (max_x - min_x) < self._filter_threshold and (max_y - min_y) < self._filter_threshold and (max_z - min_z) < self._filter_threshold:
+        if dx < self._filter_threshold and
+        dy < self._filter_threshold and
+        dz < self._filter_threshold:
             print("filter has converge, position is good!")
             self._converged = True
             self._kf_log_config.stop()  # no longer care to keep getting the kalman filter variance
@@ -477,7 +482,6 @@ class CrazyflieConnection(connection.Connection):
     def arm(self):
         """Command to arm the drone"""
         # NOTE: this doesn't exist for the crazyflie
-        # TODO: could have arm or take control be where we reset the estimator...
         pass
 
     def disarm(self):
@@ -488,17 +492,20 @@ class CrazyflieConnection(connection.Connection):
     def take_control(self):
         """
         Command the drone to switch into a mode that allows external control.
-        e.g. for PX4 this commands 'offboard' mode, while for APM this commands 'guided' mode
+        e.g. for PX4 this commands 'offboard' mode,
+        while for APM this commands 'guided' mode
         """
         # NOTE: this doesn't exist for the crazyflie
-        # however, if this command is being used, want to make sure the state output conforms to the expected changes
+        # however, if this command is being used, want to make sure
+        # the state output conforms to the expected changes
         self._armed = True
         self._guided = True
 
     def release_control(self):
         """Command to return the drone to a manual mode"""
         # NOTE: this doesn't exist for the crazyflie
-        # however, if this command is being used, want to make sure the state output conforms to the expected changes
+        # however, if this command is being used, want to make sure
+        # the state output conforms to the expected changes
         self._armed = False
         self._guided = False
 
@@ -584,11 +591,17 @@ class CrazyflieConnection(connection.Connection):
         # DEBUG - position info
         print("current positions:")
         print("\tvehicle: ({}, {}, {})".format(
-            self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
+            self._current_position_xyz[0],
+            self._current_position_xyz[1],
+            self._current_position_xyz[2]))
         print("\thome: ({}, {}, {})".format(
-            self._home_position_xyz[0], self._home_position_xyz[1], self._home_position_xyz[2]))
+            self._home_position_xyz[0],
+            self._home_position_xyz[1],
+            self._home_position_xyz[2]))
         print("\tdynamic: ({}, {}, {})".format(
-            self._dynamic_home_xyz[0], self._dynamic_home_xyz[1], self._dynamic_home_xyz[2]))
+            self._dynamic_home_xyz[0],
+            self._dynamic_home_xyz[1],
+            self._dynamic_home_xyz[2]))
 
         # DEBUG - command info
         print("command detailed:")
@@ -608,25 +621,6 @@ class CrazyflieConnection(connection.Connection):
 
         # command the relative position
         self.cmd_relative_position(dx, dy, z, heading)
-
-        # distance = math.sqrt(dx * dx + dy * dy)
-        # delay_time = distance / self._velocity
-
-        # # DEBUG
-        # # print("the delay time for the move command: {}".format(delay_time))
-
-        # # need to now calculate the velocity vector -> need to have a magnitude of default velocity
-        # vx = self._velocity * dx / distance
-        # vy = self._velocity * dy / distance
-
-        # # DEBUG
-        # # print("vel vector: ({}, {})".format(vx, vy))
-
-        # # create and send the command
-        # # TODO: determine if would want to use the hover command instead of the velocity command....
-        # # TODO: problem with the hover command is have no feedback on the current altitude!!
-        # cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
-        # self._out_msg_queue.put(cmd)
 
     def cmd_relative_position(self, dx, dy, z, heading):
         print("move vector: ({}, {}) at height {}".format(dx, dy, z))
@@ -740,4 +734,7 @@ class CrazyflieConnection(connection.Connection):
         self._home_position_xyz[2] = 0.0  # for now keep this at 0
 
         # DEBUG
-        print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1], self._home_position_xyz[2]))
+        print("home position set to be ({}, {}, {})\n".format(
+            self._home_position_xyz[0],
+            self._home_position_xyz[1],
+            self._home_position_xyz[2]))
