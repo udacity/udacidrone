@@ -6,6 +6,7 @@
 import math
 import threading
 import time
+import numpy as np
 
 # crazyflie imports
 import cflib.crtp
@@ -83,15 +84,15 @@ class CrazyflieConnection(connection.Connection):
         # since can only command velocities and not positions, the connection
         # needs some awareness of the current position to be able to do
         # the math necessary
-        self._current_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
+        self._current_position_xyz = np.array([0.0, 0.0, 0.0])  # [x, y, z]
 
         # due to a "bug" in the crazyflie's position estimator with the flow
         # deck that results in the estimator to reset the position to 0,0,0 mid
         # flight if there are changes in lighting or terrain (note: may also
         # be under other conditions, but so far only seen in those conditions)
-        self._dynamic_home_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
-        self._home_position_xyz = [0.0, 0.0, 0.0]  # [x, y, z]
-        self._cmd_position_xyz = [0.0, 0.0, 0.0]  # the commanded position
+        self._dynamic_home_xyz = np.array([0.0, 0.0, 0.0])  # [x, y, z]
+        self._home_position_xyz = np.array([0.0, 0.0, 0.0])  # [x, y, z]
+        self._cmd_position_xyz = np.array([0.0, 0.0, 0.0])  # the commanded position
 
         # state information is to be updated and managed by this connection class
         # for the crazyflie, since the crazyflie doesn't exactly pass down the
@@ -305,7 +306,7 @@ class CrazyflieConnection(connection.Connection):
                     # TODO: come up with appropriate threshold here
                     if math.sqrt(dx * dx + dy * dy) > 2.0:
                         print("estimator has reset, adjusting dynamic home position!")
-                        self._dynamic_home_xyz = [dx, dy, 0.0]
+                        self._dynamic_home_xyz = np.array([dx, dy, 0.0])
 
 
 
@@ -552,16 +553,27 @@ class CrazyflieConnection(connection.Connection):
         # y is left
         # z is up
         # also completely ignoring heading for now
-        cmd_pos_xyz = [n, -e, -d]
+        cmd_pos_xyz = np.array([n, -e, -d])
 
         # need to covert the commanded position to the crazyflie's
         # "world" frame
         cmd_pos_cf_xyz = cmd_pos_xyz + self._dynamic_home_xyz + self._home_position_xyz
 
-        # DEBUG
-        # print("current position (x,y,z): ({}, {}, {})".format(
-        # self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
-        # print("commanded position (x,y,z): ({}, {}, {})".format(n, -e, -d))
+
+        # DEBUG - position info
+        #print("current positions:")
+        print("\tvehicle: ({}, {}, {})".format(
+            self._current_position_xyz[0], self._current_position_xyz[1], self._current_position_xyz[2]))
+        print("\thome: ({}, {}, {})".format(
+            self._home_position_xyz[0], self._home_position_xyz[1], self._home_position_xyz[2]))
+        print("\tdynamic: ({}, {}, {})".format(
+            self._dynamic_home_xyz[0], self._dynamic_home_xyz[1], self._dynamic_home_xyz[2]))
+
+        # DEBUG - command info
+        print("command detailed:")
+        print("\tuser xyz frame: ({}, {}, {})".format(n, -e, -d))
+        print("\tcf frame: ({}, {}, {})".format(
+            cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
 
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
@@ -601,7 +613,7 @@ class CrazyflieConnection(connection.Connection):
         # update the commanded position information
         # want to be able to keep track of the desired "world frame"
         # coordinates to be able to catch estimator errors.
-        self._cmd_position_xyz = self._current_position_xyz + [dx, dy, 0.0]
+        self._cmd_position_xyz = self._current_position_xyz + np.array([dx, dy, 0.0])
         self._cmd_position_xyz[2] = z
 
         distance = math.sqrt(dx * dx + dy * dy)
