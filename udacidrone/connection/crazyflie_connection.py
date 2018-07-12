@@ -13,7 +13,6 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
-from cflib.crazyflie.syncLogger import SyncLogger
 
 import queue
 from udacidrone.connection import message_types as mt
@@ -203,7 +202,6 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add state log config, bad configuration.')
 
-
         # start the write thread now that the connection is open
         self._running = True
         self._write_handle.start()
@@ -290,7 +288,6 @@ class CrazyflieConnection(connection.Connection):
             # NOTE: the commands are immediately sent, which can result in fast back to back command sets, but
             # ensures all the commands are sent
             cmd = None
-            new_cmd = False
             while not self._out_msg_queue.empty():
                 try:
                     cmd = self._out_msg_queue.get_nowait()
@@ -299,7 +296,6 @@ class CrazyflieConnection(connection.Connection):
                     pass
                 else:
                     if cmd is not None:
-                        new_cmd = True
                         current_cmd = cmd
                         cmd_start_time = time.time()
 
@@ -325,7 +321,6 @@ class CrazyflieConnection(connection.Connection):
                     # current_cmd.type, current_cmd.cmd))
 
                     # time to stop
-                    new_cmd = True
                     current_height = self._current_position_xyz[2]
                     if current_height > 0.05:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
@@ -654,7 +649,6 @@ class CrazyflieConnection(connection.Connection):
         # y is left
         # z is up
         # also completely ignoring heading for now
-        cmd_pos_xyz = np.array([n, -e, -d])
 
         # send a position command - this will allow the write loop
         # to use the most up to date information for generating the
@@ -710,7 +704,7 @@ class CrazyflieConnection(connection.Connection):
         self._cmd_position_xyz[2] = z
 
         # use the helper function for this
-        cmd = self._create_velocity_cmd(dx, dy, dz, heading)
+        cmd = self._create_velocity_cmd(dx, dy, z, heading)
         self._out_msg_queue.put(cmd)
 
         # distance = math.sqrt(dx * dx + dy * dy)
@@ -770,7 +764,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to know the current height here...
         current_height = self._current_position_xyz[2]
-        decent_velocity = -self._velocity/2  # [m/s]
+        decent_velocity = -self._velocity / 2  # [m/s]
 
         # calculate how long that command should be executed for
         # we aren't going to go all the way down before then sending a stop command

@@ -1,0 +1,5 @@
+[
+  "tests/test_server.py::test_client[ConnectionProtocol.WebSocket]",
+  "tests/test_server.py::test_client[ConnectionProtocol.TCP]",
+  "tests/test_state_update.py::test_drone_state_update"
+]
