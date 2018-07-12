@@ -370,7 +370,7 @@ class CrazyflieConnection(connection.Connection):
         self._current_position_xyz = np.array([x, y, z])  # save for our internal use
 
         # the position that should be published is an NED position, adjusted for the set home position
-        adjusted_pos = self._current_position_xyz - self._home_position_xyz
+        adjusted_pos = self._current_position_xyz - self._home_position_xyz - self._dynamic_home_xyz
         pos = mt.LocalFrameMessage(timestamp, adjusted_pos[0], -adjusted_pos[1], -adjusted_pos[2])
         self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
@@ -840,6 +840,9 @@ class CrazyflieConnection(connection.Connection):
         # proper coordinate to command
         self._home_position_xyz = self._current_position_xyz
         self._home_position_xyz[2] = 0.0  # for now keep this at 0
+
+        # want to reset the dynamic home adjustment at this point, since resetting the home position
+        self._dynamic_home_xyz = np.array([0.0, 0.0, 0.0])
 
         # DEBUG
         print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1],
