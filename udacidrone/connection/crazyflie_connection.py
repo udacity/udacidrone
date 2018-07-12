@@ -357,7 +357,7 @@ class CrazyflieConnection(connection.Connection):
         pos_change = math.sqrt(dx * dx + dy * dy)
 
         # DEBUG
-        print("position change: ({}, {})".format(dx, dy))
+        # print("position change: ({}, {})".format(dx, dy))
 
         # TODO: find the correct limit here for defining a jump
         if pos_change >= 1:
