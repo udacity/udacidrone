@@ -320,8 +320,10 @@ class CrazyflieConnection(connection.Connection):
                     # print("command timer completed, completed command: {}, {}".format(
                     # current_cmd.type, current_cmd.cmd))
 
-                    # time to stop
-                    current_height = self._current_position_xyz[2]
+                    # time to stop -> want to hold the commanded height (instead of the current height as current
+                    # height may drift and that will cause the crazyflie to bob a lot)
+                    current_height = self._cmd_position_xyz[2]
+                    print("stopping and holding a cmd height of {}".format(current_height))
                     if current_height > 0.05:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
                     else:
@@ -363,6 +365,7 @@ class CrazyflieConnection(connection.Connection):
         if pos_change >= 1:
             print("esitmator has reset, adjusting home position")
             self._dynamic_home_xyz += np.array([dx, dy, 0])
+            print("\tdynamic adjustment = ({}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1]))
 
         self._current_position_xyz = np.array([x, y, z])  # save for our internal use
 
@@ -493,7 +496,8 @@ class CrazyflieConnection(connection.Connection):
         Args:
             dx: distance to travel in the crazyflie's X direction
             dy: distance to travel in the crazyflie's Y direction
-            z: height above ground for the target waypoint
+            dz: distance to travel in the crazyflie's Z direction
+            z: the height above ground to hold
             heading: desired heading
 
         Returns:
@@ -509,11 +513,14 @@ class CrazyflieConnection(connection.Connection):
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
         vx = self._velocity * dx / distance
         vy = self._velocity * dy / distance
-        print("vel vector: ({}, {})".format(vx, vy))
+        #vz = self._velocity * dz / distance
+        vz = 0
+        print("vel vector: ({}, {}, {})".format(vx, vy, vz))
 
         # create and send the command
         # TODO: determine if would want to use the hover command instead of the velocity command....
         # TODO: problem with the hover command is have no feedback on the current altitude!!
+        # return CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (vx, vy, vz, 0.0), delay_time)
         return CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
 
     def _pos_cmd_to_cf_vel_cmd(self, cmd_pos_xyz, heading):
@@ -537,6 +544,7 @@ class CrazyflieConnection(connection.Connection):
 
         # convert from the user's frame to the cf's internal frame
         cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
+        self._cmd_position_xyz = np.copy(cmd_pos_cf_xyz)
 
         # DEBUG - position info
         print("current positions:")
@@ -557,7 +565,8 @@ class CrazyflieConnection(connection.Connection):
         # as things are used as XYZ internally for the crazyflie
         dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
         dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
-        z = cmd_pos_cf_xyz[2]  # holding a specific altitude, so just pass altitude through directly
+        dz = cmd_pos_cf_xyz[2] - self._current_position_xyz[2]
+        z = cmd_pos_cf_xyz[2]
 
         return self._create_velocity_cmd(dx, dy, z, heading)
 
@@ -664,7 +673,7 @@ class CrazyflieConnection(connection.Connection):
         """
 
         # consider the waypoint as reached, so command the cf to stop
-        current_height = self._current_position_xyz[2]
+        current_height = self._cmd_position_xyz[2]
         stop_moving_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
         self._out_msg_queue.put(stop_moving_cmd)
 
@@ -718,17 +727,16 @@ class CrazyflieConnection(connection.Connection):
         # # command the relative position
         # self.cmd_relative_position(dx, dy, z, heading)
 
-    def cmd_relative_position(self, dx, dy, z, heading):
-        print("move vector: ({}, {}) at height {}".format(dx, dy, z))
+    def cmd_relative_position(self, dx, dy, dz, heading):
+        print("move vector: ({}, {}, {})".format(dx, dy, dz))
 
         # update the commanded position information
         # want to be able to keep track of the desired "world frame"
         # coordinates to be able to catch estimator errors.
-        self._cmd_position_xyz = self._current_position_xyz + np.array([dx, dy, 0.0])
-        self._cmd_position_xyz[2] = z
+        self._cmd_position_xyz = self._current_position_xyz + np.array([dx, dy, dz])
 
         # use the helper function for this
-        cmd = self._create_velocity_cmd(dx, dy, z, heading)
+        cmd = self._create_velocity_cmd(dx, dy, self._cmd_position_xyz[2], heading)
         self._out_msg_queue.put(cmd)
 
         # distance = math.sqrt(dx * dx + dy * dy)
