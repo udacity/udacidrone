@@ -513,7 +513,7 @@ class CrazyflieConnection(connection.Connection):
         # need to now calculate the velocity vector -> need to have a magnitude of default velocity
         vx = self._velocity * dx / distance
         vy = self._velocity * dy / distance
-        #vz = self._velocity * dz / distance
+        # vz = self._velocity * dz / distance
         vz = 0
         print("vel vector: ({}, {}, {})".format(vx, vy, vz))
 
@@ -565,7 +565,7 @@ class CrazyflieConnection(connection.Connection):
         # as things are used as XYZ internally for the crazyflie
         dx = cmd_pos_cf_xyz[0] - self._current_position_xyz[0]
         dy = cmd_pos_cf_xyz[1] - self._current_position_xyz[1]
-        dz = cmd_pos_cf_xyz[2] - self._current_position_xyz[2]
+        # dz = cmd_pos_cf_xyz[2] - self._current_position_xyz[2]
         z = cmd_pos_cf_xyz[2]
 
         return self._create_velocity_cmd(dx, dy, z, heading)
