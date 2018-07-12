@@ -1,6 +1,7 @@
+from enum import Enum
+
 from pymavlink import mavutil
 
-from enum import Enum
 from udacidrone.messaging import MsgID
 
 from . import message_types as mt

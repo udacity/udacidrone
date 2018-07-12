@@ -4,19 +4,19 @@
 """
 
 import math
+import queue
 import threading
 import time
-import numpy as np
 
 # crazyflie imports
 import cflib.crtp
+import numpy as np
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
-import queue
-from udacidrone.connection import message_types as mt
 from udacidrone.connection import connection
+from udacidrone.connection import message_types as mt
 # udacidrone imports
 from udacidrone.messaging import MsgID
 
@@ -504,29 +504,17 @@ class CrazyflieConnection(connection.Connection):
 
         # DEBUG - position info
         print("current positions:")
-        print("\tvehicle: ({}, {}, {})".format(
-            self._current_position_xyz[0],
-            self._current_position_xyz[1],
-            self._current_position_xyz[2]))
-        print("\thome: ({}, {}, {})".format(
-            self._home_position_xyz[0],
-            self._home_position_xyz[1],
-            self._home_position_xyz[2]))
-        print("\tdynamic: ({}, {}, {})".format(
-            self._dynamic_home_xyz[0],
-            self._dynamic_home_xyz[1],
-            self._dynamic_home_xyz[2]))
+        print("\tvehicle: ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1],
+                                               self._current_position_xyz[2]))
+        print("\thome: ({}, {}, {})".format(self._home_position_xyz[0], self._home_position_xyz[1],
+                                            self._home_position_xyz[2]))
+        print("\tdynamic: ({}, {}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1],
+                                               self._dynamic_home_xyz[2]))
 
         # DEBUG - command info
         print("command detailed:")
-        print("\tuser xyz frame: ({}, {}, {})".format(
-            cmd_pos_xyz[0],
-            cmd_pos_xyz[1],
-            cmd_pos_xyz[2]))
-        print("\tcf frame: ({}, {}, {})".format(
-            cmd_pos_cf_xyz[0],
-            cmd_pos_cf_xyz[1],
-            cmd_pos_cf_xyz[2]))
+        print("\tuser xyz frame: ({}, {}, {})".format(cmd_pos_xyz[0], cmd_pos_xyz[1], cmd_pos_xyz[2]))
+        print("\tcf frame: ({}, {}, {})".format(cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
 
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
@@ -810,7 +798,5 @@ class CrazyflieConnection(connection.Connection):
         self._home_position_xyz[2] = 0.0  # for now keep this at 0
 
         # DEBUG
-        print("home position set to be ({}, {}, {})\n".format(
-            self._home_position_xyz[0],
-            self._home_position_xyz[1],
-            self._home_position_xyz[2]))
+        print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1],
+                                                              self._home_position_xyz[2]))
