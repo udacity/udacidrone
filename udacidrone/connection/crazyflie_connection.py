@@ -763,7 +763,7 @@ class CrazyflieConnection(connection.Connection):
         self._reset_position_estimator()
 
         # set the command position
-        self._cmd_position_xyz = self._current_position_xyz
+        self._cmd_position_xyz = np.copy(self._current_position_xyz)
         self._cmd_position_xyz[2] = -d
 
         # add to queue a command with 0 x,y vel, 0 yawrate, and the desired height off the ground
@@ -783,7 +783,7 @@ class CrazyflieConnection(connection.Connection):
         """
 
         # set the command position
-        self._cmd_position_xyz = self._current_position_xyz
+        self._cmd_position_xyz = np.copy(self._current_position_xyz)
         self._cmd_position_xyz[2] = 0
 
         # need to know the current height here...
