@@ -509,7 +509,7 @@ class Drone(object):
 
     def set_home_as_current_position(self):
         """Set the drone's home position to its current position"""
-        self.set_home_position(self.global_position[0], self.global_position[1], self.global_position[2])
+        self.set_home_position(self._longitude, self._latitude, self._altitude)
 
     def start_log(self, directory, name):
         self.log = Logger(directory, name)
