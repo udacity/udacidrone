@@ -341,12 +341,13 @@ class CrazyflieConnection(connection.Connection):
             self._send_command(current_cmd)
 
     def _cf_callback_pos(self, timestamp, data, logconf):
+        """callback on the crazyflie's position update"""
         x = data['kalman.stateX']
         y = data['kalman.stateY']
         z = data['kalman.stateZ']
         # print("current height: {}".format(z))
 
-        # TODO: compute a difference between the previou current position and this one
+        # compute a difference between the previou current position and this one
         # if there is a large jump, that means there is a chance the estimator has reset!
         new_position = np.array([x, y, z])
 
@@ -371,6 +372,7 @@ class CrazyflieConnection(connection.Connection):
         self.notify_message_listeners(MsgID.LOCAL_POSITION, pos)
 
     def _cf_callback_vel(self, timestamp, data, logconf):
+        """callback on the crazyflie's velocity update"""
         x = data['kalman.statePX']
         y = data['kalman.statePY']
         z = data['kalman.statePZ']
@@ -378,6 +380,7 @@ class CrazyflieConnection(connection.Connection):
         self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
     def _cf_callback_att(self, timestamp, data, logconf):
+        """callback on the crazyflie's attitude update"""
         roll = data['stabilizer.roll']
         pitch = data['stabilizer.pitch']
         yaw = data['stabilizer.yaw']
@@ -385,6 +388,7 @@ class CrazyflieConnection(connection.Connection):
         self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
     def _cf_callback_state(self, timestamp, data, logconf):
+        """callback on the crazyflie's state information"""
         # in_flight = data['kalman.inFlight']
         # armed = False
         # guided = False
@@ -406,6 +410,7 @@ class CrazyflieConnection(connection.Connection):
         pass
 
     def _cf_callback_kf_variance(self, timestamp, data, logconf):
+        """callback on the crazyflie's KF varaince information"""
         self._var_x_history.append(data['kalman.varPX'])
         self._var_x_history.pop(0)
         self._var_y_history.append(data['kalman.varPY'])
@@ -431,6 +436,7 @@ class CrazyflieConnection(connection.Connection):
             self._kf_log_config.stop()  # no longer care to keep getting the kalman filter variance
 
     def _cf_callback_error(self, logconf, msg):
+        """callback for an error from one of the loggers"""
         print('Error when logging %s: %s' % (logconf.name, msg))
 
     def _wait_for_position_estimator(self):
@@ -479,8 +485,21 @@ class CrazyflieConnection(connection.Connection):
         return pos + self._dynamic_home_xyz + self._home_position_xyz
 
     def _create_velocity_cmd(self, dx, dy, z, heading):
-        """helper function for calculating the necessary hover (velocity)
-           command given a relative motion command"""
+        """helper function to create a velocity command given a desired change in position.
+
+        computes the velocity command given the velocity setting and then passed in position change.
+        also computes the necessary delay time to wait before finishing the command.
+
+        Args:
+            dx: distance to travel in the crazyflie's X direction
+            dy: distance to travel in the crazyflie's Y direction
+            z: height above ground for the target waypoint
+            heading: desired heading
+
+        Returns:
+            a velocity command (CF type HOVER) to execute the desired motion.
+            CrazyflieCommand
+        """
 
         # calculate the distance needed to travel and the delay time for the command
         distance = math.sqrt(dx * dx + dy * dy)
@@ -498,6 +517,23 @@ class CrazyflieConnection(connection.Connection):
         return CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (vx, vy, 0.0, z), delay_time)
 
     def _pos_cmd_to_cf_vel_cmd(self, cmd_pos_xyz, heading):
+        """convert an XYZ command from the user to a velocity command in the crazyflie's frame
+
+        handles the translation that needs to occur to take into account the set home position and any potential
+        dynamic home adjustments needed due to the estimator onboard the crazyflie resetting.
+        then computes the velocity command and delay time needed to reach the desired point, creating the necessary
+        crazyflie command to successfully fly to the commanded position.
+
+        Note: the user's XYZ frame is a frame with (0,0) at the location at which `set_home_position()` was called.
+
+        Args:
+            cmd_pos_xyz: the desired position in the user's XYZ frame
+            heading: the desired vehicle heading
+
+        Returns:
+            a velocity move command (CF type hover) required to reach the desired position.
+            CrazyflieCommand
+        """
 
         # convert from the user's frame to the cf's internal frame
         cmd_pos_cf_xyz = self._convert_to_cf_xyz(cmd_pos_xyz)
