@@ -508,6 +508,10 @@ class Drone(object):
         except Exception as e:
             traceback.print_exc()
 
+    def set_home_as_current_position(self):
+        """Set the drone's home position to its current position"""
+        set_home_position(self.global_position[0], self.global_position[1], self.global_position[2])
+
     def start_log(self, directory, name):
         self.log = Logger(directory, name)
 
