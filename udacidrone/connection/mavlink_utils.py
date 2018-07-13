@@ -108,10 +108,10 @@ def dispatch_message(conn, msg):
     elif msg.get_type() == 'SCALED_IMU':
         timestamp = msg.time_boot_ms / 1000.0
         # break out the message into its respective messages for here
-        accel = mt.BodyFrameMessage(timestamp, msg.xacc, msg.yacc, msg.zacc)  # units are [mg]
+        accel = mt.BodyFrameMessage(timestamp, msg.xacc/1000.0, msg.yacc/1000.0, msg.zacc/1000.0)  # units are [mg]
         conn.notify_message_listeners(MsgID.RAW_ACCELEROMETER, accel)
 
-        gyro = mt.BodyFrameMessage(timestamp, msg.xgyro, msg.ygyro, msg.zgyro)  # units are [millirad/sec]
+        gyro = mt.BodyFrameMessage(timestamp, msg.xgyro/1000.0, msg.ygyro/1000.0, msg.zgyro/1000.0)  # units are [millirad/sec]
         conn.notify_message_listeners(MsgID.RAW_GYROSCOPE, gyro)
 
     # http://mavlink.org/messages/common#SCALED_PRESSURE
