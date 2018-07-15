@@ -57,6 +57,9 @@ class Drone(object):
         # If the drone is guided it is being autonomously controlled,
         # the other opposite would be manual control.
         self._guided = False
+        
+        # An integer to pass along random status changes specific for different vehicles
+        self._status = 0
         self._state_time = 0.0
         self._state_frequency = 0.0
 
@@ -206,6 +209,10 @@ class Drone(object):
     @property
     def state_time(self):
         return self._state_time
+    
+    @property
+    def status(self):
+        return self._status
 
     def _update_state(self, msg):
         self._armed = msg.armed
@@ -213,6 +220,7 @@ class Drone(object):
         if (msg.time - self._state_time) > 0.0:
             self._state_frequency = 1.0 / (msg.time - self._state_time)
         self._state_time = msg.time
+        self._status = msg.status
 
     @property
     def attitude(self):

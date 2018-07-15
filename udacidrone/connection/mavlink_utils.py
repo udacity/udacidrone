@@ -81,7 +81,7 @@ def dispatch_message(conn, msg):
         if main_mode == MainMode.PX4_MODE_OFFBOARD.value:
             guided_mode = True
 
-        state = mt.StateMessage(timestamp, motors_armed, guided_mode)
+        state = mt.StateMessage(timestamp, motors_armed, guided_mode, msg.system_status)
         conn.notify_message_listeners(MsgID.STATE, state)
 
     # http://mavlink.org/messages/common#LOCAL_POSITION_NED

@@ -56,10 +56,11 @@ class StateMessage(Message):
         _guided: whether or not drone can be commanded from python
     """
 
-    def __init__(self, time, armed, guided):
+    def __init__(self, time, armed, guided, status = 0):
         super().__init__(time)
         self._armed = armed
         self._guided = guided
+        self._status = status
 
     @property
     def armed(self):
@@ -70,6 +71,11 @@ class StateMessage(Message):
     def guided(self):
         """bool: true if the drone can be commanded from python """
         return self._guided
+    
+    @property
+    def status(self):
+        """int: status value from the autopilot not corresponding to anything in particular """
+        return self._status
 
 
 class GlobalFrameMessage(Message):
