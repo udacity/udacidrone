@@ -640,13 +640,28 @@ class CrazyflieConnection(connection.Connection):
     def cmd_velocity(self, vn, ve, vd, heading):
         """Command to set the desired velocity (NED frame) and heading
 
+        Note: For the crazyflie, NED is defined when the crazyflie starts, not aligned with world NED
+
         Args:
             vn: desired north velocity component in meters/second
             ve: desired east velocity component in meters/second
             vd: desired down velocity component in meters/second (note: positive down!)
             heading: desired drone heading in radians
         """
-        pass
+
+        # crazyflie works in an XYZ "world" frame, so need to convert from NED to XYZ
+        vx = vn
+        vy = -ve
+        vz = -vd
+
+        # TODO: crazyflie takes yaw_rate here, need to handle this correctly
+        # for now, ignore all heading commands
+
+        # for a velocity command the idea of a delay time doesn't exist, it's up to the user to make sure
+        # that velocity commands keep getting sent
+        delay_time = None
+
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (vx, vy, vz, 0.0), delay_time))
 
     def cmd_motors(self, motor1, motor2, motor3, motor4):
         """Command the thrust levels for each motor on a quadcopter
