@@ -613,7 +613,25 @@ class CrazyflieConnection(connection.Connection):
             roll: the deisred roll in radians
             thrust: the normalized desired thrust level on [0, 1]
         """
-        pass
+
+        # NOTE: for the crazyflie, the attitude commands are in degrees, so will need to adjust accordingly
+        # TODO: crazyflie takes in roll/pitch/yaw, should figure out the impact of making this function correct
+        # to the definition of cmd_attitude... not sure why commanding yaw rate here
+
+        # NOTE: thrust is also a bit weird for the crazyflie, it's a value between 10001 and 60000
+        # with hover thrust being around 36850.0
+
+
+        # XXX: for now overload this incorrectly for testing purposes
+        roll_deg = np.degrees(roll)
+        pitch_deg = np.degrees(pitch)
+        yaw_deg = np.degrees(yaw)  # overloaded with this being yaw, not yaw rate!
+        # overload with thrust being on the correct scale for the crazyflie
+        # TODO: adjusting scale will be pretty straight forward, it'll just need noting that hover
+        # will then be ~0.7 (?)
+
+        # NOTE: again no delay time as that is not used when sending commands at this level
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
