@@ -323,7 +323,7 @@ class CrazyflieConnection(connection.Connection):
                     # time to stop -> want to hold the commanded height (instead of the current height as current
                     # height may drift and that will cause the crazyflie to bob a lot)
                     current_height = self._cmd_position_xyz[2]
-                    print("stopping and holding a cmd height of {}".format(current_height))
+                    # print("stopping and holding a cmd height of {}".format(current_height))
                     if current_height > 0.05:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
                     else:
@@ -363,9 +363,9 @@ class CrazyflieConnection(connection.Connection):
 
         # TODO: find the correct limit here for defining a jump
         if pos_change >= 1:
-            print("esitmator has reset, adjusting home position")
+            # print("esitmator has reset, adjusting home position")
             self._dynamic_home_xyz += np.array([dx, dy, 0])
-            print("\tdynamic adjustment = ({}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1]))
+            # print("\tdynamic adjustment = ({}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1]))
 
         self._current_position_xyz = np.array([x, y, z])  # save for our internal use
 
@@ -547,18 +547,18 @@ class CrazyflieConnection(connection.Connection):
         self._cmd_position_xyz = np.copy(cmd_pos_cf_xyz)
 
         # DEBUG - position info
-        print("current positions:")
-        print("\tvehicle: ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1],
-                                               self._current_position_xyz[2]))
-        print("\thome: ({}, {}, {})".format(self._home_position_xyz[0], self._home_position_xyz[1],
-                                            self._home_position_xyz[2]))
-        print("\tdynamic: ({}, {}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1],
-                                               self._dynamic_home_xyz[2]))
+        # print("current positions:")
+        # print("\tvehicle: ({}, {}, {})".format(self._current_position_xyz[0], self._current_position_xyz[1],
+        #                                        self._current_position_xyz[2]))
+        # print("\thome: ({}, {}, {})".format(self._home_position_xyz[0], self._home_position_xyz[1],
+        #                                     self._home_position_xyz[2]))
+        # print("\tdynamic: ({}, {}, {})".format(self._dynamic_home_xyz[0], self._dynamic_home_xyz[1],
+        #                                        self._dynamic_home_xyz[2]))
 
         # DEBUG - command info
-        print("command detailed:")
-        print("\tuser xyz frame: ({}, {}, {})".format(cmd_pos_xyz[0], cmd_pos_xyz[1], cmd_pos_xyz[2]))
-        print("\tcf frame: ({}, {}, {})".format(cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
+        # print("command detailed:")
+        # print("\tuser xyz frame: ({}, {}, {})".format(cmd_pos_xyz[0], cmd_pos_xyz[1], cmd_pos_xyz[2]))
+        # print("\tcf frame: ({}, {}, {})".format(cmd_pos_cf_xyz[0], cmd_pos_cf_xyz[1], cmd_pos_cf_xyz[2]))
 
         # calculate the change vector needed
         # note the slight oddity that happens in converting NED to XYZ
@@ -804,7 +804,7 @@ class CrazyflieConnection(connection.Connection):
         delay_time = (current_height - 0.02) / (-1 * decent_velocity)  # the wait time in seconds
 
         # DEBUG
-        print("current height: {}, delay time: {}".format(current_height, delay_time))
+        # print("current height: {}, delay time: {}".format(current_height, delay_time))
 
         # make sure delay time is always positive and non-zero
         if delay_time < 0:
@@ -845,5 +845,5 @@ class CrazyflieConnection(connection.Connection):
         self._dynamic_home_xyz = np.array([0.0, 0.0, 0.0])
 
         # DEBUG
-        print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1],
-                                                              self._home_position_xyz[2]))
+        # print("home position set to be ({}, {}, {})\n".format(self._home_position_xyz[0], self._home_position_xyz[1],
+        #                                                       self._home_position_xyz[2]))
