@@ -56,7 +56,7 @@ class StateMessage(Message):
         _guided: whether or not drone can be commanded from python
     """
 
-    def __init__(self, time, armed, guided, status = 0):
+    def __init__(self, time, armed, guided, status=0):
         super().__init__(time)
         self._armed = armed
         self._guided = guided
@@ -71,7 +71,7 @@ class StateMessage(Message):
     def guided(self):
         """bool: true if the drone can be commanded from python """
         return self._guided
-    
+
     @property
     def status(self):
         """int: status value from the autopilot not corresponding to anything in particular """
@@ -80,9 +80,9 @@ class StateMessage(Message):
 
 class GlobalFrameMessage(Message):
     """Global frame message
-    
+
     message to carry information in a global frame
-    
+
     Attributes:
         _latitude: latitude in degrees
         _longitude: longitude in degrees
@@ -118,9 +118,9 @@ class GlobalFrameMessage(Message):
 
 class LocalFrameMessage(Message):
     """Local frame message
-    
+
     message to carry information in a local (NED) frame
-    
+
     Attributes:
         _north: north position in meters
         _east: east position in meters
@@ -156,9 +156,9 @@ class LocalFrameMessage(Message):
 
 class BodyFrameMessage(Message):
     """Body frame message
-    
+
     message to carry information in a body frame
-    
+
     Attributes:
         _x: x value
         _y: y value
@@ -194,7 +194,7 @@ class BodyFrameMessage(Message):
 
 class FrameMessage(Message):
     """Message representating frame information
-    
+
     Messages defining the rotation between frames (Euler angles or Quaternions)
 
     Attributes:
@@ -291,7 +291,7 @@ class FrameMessage(Message):
 
 class DistanceSensorMessage(Message):
     """Message for distance sensor (e.g. Lidar) information
-    
+
     the properties of and measurement from a given distance sensor onboard
     the drone.
 
@@ -313,8 +313,8 @@ class DistanceSensorMessage(Message):
 
     @property
     def measurement(self):
-        """ 
-        (float, float, float): tuple containing the measurement information defined as 
+        """
+        (float, float, float): tuple containing the measurement information defined as
         (direction, distance, covariance)
         """
         return (self._direction, self._measurement, self._covariance)

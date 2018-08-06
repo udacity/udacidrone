@@ -1,14 +1,14 @@
 import os
+import queue
 import threading
 import time
 
 from pymavlink import mavutil
 
-import queue
 from udacidrone.messaging import MsgID
 
-from . import message_types as mt
 from . import connection
+from . import message_types as mt
 from .mavlink_utils import AttitudeMask, MainMode, PositionMask, dispatch_message
 
 # force use of mavlink v2.0

@@ -512,9 +512,12 @@ class Drone(object):
         """Set the drone's home position to these coordinates"""
         try:
             self.connection.set_home_position(latitude, longitude, altitude)
-
         except Exception as e:
             traceback.print_exc()
+
+    def set_home_as_current_position(self):
+        """Set the drone's home position to its current position"""
+        self.set_home_position(self._longitude, self._latitude, self._altitude)
 
     def start_log(self, directory, name):
         self.log = Logger(directory, name)
