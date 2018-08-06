@@ -352,6 +352,19 @@ class MavlinkConnection(connection.Connection):
             time_boot_ms, self._target_system, self._target_component, mavutil.mavlink.MAV_FRAME_LOCAL_NED, mask, n, e,
             d, 0, 0, 0, 0, 0, 0, heading, 0)
         self.send_message(msg)
+        
+    def cmd_controls(self, controls, t=0):
+        time_boot_us = int(t * 1000000)
+        # ensure controls_out is of length 8 even if controls isn't
+        controls_out = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  
+        for i in range(len(controls)):
+            controls_out[i] = controls[i]
+        group_mlx = 1  # TODO: add the ability to set multiple groups of messages
+        
+        msg = self._master.mav.set_actuator_control_target_encode(
+            time_boot_us, group_mlx, self._target_system, 
+            self._target_component, controls_out)
+        self.send_message(msg)            
 
     def takeoff(self, n, e, d):
         # for mavlink to PX4 need to specify the NED location for landing
