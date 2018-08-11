@@ -621,11 +621,10 @@ class CrazyflieConnection(connection.Connection):
         # NOTE: thrust is also a bit weird for the crazyflie, it's a value between 10001 and 60000
         # with hover thrust being around 36850.0
 
-
         # XXX: for now overload this incorrectly for testing purposes
         roll_deg = np.degrees(roll)
         pitch_deg = np.degrees(pitch)
-        yaw_deg = np.degrees(yaw)  # overloaded with this being yaw, not yaw rate!
+        yaw_deg = np.degrees(yawrate)  # overloaded with this being yaw, not yaw rate!
         # overload with thrust being on the correct scale for the crazyflie
         # TODO: adjusting scale will be pretty straight forward, it'll just need noting that hover
         # will then be ~0.7 (?)
