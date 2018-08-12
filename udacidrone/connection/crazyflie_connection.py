@@ -80,7 +80,7 @@ class CrazyflieConnection(connection.Connection):
         self._is_open = False
         self._running = False
 
-        self._send_rate = 5  # want to send messages at 5Hz  NOTE: the minimum is 2 Hz
+        self._send_rate = 50  # want to send messages at 5Hz  NOTE: the minimum is 2 Hz
         self._out_msg_queue = queue.Queue()  # a queue for sending data between threads
         self._write_handle = threading.Thread(target=self.command_loop)
         self._write_handle.daemon = True
@@ -136,7 +136,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to now register for callbacks on the data of interest from the crazyflie
         # TODO: decide on the appropriate rates
-        log_pos = LogConfig(name='LocalPosition', period_in_ms=500)
+        log_pos = LogConfig(name='LocalPosition', period_in_ms=200)
         log_pos.add_variable('kalman.stateX', 'float')
         log_pos.add_variable('kalman.stateY', 'float')
         log_pos.add_variable('kalman.stateZ', 'float')
@@ -153,7 +153,7 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add Position log config, bad configuration.')
 
-        log_vel = LogConfig(name='LocalVelocity', period_in_ms=500)
+        log_vel = LogConfig(name='LocalVelocity', period_in_ms=100)
         log_vel.add_variable('kalman.statePX', 'float')
         log_vel.add_variable('kalman.statePY', 'float')
         log_vel.add_variable('kalman.statePZ', 'float')
@@ -205,6 +205,9 @@ class CrazyflieConnection(connection.Connection):
         # start the write thread now that the connection is open
         self._running = True
         self._write_handle.start()
+
+        # reset the estimator
+        self._reset_position_estimator()
 
     def stop(self):
         """Command to stop a connection with a drone"""
@@ -272,7 +275,8 @@ class CrazyflieConnection(connection.Connection):
         cmd_start_time = 0  # the time [s] that the command started -> needed for distance commands
 
         # the current command that should be being sent, default to 0 everything
-        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+        #current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (0, 0, 0, 0), None)
 
         # the last commanded height
         # if this is not 0, want the hold commands to be hover to hold the specific height
@@ -282,6 +286,7 @@ class CrazyflieConnection(connection.Connection):
 
             # want to make sure the kalman filter has converged before sending any command
             while not self._converged:
+                self._send_command(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (0, 0, 0, 0), None))
                 continue
 
             # empty out the queue of pending messages -> want to always send the messages asap
@@ -323,7 +328,7 @@ class CrazyflieConnection(connection.Connection):
                     # time to stop -> want to hold the commanded height (instead of the current height as current
                     # height may drift and that will cause the crazyflie to bob a lot)
                     current_height = self._cmd_position_xyz[2]
-                    print("stopping and holding a cmd height of {}".format(current_height))
+                    # print("stopping and holding a cmd height of {}".format(current_height))
                     if current_height > 0.05:
                         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_HOVER, (0.0, 0.0, 0.0, current_height))
                     else:
@@ -379,7 +384,7 @@ class CrazyflieConnection(connection.Connection):
         x = data['kalman.statePX']
         y = data['kalman.statePY']
         z = data['kalman.statePZ']
-        vel = mt.LocalFrameMessage(timestamp, x, y, z)
+        vel = mt.LocalFrameMessage(timestamp, x, y, -z)
         self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
     def _cf_callback_att(self, timestamp, data, logconf):
@@ -629,6 +634,11 @@ class CrazyflieConnection(connection.Connection):
         # TODO: adjusting scale will be pretty straight forward, it'll just need noting that hover
         # will then be ~0.7 (?)
 
+        # thrust needs to be an int
+        thrust = int(thrust)
+
+        print("commanding attitude: ({}, {}, {}, {})".format(roll_deg, pitch_deg, yaw_deg, thrust))
+
         # NOTE: again no delay time as that is not used when sending commands at this level
         self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
 
@@ -800,7 +810,7 @@ class CrazyflieConnection(connection.Connection):
         """
         # first step: reset the estimator to make sure all is good, this will take a variable amount of time
         # as it waits for the filter to converge before returning
-        self._reset_position_estimator()
+        #self._reset_position_estimator()
 
         # set the command position
         self._cmd_position_xyz = np.copy(self._current_position_xyz)
