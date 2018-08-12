@@ -280,12 +280,13 @@ class Drone(object):
     def log_telemetry(self, msg_name, msg):
         """Save the msg information to the telemetry log"""
         if self.tlog.open:
-            data = [msg_name]
-            data.append(msg.time)
-            for k in msg.__dict__.keys():
-                if k != '_time':
-                    data.append(msg.__dict__[k])
-            self.tlog.log_telemetry_data(data)
+            self.tlog.log_telemetry_msg(msg_name, msg)
+            # data = [msg_name]
+            # data.append(msg.time)
+            # for k in msg.__dict__.keys():
+            #     if k != '_time':
+            #         data.append(msg.__dict__[k])
+            # self.tlog.log_telemetry_data(data)
 
     @staticmethod
     def read_telemetry_data(filename):
