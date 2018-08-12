@@ -381,14 +381,22 @@ class CrazyflieConnection(connection.Connection):
 
     def _cf_callback_vel(self, timestamp, data, logconf):
         """callback on the crazyflie's velocity update"""
+
+        if not self._converged:
+            return
+
         x = data['kalman.statePX']
         y = data['kalman.statePY']
         z = data['kalman.statePZ']
-        vel = mt.LocalFrameMessage(timestamp, x, y, -z)
+        vel = mt.LocalFrameMessage(timestamp, x, -y, -z)
         self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
     def _cf_callback_att(self, timestamp, data, logconf):
         """callback on the crazyflie's attitude update"""
+
+        if not self._converged:
+            return
+
         roll = data['stabilizer.roll']
         pitch = data['stabilizer.pitch']
         yaw = data['stabilizer.yaw']
@@ -628,7 +636,7 @@ class CrazyflieConnection(connection.Connection):
 
         # XXX: for now overload this incorrectly for testing purposes
         roll_deg = np.degrees(roll)
-        pitch_deg = np.degrees(pitch)
+        pitch_deg = -np.degrees(pitch) # crazyflie is in an XYZ frame, so pitch direction is reversed
         yaw_deg = np.degrees(yawrate)  # overloaded with this being yaw, not yaw rate!
         # overload with thrust being on the correct scale for the crazyflie
         # TODO: adjusting scale will be pretty straight forward, it'll just need noting that hover
@@ -637,10 +645,11 @@ class CrazyflieConnection(connection.Connection):
         # thrust needs to be an int
         thrust = int(thrust)
 
-        print("commanding attitude: ({}, {}, {}, {})".format(roll_deg, pitch_deg, yaw_deg, thrust))
+        #print("commanding attitude: ({}, {}, {}, {})".format(roll_deg, pitch_deg, yaw_deg, thrust))
 
         # NOTE: again no delay time as that is not used when sending commands at this level
         self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
+        #self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, 0.5), None))
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
