@@ -445,17 +445,17 @@ class Drone(object):
         except Exception as e:
             traceback.print_exc()
 
-    def cmd_attitude(self, roll, pitch, yaw_rate, thrust):
+    def cmd_attitude(self, roll, pitch, yaw, thrust):
         """Command the drone through attitude command
 
         Args:
             roll: in radians
             pitch: in randians
-            yaw_rate: in radians/second
-            thrust: upward acceleration in meters/second^2
+            yaw_rate: in radians
+            thrust: normalized thrust on [0, 1] (0 being no thrust, 1 being full thrust)
         """
         try:
-            self.connection.cmd_attitude(roll, pitch, yaw_rate, thrust)
+            self.connection.cmd_attitude(roll, pitch, yaw, thrust)
         except Exception as e:
             traceback.print_exc()
 

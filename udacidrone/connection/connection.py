@@ -146,13 +146,13 @@ class Connection(object):
         pass
 
     @abstractmethod
-    def cmd_attitude(self, roll, pitch, yawrate, thrust):
+    def cmd_attitude(self, roll, pitch, yaw, thrust):
         """Command to set the desired attitude and thrust
 
         Args:
-            yaw: the desired yaw in radians
-            pitch: the desired pitch in radians
             roll: the deisred roll in radians
+            pitch: the desired pitch in radians
+            yaw: the desired yaw in radians
             thrust: the normalized desired thrust level on [0, 1]
         """
         pass
