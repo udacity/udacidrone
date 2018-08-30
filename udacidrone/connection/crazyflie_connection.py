@@ -170,12 +170,10 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add velocity log config, bad configuration.')
 
-        log_att = LogConfig(name='Kalman Attitude', period_in_ms=500)
-        log_att.add_variable('kalman.q0', 'float')
-        log_att.add_variable('kalman.q1', 'float')
-        log_att.add_variable('kalman.q2', 'float')
-        log_att.add_variable('kalman.q3', 'float')
-
+        log_att = LogConfig(name='Attitude', period_in_ms=500)
+        log_att.add_variable('stabilizer.roll', 'float')
+        log_att.add_variable('stabilizer.pitch', 'float')
+        log_att.add_variable('stabilizer.yaw', 'float')
         try:
             self._scf.cf.log.add_config(log_att)
             # This callback will receive the data
@@ -399,12 +397,10 @@ class CrazyflieConnection(connection.Connection):
         if not self._converged:
             return
 
-        # create the frame message from the quaternion
-        fm = mt.FrameMessage(timestamp,
-                             data['kalman.q0'],
-                             data['kalman.q1'],
-                             data['kalman.q2'],
-                             data['kalman.q3'])
+        roll = data['stabilizer.roll']
+        pitch = data['stabilizer.pitch']
+        yaw = data['stabilizer.yaw']
+        fm = mt.FrameMessage(timestamp, roll, pitch, yaw)
         self.notify_message_listeners(MsgID.ATTITUDE, fm)
 
     def _cf_callback_state(self, timestamp, data, logconf):
@@ -427,6 +423,7 @@ class CrazyflieConnection(connection.Connection):
         # once the connection is made, so basically the second the script starts...
         # state = mt.StateMessage(timestamp, armed, guided)
         # self.notify_message_listeners(MsgID.STATE, state)
+        pass
 
     def _cf_callback_kf_variance(self, timestamp, data, logconf):
         """callback on the crazyflie's KF varaince information"""
