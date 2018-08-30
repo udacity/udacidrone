@@ -639,10 +639,7 @@ class CrazyflieConnection(connection.Connection):
 
         roll_deg = np.degrees(roll)
         pitch_deg = -np.degrees(pitch) # crazyflie is in an XYZ frame, so pitch direction is reversed
-        yaw_deg = np.degrees(yawrate)  # overloaded with this being yaw, not yaw rate!
-        # overload with thrust being on the correct scale for the crazyflie
-        # TODO: adjusting scale will be pretty straight forward, it'll just need noting that hover
-        # will then be ~0.7 (?)
+        yaw_deg = np.degrees(yaw)
 
         # map the thrust from [0, 1] to the crazyflie accepted [10000, 65000]
         thrust = thrust * 55000 + 10000
@@ -650,11 +647,31 @@ class CrazyflieConnection(connection.Connection):
         # thrust needs to be an int
         thrust = int(thrust)
 
-        #print("commanding attitude: ({}, {}, {}, {})".format(roll_deg, pitch_deg, yaw_deg, thrust))
-
         # NOTE: again no delay time as that is not used when sending commands at this level
         self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
         #self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, 0.5), None))
+
+    def cmd_attitude_zdist(self, roll, pitch, yaw, altitude):
+        """Command to set the desired attitude and altitude.
+
+        This is a custom crazyflie command that has the crazyflie worry about holding altitude and
+        attitude is controlled by the user
+
+        Args:
+            roll: the desired roll in [radians]
+            pitch: the desired pitch in [radians]
+            yaw: the desired yaw in [radians]
+            altitude: the desired altitude in [m]
+        """
+
+        roll_deg = np.degrees(roll)
+        pitch_deg = -np.degrees(pitch)
+        yaw_deg = np.degrees(yaw)
+
+        # no time delay here
+        # create the attitude zdistance command
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, zdist), None))
+
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
