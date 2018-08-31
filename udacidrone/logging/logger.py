@@ -39,7 +39,6 @@ class Logger(object):
         # immediately start the loop
         write_handle.start()
 
-
     def close(self):
         """close the log (and the corresponding log file) and stop logging"""
         self.open = False

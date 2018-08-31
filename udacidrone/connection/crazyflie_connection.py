@@ -275,7 +275,7 @@ class CrazyflieConnection(connection.Connection):
         cmd_start_time = 0  # the time [s] that the command started -> needed for distance commands
 
         # the current command that should be being sent, default to 0 everything
-        #current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+        # current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
         current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (0, 0, 0, 0), None)
 
         # the last commanded height
@@ -635,7 +635,7 @@ class CrazyflieConnection(connection.Connection):
         # with hover thrust being around 36850.0
 
         roll_deg = np.degrees(roll)
-        pitch_deg = -np.degrees(pitch) # crazyflie is in an XYZ frame, so pitch direction is reversed
+        pitch_deg = -np.degrees(pitch)  # crazyflie is in an XYZ frame, so pitch direction is reversed
         yaw_deg = np.degrees(yaw)
 
         # map the thrust from [0, 1] to the crazyflie accepted [10000, 65000]
@@ -645,8 +645,12 @@ class CrazyflieConnection(connection.Connection):
         thrust = int(thrust)
 
         # NOTE: again no delay time as that is not used when sending commands at this level
-        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
-        # self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, 0.5), None))
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST,
+                                                 (roll_deg, pitch_deg, yaw_deg, thrust),
+                                                 None))
+        # self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST,
+        #                                          (roll_deg, pitch_deg, yaw_deg, 0.5),
+        #                                          None))
 
     def cmd_attitude_zdist(self, roll, pitch, yaw, altitude):
         """Command to set the desired attitude and altitude.
@@ -667,8 +671,9 @@ class CrazyflieConnection(connection.Connection):
 
         # no time delay here
         # create the attitude zdistance command
-        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, zdist), None))
-
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST,
+                                                 (roll_deg, pitch_deg, yaw_deg, altitude),
+                                                 None))
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
@@ -838,7 +843,7 @@ class CrazyflieConnection(connection.Connection):
         """
         # first step: reset the estimator to make sure all is good, this will take a variable amount of time
         # as it waits for the filter to converge before returning
-        #self._reset_position_estimator()
+        # self._reset_position_estimator()
 
         # set the command position
         self._cmd_position_xyz = np.copy(self._current_position_xyz)
