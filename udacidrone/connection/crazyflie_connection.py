@@ -136,7 +136,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to now register for callbacks on the data of interest from the crazyflie
         # TODO: decide on the appropriate rates
-        log_pos = LogConfig(name='LocalPosition', period_in_ms=200)
+        log_pos = LogConfig(name='LocalPosition', period_in_ms=150)
         log_pos.add_variable('kalman.stateX', 'float')
         log_pos.add_variable('kalman.stateY', 'float')
         log_pos.add_variable('kalman.stateZ', 'float')
@@ -646,7 +646,7 @@ class CrazyflieConnection(connection.Connection):
 
         # NOTE: again no delay time as that is not used when sending commands at this level
         self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (roll_deg, pitch_deg, yaw_deg, thrust), None))
-        #self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, 0.5), None))
+        # self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST, (roll_deg, pitch_deg, yaw_deg, 0.5), None))
 
     def cmd_attitude_zdist(self, roll, pitch, yaw, altitude):
         """Command to set the desired attitude and altitude.
@@ -662,7 +662,7 @@ class CrazyflieConnection(connection.Connection):
         """
 
         roll_deg = np.degrees(roll)
-        pitch_deg = -np.degrees(pitch)
+        pitch_deg = np.degrees(pitch)
         yaw_deg = np.degrees(yaw)
 
         # no time delay here
