@@ -1,5 +1,5 @@
 ---
-id: visdom-tutorial
+id: tutorial-visdom
 title: Plotting Realtime Data
 sidebar_label: Plotting Realtime Data
 ---

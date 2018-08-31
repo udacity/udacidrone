@@ -85,3 +85,8 @@ latitude = t_log['global_position_msg'][2][:]
 ```
 
 The data between different messages will not be time synced since they are recorded at different times.
+
+
+## Reference Frames ##
+
+Two different reference frames are defined and used within the Drone API. Global positions are defined as [longitude, latitude, altitude (positive up)]. Local reference frames are defined [North, East, Down (positive down)] and is relative to a nearby global home provided. Both reference frames are defined in a proper right-handed reference frame. The global reference frame is what is provided by the Drone's GPS. Two convenience functions, `global_to_local()` and `local_to_global()` are provided within the `frame_utils.py` script to convert between the two frames. These functions are wrappers on `utm` library functions.
