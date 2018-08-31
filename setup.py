@@ -6,7 +6,7 @@ readme = open('README.md').read()
 
 setup(
     name='udacidrone',
-    version='0.3.4',
+    version='0.3.5',
     description="Drone API for Udacity's Flying Car Nanodegree",
     long_description=readme,
     packages=find_packages(exclude=('tests*',)),
