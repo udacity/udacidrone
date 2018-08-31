@@ -80,7 +80,7 @@ class CrazyflieConnection(connection.Connection):
         self._is_open = False
         self._running = False
 
-        self._send_rate = 5  # want to send messages at 5Hz  NOTE: the minimum is 2 Hz
+        self._send_rate = 50  # want to send messages at 5Hz  NOTE: the minimum is 2 Hz
         self._out_msg_queue = queue.Queue()  # a queue for sending data between threads
         self._write_handle = threading.Thread(target=self.command_loop)
         self._write_handle.daemon = True
@@ -136,7 +136,7 @@ class CrazyflieConnection(connection.Connection):
 
         # need to now register for callbacks on the data of interest from the crazyflie
         # TODO: decide on the appropriate rates
-        log_pos = LogConfig(name='LocalPosition', period_in_ms=500)
+        log_pos = LogConfig(name='LocalPosition', period_in_ms=150)
         log_pos.add_variable('kalman.stateX', 'float')
         log_pos.add_variable('kalman.stateY', 'float')
         log_pos.add_variable('kalman.stateZ', 'float')
@@ -153,7 +153,7 @@ class CrazyflieConnection(connection.Connection):
         except AttributeError:
             print('Could not add Position log config, bad configuration.')
 
-        log_vel = LogConfig(name='LocalVelocity', period_in_ms=500)
+        log_vel = LogConfig(name='LocalVelocity', period_in_ms=100)
         log_vel.add_variable('kalman.statePX', 'float')
         log_vel.add_variable('kalman.statePY', 'float')
         log_vel.add_variable('kalman.statePZ', 'float')
@@ -205,6 +205,9 @@ class CrazyflieConnection(connection.Connection):
         # start the write thread now that the connection is open
         self._running = True
         self._write_handle.start()
+
+        # reset the estimator
+        self._reset_position_estimator()
 
     def stop(self):
         """Command to stop a connection with a drone"""
@@ -272,7 +275,8 @@ class CrazyflieConnection(connection.Connection):
         cmd_start_time = 0  # the time [s] that the command started -> needed for distance commands
 
         # the current command that should be being sent, default to 0 everything
-        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+        # current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_STOP, None)
+        current_cmd = CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (0, 0, 0, 0), None)
 
         # the last commanded height
         # if this is not 0, want the hold commands to be hover to hold the specific height
@@ -282,6 +286,7 @@ class CrazyflieConnection(connection.Connection):
 
             # want to make sure the kalman filter has converged before sending any command
             while not self._converged:
+                self._send_command(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST, (0, 0, 0, 0), None))
                 continue
 
             # empty out the queue of pending messages -> want to always send the messages asap
@@ -376,14 +381,22 @@ class CrazyflieConnection(connection.Connection):
 
     def _cf_callback_vel(self, timestamp, data, logconf):
         """callback on the crazyflie's velocity update"""
+
+        if not self._converged:
+            return
+
         x = data['kalman.statePX']
         y = data['kalman.statePY']
         z = data['kalman.statePZ']
-        vel = mt.LocalFrameMessage(timestamp, x, y, z)
+        vel = mt.LocalFrameMessage(timestamp, x, -y, -z)
         self.notify_message_listeners(MsgID.LOCAL_VELOCITY, vel)
 
     def _cf_callback_att(self, timestamp, data, logconf):
         """callback on the crazyflie's attitude update"""
+
+        if not self._converged:
+            return
+
         roll = data['stabilizer.roll']
         pitch = data['stabilizer.pitch']
         yaw = data['stabilizer.yaw']
@@ -604,7 +617,7 @@ class CrazyflieConnection(connection.Connection):
         self._armed = False
         self._guided = False
 
-    def cmd_attitude(self, roll, pitch, yawrate, thrust):
+    def cmd_attitude(self, roll, pitch, yaw, thrust):
         """Command to set the desired attitude and thrust
 
         Args:
@@ -613,7 +626,54 @@ class CrazyflieConnection(connection.Connection):
             roll: the deisred roll in radians
             thrust: the normalized desired thrust level on [0, 1]
         """
-        pass
+
+        # NOTE: for the crazyflie, the attitude commands are in degrees, so will need to adjust accordingly
+        # TODO: crazyflie takes in roll/pitch/yaw, should figure out the impact of making this function correct
+        # to the definition of cmd_attitude... not sure why commanding yaw rate here
+
+        # NOTE: thrust is also a bit weird for the crazyflie, it's a value between 10001 and 60000
+        # with hover thrust being around 36850.0
+
+        roll_deg = np.degrees(roll)
+        pitch_deg = -np.degrees(pitch)  # crazyflie is in an XYZ frame, so pitch direction is reversed
+        yaw_deg = np.degrees(yaw)
+
+        # map the thrust from [0, 1] to the crazyflie accepted [10000, 65000]
+        thrust = thrust * 55000 + 10000
+
+        # thrust needs to be an int
+        thrust = int(thrust)
+
+        # NOTE: again no delay time as that is not used when sending commands at this level
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_THRUST,
+                                                 (roll_deg, pitch_deg, yaw_deg, thrust),
+                                                 None))
+        # self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST,
+        #                                          (roll_deg, pitch_deg, yaw_deg, 0.5),
+        #                                          None))
+
+    def cmd_attitude_zdist(self, roll, pitch, yaw, altitude):
+        """Command to set the desired attitude and altitude.
+
+        This is a custom crazyflie command that has the crazyflie worry about holding altitude and
+        attitude is controlled by the user
+
+        Args:
+            roll: the desired roll in [radians]
+            pitch: the desired pitch in [radians]
+            yaw: the desired yaw in [radians]
+            altitude: the desired altitude in [m]
+        """
+
+        roll_deg = np.degrees(roll)
+        pitch_deg = np.degrees(pitch)
+        yaw_deg = np.degrees(yaw)
+
+        # no time delay here
+        # create the attitude zdistance command
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_ATTITUDE_DIST,
+                                                 (roll_deg, pitch_deg, yaw_deg, altitude),
+                                                 None))
 
     def cmd_attitude_rate(self, roll_rate, pitch_rate, yaw_rate, thrust):
         """Command to set the desired attitude rates and thrust
@@ -640,13 +700,28 @@ class CrazyflieConnection(connection.Connection):
     def cmd_velocity(self, vn, ve, vd, heading):
         """Command to set the desired velocity (NED frame) and heading
 
+        Note: For the crazyflie, NED is defined when the crazyflie starts, not aligned with world NED
+
         Args:
             vn: desired north velocity component in meters/second
             ve: desired east velocity component in meters/second
             vd: desired down velocity component in meters/second (note: positive down!)
             heading: desired drone heading in radians
         """
-        pass
+
+        # crazyflie works in an XYZ "world" frame, so need to convert from NED to XYZ
+        vx = vn
+        vy = -ve
+        vz = -vd
+
+        # TODO: crazyflie takes yaw_rate here, need to handle this correctly
+        # for now, ignore all heading commands
+
+        # for a velocity command the idea of a delay time doesn't exist, it's up to the user to make sure
+        # that velocity commands keep getting sent
+        delay_time = None
+
+        self._out_msg_queue.put(CrazyflieCommand(CrazyflieCommand.CMD_TYPE_VELOCITY, (vx, vy, vz, 0.0), delay_time))
 
     def cmd_motors(self, motor1, motor2, motor3, motor4):
         """Command the thrust levels for each motor on a quadcopter
@@ -768,7 +843,7 @@ class CrazyflieConnection(connection.Connection):
         """
         # first step: reset the estimator to make sure all is good, this will take a variable amount of time
         # as it waits for the filter to converge before returning
-        self._reset_position_estimator()
+        # self._reset_position_estimator()
 
         # set the command position
         self._cmd_position_xyz = np.copy(self._current_position_xyz)
