@@ -27,7 +27,15 @@ Also will need the CrazyRadio as that will be how we will be communicating betwe
 
 TODO: add a link to the setup instructions for getting the CrazyRadio installed on their device.
 
-The CrazyRadio's default bandwidth is enough to send simple commands, but will not be enough to handle the data used by UdaciDrone without introducing a latency that makes things more difficult.  Therefore the first step, once you have your CrazyRadio installed properly, will be to increase the bandwidth of the data link from the default XXXX to 2M.  For detailed instructions on how to make this change [check out BitCraze's documentation](https://wiki.bitcraze.io/doc:crazyflie:client:pycfclient:index).  Here is an abridged version:
+The CrazyRadio's default bandwidth is enough to send simple commands, but will not be enough to handle the data used by UdaciDrone without introducing a latency that makes things more difficult.  Therefore the first step, once you have your CrazyRadio installed properly, will be to increase the bandwidth of the data link from the default 250K (meaning 250 kpbs) to 2M (meaning 2 Mbps).  For detailed instructions on how to make this change [check out BitCraze's documentation](https://wiki.bitcraze.io/doc:crazyflie:client:pycfclient:index).  Here is an abridged version:
+
+ 1. Open the crazyflie PC client with your crazyradio plugged in to your computer the the crazyflie powered on.
+
+ 2. In the `Connect` menu, select the `Configure 2.0` option.  This should display a window that contains a set of trim setting and radio configuration settings.
+ 
+ 3. From the dropdown, select the `2Mbit/s` option.  Note if you are flying multiple crazyflies or are having problems with interference, this is also where you change change the radio channel the crazyflie is communicating on.
+
+ 4. Save the setting to the crazyflie by hitting `Write`.
 
 TODO: add abridged version
 
