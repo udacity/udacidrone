@@ -1,6 +1,6 @@
 ---
 id: platform-simulator
-title: Unity Simulator
+title: UdaciDrone with the Unity Simulator
 sidebar_label: Unity Simulator
 ---
 

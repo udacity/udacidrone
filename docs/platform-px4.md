@@ -1,6 +1,6 @@
 ---
 id: platform-px4
-title: PX4
+title: UdaciDrone with PX4
 sidebar_label: PX4
 ---
 
