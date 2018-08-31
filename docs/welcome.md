@@ -26,7 +26,13 @@ For a detailed understanding of the `Drone` class, check out the detailed [Drone
 
 ## Connection ##
 
-These set of classes contain implementations of specific communication protocols over which `Drone` can connect with a real drone or simulator.  Currently, the only supported protocol is the [Mavlink Protocol](https://mavlink.io/en/) used in the [Dronecode](https://www.dronecode.org/) community.  This means that this API currently only works with the [Udacity Simulator](https://github.com/udacity/FCND-Simulator-Releases/releases/tag/0.0.1) and any [PX4](http://px4.io/) powered drone!.
+These set of classes contain implementations of specific communication protocols over which `Drone` can connect with a real drone or simulator.  Currently, the API supports two protocols:
+
+ - the [Mavlink Protocol](https://mavlink.io/en/) used in the [Dronecode](https://www.dronecode.org/) community.
+
+ - [cflib](https://github.com/bitcraze/crazyflie-lib-python) the API used for [Bitcraze's crazyflie](https://www.bitcraze.io/crazyflie-2/)
+
+This means that this API currently works with the [Udacity Simulator](https://github.com/udacity/FCND-Simulator-Releases/releases/tag/0.0.1) any [PX4](http://px4.io/) powered drone, and the crazyflie!.
 
 For a detailed understanding of the `Connection` class, check out the detailed [Connection](connection.md) documentation.
 
