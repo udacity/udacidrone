@@ -30,7 +30,7 @@ Control Commands | Simulator | PX4 | Crazyflie
 `cmd_position()` | yes | yes | yes
 `takeoff()` and `land()` | yes | yes | yes
 
-For those interested in extending the UdaciDrone API to support other protocols (e.g. Parrot or DJI), please refer to [this documentation]() to see how to get started!
+For those interested in extending the UdaciDrone API to support other protocols (e.g. Parrot or DJI), check down below for what methods need implementation!
 
 ## Messages ##
 
