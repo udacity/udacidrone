@@ -4,11 +4,11 @@ title: UdaciDrone with the Unity Simulator
 sidebar_label: Unity Simulator
 ---
 
-This will contain the overview information on how to use the unity simulator with the UdaciDrone API.
+Here is an overview of the functionality that UdaciDrone provides with a [PX4](http://px4.io/) drone using the [Mavlink](https://mavlink.io/en/) protocol.  For more specific details on the implementation of the communication with PX4 over Mavlink, check out the `mavlink_connection.py` and `mavlink_utils.py` classes.
 
-Specifically should discuss how to use the `UnityConnection` class, a short version of what the parameters mean (the long version is in the files themselves if people are very curious), the supported list of commands, anything else specific to note that is related to the simulator and its behavior with UdaciDrone.
-
-# UdaciDrone with the Unity Simulator #
+This document discuses the following:
+ - [general Unity simulator configuration](#general-unity-simulator-setup)
+ - [mavlink connection with PX4](#mavlinkconnection-overview)
 
 This document discuses the following:
  - general simulator configuration
@@ -18,12 +18,11 @@ This document discuses the following:
 
 ## General Unity Simulator Setup ##
 
-Note: I don't think there is anything specific that needs to be set up with the simulator....
+Nothing specific needs to be setup, will work out of the box!
 
+## `MavlinkConnection` Overview ##
 
-## `UnityConnection` Overview ##
-
-TODO: instructions for using the UnityConnection class, for both a shell version and a script version.
+Here are examples of how to use the connection class in both the shell and in a script.
 
 ### Python Shell ###
 
@@ -36,8 +35,3 @@ TODO: instructions for using the UnityConnection class, for both a shell version
 ```py
 conn = UnityConnection('tcp:127.0.0.1:5760', threaded=False)
 ```
-
-## API Notes ##
-
-
-## General Notes ##

@@ -9,8 +9,8 @@ Here is an overview of the functionality that UdaciDrone provides with the Bitcr
 This document discuses the following:
  - [setup of the Crazyflie](#crazyflie-setup)
  - [understanding some behavior unique to the Crazyflie](#crazyflie-behavior)
- - overview of the `CrazyflieConnection` class
- - platform specific limitations
+ - [overview of the `CrazyflieConnection` class](#crazyflieconnection)
+ - [supported API commands](#api-commands)
 
 ## Crazyflie Setup ##
 

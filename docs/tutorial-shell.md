@@ -4,26 +4,18 @@ title: UdaciDrone in the Python Shell
 sidebar_label:  UdaciDrone in the Python Shell
 ---
 
-This is a tutorial on the use of UdaciDrone to interact with a drone through the Python shell.
+This is a tutorial on the use of UdaciDrone to interact with a drone through the Python shell (using Python 3).  Note that this is really platform agnostic! (Or Connection class agnostic to be specific with the UdaciDrone terms).
 
-Note that this is really platform agnostic! (Or Connection class agnostic to be specific with the UdaciDrone terms).
-
-The following example can be used for controlling the simulator, a crazyflie or even a PX4 drone!  The only changes for each of these will be the instance of the connection that is passed to the `Drone`.
+The following example can be used for controlling the simulator, a crazyflie or even a PX4 drone!  The only changes for each of these will be the instance of the connection that is passed to the `Drone`.  When working in the python shell, commands can be sent on at a time and the behavior of the drone can immediately be seen.
 
 To learn more about the respective connections, check out the individual documentation.
 
-TODO: decide where want to have an overview of the different connection classes and how to instantiate each one of them.  Also worth noting that there are some slight differences in all of them between controlling through the shell and through a script, but that should be left to the other tutorial that will explain the differences in the connection classes.
-
-# UdaciDrone in the Python Shell #
-
-When working in the python shell, commands can be sent on at a time and the behavior of the drone can immediately be seen.
 
 ## Imports ##
 
 Before being able to use the UdaciDrone API, you will need to import it into the python shell.  In the shell, we need to import both the `Drone` class (which we will be using to interact with the drone) and the connection class to be used to connect to the drone.  For this example, we will be assuming we are connecting to the simulator and will be using the `MavlinkConnection`.
 
 *For more information on the use of the difference connection classes, check out [the connection tutorial]()*.
-
 
 ```py
 >>> from udacidrone import Drone
@@ -87,5 +79,3 @@ Once the home position is set, you are ready to take off and start flying around
 ### Commands ###
 
 TODO: link to somewhere else for the full list of supported commands per platform.  While the API has a common set of commands, unfortunately not every platform is able to support every type of command.
-
-TODO: decide where want to have the details for each type of platform.  These details would include how to create the connections, what they mean, supported API functions, possible extra functions, etc...
