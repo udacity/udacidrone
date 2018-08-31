@@ -1,7 +1,7 @@
 ---
 id: tutorial-shell
-title: Python Shell
-sidebar_label: Tutorials
+title: UdaciDrone in the Python Shell
+sidebar_label:  UdaciDrone in the Python Shell
 ---
 
 This is a tutorial on the use of UdaciDrone to interact with a drone through the Python shell.

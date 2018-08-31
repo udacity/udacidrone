@@ -1,7 +1,7 @@
 ---
 id: platform-crazyflie
 title: Crazyflie
-sidebar_label: Platforms
+sidebar_label: Crazyflie
 ---
 
 This will contain the overview information on how to use the crazyflie with the UdaciDrone API.

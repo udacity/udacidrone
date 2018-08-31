@@ -9,10 +9,18 @@
     	"drone-attributes"
     ],
     "Connection API": [
-    	"connection-api"
+    	"connection-api",
+      "connection-interface"
+    ],
+    "Platforms": [
+      "platform-simulator",
+      "platform-crazyflie",
+      "platform-px4"
     ],
     "Tutorials": [
-      "visdom-tutorial"
+      "tutorial-shell",
+      "tutorial-script",
+      "tutorial-visdom"
     ],
     "Development": [
       "dev-setup"

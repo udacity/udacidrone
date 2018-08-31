@@ -1,7 +1,7 @@
 ---
 id: tutorial-script
-title: Python Script
-sidebar_label: Tutorials
+title:  UdaciDrone in a Python Script
+sidebar_label:  UdaciDrone in a Python Script
 ---
 
 This is a tutorial of UdaciDrone's API used in an event-driven script.

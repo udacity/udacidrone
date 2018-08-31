@@ -1,7 +1,7 @@
 ---
 id: platform-simulator
 title: Unity Simulator
-sidebar_label: Platforms
+sidebar_label: Unity Simulator
 ---
 
 This will contain the overview information on how to use the unity simulator with the UdaciDrone API.

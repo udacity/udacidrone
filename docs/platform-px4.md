@@ -1,7 +1,7 @@
 ---
 id: platform-px4
 title: PX4
-sidebar_label: Platforms
+sidebar_label: PX4
 ---
 
 This will contain the overview information on how to use a PX4 drone with the UdaciDrone API.
