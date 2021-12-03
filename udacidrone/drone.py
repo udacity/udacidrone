@@ -347,10 +347,10 @@ class Drone(object):
 
         These can be added anywhere in the code and are identical to initializing a callback with the decorator
         """
-        if name not in self._callbacks:
-            self._callbacks[name] = []
-        if fn not in self._callbacks[name]:
-            self._callbacks[name].append(fn)
+        
+        callbacks = self._callbacks.setdefault(name, [])
+        if fn not in callbacks:
+            callbacks.append(fn)
 
     def remove_callback(self, name, fn):
         """Remove the function, `fn`, as a callback for the message type, `name`
@@ -364,11 +364,13 @@ class Drone(object):
             self.remove_message_listener(MsgID.GLOBAL_POSITION, global_msg_listener)
 
         """
-        if name in self._callbacks:
-            if fn in self._callbacks[name]:
-                self._callbacks[name].remove(fn)
-                if len(self._callbacks[name]) == 0:
-                    del self._callbacks[name]
+        
+        callbacks = self._callbacks.get(name, [])
+        if fn in callbacks:
+            callbacks.remove(fn)
+        
+            if not len(self._callbacks[name]):
+                del self._callbacks[name]
 
     def notify_callbacks(self, name, msg):
         """Passes the message to the appropriate listeners"""
