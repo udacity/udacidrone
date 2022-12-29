@@ -42,14 +42,14 @@ Function | Description
 `cmd_velocity(velocity_north, velocity_east, velocity_down, heading)` | command the drone to have the specified current velocity (in meters/second) and heading (in radians)
 `cmd_attitude(roll, pitch, yawrate, thrust)` | command the drone to the specified attitude, where roll and pitch are in radian, yawrate is the desired rate of heading change in radian/second and thrust is the desired vertical acceleration in meters/second^2
 `cmd_attitude_rate(roll_rate, pitch_rate, yaw_rate, thrust)` | command the drone to have the specified attitude rates in radians/second and thrust (vertical acceleration) in meters/second^2
-`cmd_moment(roll_moment, pitch_moment, yaw_moment, thrust)` | command a moment in Newtom*meters and a vertical force in Netwons
+`cmd_moment(roll_moment, pitch_moment, yaw_moment, thrust)` | command a moment in Newton*meters and a vertical force in Netwons
 `set_home_position(longitude, latitude, altitude)` | set the GPS home position for the drone.  This changes the origin point of the local NED frame and therefore adjusts the local position information.
 `start_log(directory, name)` | start logging telemetry data to the specified directory with the specified filename.
 `stop_log()` | stop logging telemetry data
 
 ## Logging ##
 
-The `Drone` will also log telemetry data while a connection to a drone exists.  When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as "TLog-manual.txt" as shown belo).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.
+The `Drone` will also log telemetry data while a connection to a drone exists.  When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as "TLog-manual.txt" as shown below).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.
 
 ```python
 >>> from drone import Drone
