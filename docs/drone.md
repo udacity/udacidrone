@@ -49,7 +49,7 @@ Function | Description
 
 ## Logging ##
 
-The `Drone` will also log telemetry data while a connection to a drone exists.  When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as "TLog-manual.txt" as shown belo).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.
+The `Drone` will also log telemetry data while a connection to a drone exists.  When starting the drone manually from a Python/iPython shell you have the option to provide a desired filename for the telemetry log file (such as "TLog-manual.txt" as shown below).  This allows you to customize the telemetry log name as desired to help keep track of different types of log files you might have.
 
 ```python
 >>> from drone import Drone
